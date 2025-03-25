@@ -4,7 +4,7 @@ const TerserPlugin = require('terser-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
-  entry: './src/game.ts',
+  entry: './src/index.ts',
   output: {
     filename: '[name].[contenthash].js',
     path: path.resolve(__dirname, 'dist'),
@@ -90,7 +90,7 @@ module.exports = {
       }
     ],
     compress: true,
-    port: 3000,
+    port: 3001,
     hot: 'only',
     watchFiles: {
       paths: ['src/**/*', 'assets/**/*', 'index.html'],
