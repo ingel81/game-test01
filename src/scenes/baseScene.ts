@@ -2,6 +2,7 @@ import { Constants } from '../utils/constants';
 import { EventBus, EventType } from '../utils/eventBus';
 import { GameObjects } from 'phaser';
 import { PlanetsBackground } from '../ui/planetsBackground';
+import { FpsDisplay } from '../ui/fpsDisplay';
 
 /**
  * BaseScene-Klasse
@@ -11,6 +12,7 @@ export abstract class BaseScene extends Phaser.Scene {
   protected eventBus: EventBus;
   protected stars!: GameObjects.Group;
   protected planetsBackground!: PlanetsBackground;
+  protected fpsDisplay!: FpsDisplay;
 
   constructor(key: string) {
     super(key);
@@ -52,6 +54,9 @@ export abstract class BaseScene extends Phaser.Scene {
     
     // Erstelle den Planeten-Hintergrund für alle Szenen
     this.createPlanetsBackground();
+    
+    // Erstelle die FPS-Anzeige
+    this.createFpsDisplay();
   }
   
   /**
@@ -64,6 +69,11 @@ export abstract class BaseScene extends Phaser.Scene {
     // Aktualisiere die Planeten im Hintergrund
     if (this.planetsBackground) {
       this.planetsBackground.update(time, delta);
+    }
+    
+    // Aktualisiere die FPS-Anzeige
+    if (this.fpsDisplay) {
+      this.fpsDisplay.update(time);
     }
   }
 
@@ -213,6 +223,17 @@ export abstract class BaseScene extends Phaser.Scene {
       this.planetsBackground = new PlanetsBackground(this);
     } catch (error) {
       console.error('Fehler beim Erstellen der Planeten:', error);
+    }
+  }
+  
+  /**
+   * Erstellt die FPS-Anzeige
+   */
+  protected createFpsDisplay(): void {
+    try {
+      this.fpsDisplay = new FpsDisplay(this);
+    } catch (error) {
+      console.error('Fehler beim Erstellen der FPS-Anzeige:', error);
     }
   }
 } 

@@ -6,7 +6,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 module.exports = {
   entry: './src/index.ts',
   output: {
-    filename: '[name].[contenthash].js',
+    filename: '[name].[contenthash:8].js',
     path: path.resolve(__dirname, 'dist'),
     clean: true,
   },
@@ -34,6 +34,12 @@ module.exports = {
       template: 'index.html',
       filename: 'index.html',
       inject: true,
+      hash: false,
+      meta: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     }),
     new CopyWebpackPlugin({
       patterns: [
