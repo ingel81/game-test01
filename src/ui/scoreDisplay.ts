@@ -7,19 +7,24 @@ export class ScoreDisplay {
   private scoreText: Phaser.GameObjects.Text;
   private score: number = 0;
   private prefix: string;
+  private isMobile: boolean;
 
   constructor(scene: Phaser.Scene, x: number, y: number, prefix: string = '') {
     this.scene = scene;
     this.prefix = prefix;
+    this.isMobile = this.scene.sys.game.device.input.touch;
+    
+    // Angepasste Textgröße für optimale Platzierung
+    const fontSize = this.isMobile ? '16px' : '18px';
     
     // Erstelle den Punktetext
     this.scoreText = this.scene.add.text(x, y, this.formatScore(), {
-      fontSize: '24px',
+      fontSize: fontSize,
       color: '#00ffff',
       fontFamily: 'monospace',
       stroke: '#000',
-      strokeThickness: 4
-    }).setOrigin(0, 0.5);
+      strokeThickness: 3
+    }).setOrigin(0, 0.5); // Linksbündig ausrichten
     
     // Setze die Tiefe, damit die Punkteanzeige über der Toolbar liegt
     this.scoreText.setDepth(91);
@@ -52,8 +57,11 @@ export class ScoreDisplay {
    * Formatiert die Punktzahl zur Anzeige
    */
   private formatScore(): string {
-    // Füge führende Nullen hinzu, um eine 6-stellige Zahl zu erhalten
-    const formattedScore = this.score.toString().padStart(6, '0');
+    // Stellenanzahl für gute Lesbarkeit
+    const digits = 6;
+    
+    // Füge führende Nullen hinzu
+    const formattedScore = this.score.toString().padStart(digits, '0');
     return `${this.prefix}${formattedScore}`;
   }
 

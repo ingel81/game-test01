@@ -21,6 +21,16 @@ export class EventBus {
   }
 
   /**
+   * Setzt die Instanz des EventBus zurück
+   * Wird beim Neustart des Spiels aufgerufen
+   */
+  public static resetInstance(): void {
+    if (EventBus.instance) {
+      EventBus.instance.removeAllEvents();
+    }
+  }
+
+  /**
    * Registriert einen Event-Listener
    * @param event Event-Name
    * @param callback Callback-Funktion

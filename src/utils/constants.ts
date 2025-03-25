@@ -7,6 +7,11 @@ export class Constants {
   public static readonly GAME_TITLE: string = 'Echoes from the Rift';
   public static readonly TOOLBAR_HEIGHT: number = 60;
   
+  // Dynamische Werte für verschiedene Bildschirmgrößen
+  public static getToolbarHeight(isMobile: boolean = false): number {
+    return isMobile ? 50 : 60;
+  }
+  
   // Spieler
   public static readonly PLAYER_INITIAL_HEALTH: number = 100;
   public static readonly PLAYER_SPEED: number = 300;

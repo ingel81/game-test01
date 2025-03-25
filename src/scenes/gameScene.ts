@@ -70,6 +70,15 @@ export class GameScene extends BaseScene {
     super.create();
 
     try {
+      // Debug-Ausgabe
+      console.log('GameScene: Initialisierung startet');
+      
+      // Setze alle Spielvariablen zurück
+      this.score = 0;
+      this.isPaused = false;
+      this.mouseMoveTimer = 0;
+      this.mouseCursorVisible = false;
+      
       // Schwarzer Hintergrund für Weltraum-Feeling
       this.cameras.main.setBackgroundColor('#000000');
       
@@ -84,21 +93,25 @@ export class GameScene extends BaseScene {
       // Kamera für flüssigeres Scrolling optimieren
       this.cameras.main.setRoundPixels(true);
       
+      console.log('GameScene: Erstelle Explosion-Animation');
       // Erstelle die Explosions-Animation
-      this.anims.create({
-        key: 'explode',
-        frames: [
-          { key: Constants.ASSET_EXPLOSION_1 },
-          { key: Constants.ASSET_EXPLOSION_2 },
-          { key: Constants.ASSET_EXPLOSION_3 },
-          { key: Constants.ASSET_EXPLOSION_4 },
-          { key: Constants.ASSET_EXPLOSION_5 }
-        ],
-        frameRate: 10,
-        repeat: 0,
-        hideOnComplete: true
-      });
+      if (!this.anims.exists('explode')) {
+        this.anims.create({
+          key: 'explode',
+          frames: [
+            { key: Constants.ASSET_EXPLOSION_1 },
+            { key: Constants.ASSET_EXPLOSION_2 },
+            { key: Constants.ASSET_EXPLOSION_3 },
+            { key: Constants.ASSET_EXPLOSION_4 },
+            { key: Constants.ASSET_EXPLOSION_5 }
+          ],
+          frameRate: 10,
+          repeat: 0,
+          hideOnComplete: true
+        });
+      }
 
+      console.log('GameScene: Erstelle Spieler');
       // Erstelle den Spieler
       this.player = new Player(this, 100, this.scale.height / 2);
       
@@ -106,6 +119,7 @@ export class GameScene extends BaseScene {
       const playerSprite = this.player.getSprite();
       playerSprite.setDepth(10); // Setze den Spieler in den Vordergrund
 
+      console.log('GameScene: Erstelle Manager');
       // Erstelle die Manager
       this.createManagers();
       this.soundManager = new SoundManager(this);
@@ -114,9 +128,11 @@ export class GameScene extends BaseScene {
       // Verknüpfe die Manager
       this.collisionManager.setManagers(this.enemyManager, this.spawnManager);
 
+      console.log('GameScene: Starte Musik');
       // Starte die Hintergrundmusik
       this.soundManager.playBackgroundMusic();
 
+      console.log('GameScene: Event-Listener registrieren');
       // Event-Listener
       this.eventBus.on(EventType.PAUSE_GAME, this.pauseGame);
       this.eventBus.on(EventType.RESUME_GAME, this.resumeGame);
@@ -138,6 +154,8 @@ export class GameScene extends BaseScene {
       // Optimiere die Performance
       this.physics.world.setFPS(60);
       this.physics.world.fixedStep = true;
+
+      console.log('GameScene: Initialisierung abgeschlossen');
     } catch (error) {
       console.error('Fehler beim Erstellen der Spielszene:', error);
       this.scene.start(Constants.SCENE_MAIN_MENU);

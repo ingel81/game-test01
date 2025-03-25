@@ -30,6 +30,14 @@ export class Player extends GameObject {
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, Constants.ASSET_PLAYER, Constants.PLAYER_INITIAL_HEALTH);
     
+    // Debug-Information
+    console.log('Player: Initialisierung mit Gesundheit:', Constants.PLAYER_INITIAL_HEALTH);
+    
+    // Explizite Zurücksetzung der Gesundheit auf den Initialwert
+    this.health = Constants.PLAYER_INITIAL_HEALTH;
+    this.maxHealth = Constants.PLAYER_INITIAL_HEALTH;
+    this.isDestroyed = false;
+    
     // Optimierte Sprite-Einstellungen für flüssigeres Rendering
     this.sprite.setOrigin(0.5, 0.5); // Zentrum als Ursprung für pixelgenaues Rendering
     this.sprite.setCollideWorldBounds(true); // Bildschirmgrenzen einhalten
@@ -45,6 +53,9 @@ export class Player extends GameObject {
     if (this.sprite.body instanceof Phaser.Physics.Arcade.Body) {
       this.sprite.body.setMaxVelocity(400, 400); // Maximale Geschwindigkeit setzen
       this.sprite.body.setFriction(0, 0);        // Keine Reibung für direktere Kontrolle
+      
+      // Wichtig: Stelle sicher, dass die Geschwindigkeit auf 0 gesetzt ist
+      this.sprite.body.reset(x, y);
     }
 
     this.cursors = this.scene.input.keyboard.createCursorKeys();
@@ -245,29 +256,39 @@ export class Player extends GameObject {
    * Richtet die Touch-Steuerung ein
    */
   private setupTouchControls(): void {
-    // Definiere Button-Größe und Padding
-    const buttonSize = 100;
-    const padding = Math.min(40, this.scene.scale.height * 0.1);
+    // Initialisiere die Touch-Steuerung
+    this.touchControls = {
+      shoot: false,
+      touchX: 0,
+      touchY: 0,
+      isMoving: false,
+      pointer: null
+    };
     
-    // Erstelle einen sichtbaren Schussbutton
+    // Optimierte Positionierung für den Schussbutton (ganz unten rechts)
+    const buttonSize = Math.min(70, window.innerWidth * 0.13); // Etwas kleiner
+    const padding = 15; // Geringerer Abstand zum Rand
+    const buttonX = window.innerWidth - buttonSize - padding;
+    const buttonY = window.innerHeight - buttonSize - padding;
+    
     const shootButton = this.scene.add.rectangle(
-      this.scene.scale.width - padding - buttonSize/2, 
-      this.scene.scale.height - padding - buttonSize - 50, // 50px höher positionieren
+      buttonX, 
+      buttonY, 
       buttonSize, 
       buttonSize, 
       0xff0000, 
-      0.5
+      0.4 // Leicht transparenter
     )
       .setInteractive()
       .setScrollFactor(0)
       .setDepth(1000);
     
-    // Füge ein Symbol zum Button hinzu
+    // Optimiertes Symbol für den Button
     const shootIcon = this.scene.add.text(
       shootButton.x, 
       shootButton.y, 
       '⚡', 
-      { fontSize: '36px' }
+      { fontSize: Math.min(32, buttonSize * 0.45) + 'px' }
     )
       .setOrigin(0.5)
       .setScrollFactor(0)
@@ -355,6 +376,11 @@ export class Player extends GameObject {
    * Verarbeitet eingehenden Schaden und aktualisiert die UI
    */
   public takeDamage(amount: number): boolean {
+    // Stellen wir sicher, dass wir keinen negativen Schaden bekommen
+    if (amount < 0) {
+      amount = 0;
+    }
+    
     const isDead = super.takeDamage(amount);
 
     // Event für UI-Aktualisierung auslösen
@@ -386,8 +412,14 @@ export class Player extends GameObject {
   public heal(amount: number): void {
     if (amount <= 0 || !this.sprite.active) return;
     
+    // Stellen wir sicher, dass wir die Gesundheit nicht über das Maximum erhöhen
+    const oldHealth = this.health;
     super.heal(amount);
-    this.eventBus.emit(EventType.PLAYER_HEALED, this.health);
+    
+    // Nur ein Event auslösen, wenn sich die Gesundheit tatsächlich ändert
+    if (this.health > oldHealth) {
+      this.eventBus.emit(EventType.PLAYER_HEALED, this.health);
+    }
     
     // Heal-Effekt
     this.scene.tweens.add({

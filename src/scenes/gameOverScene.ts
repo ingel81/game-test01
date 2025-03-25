@@ -1,6 +1,6 @@
 import { BaseScene } from './baseScene';
 import { Constants } from '../utils/constants';
-import { EventType } from '../utils/eventBus';
+import { EventType, EventBus } from '../utils/eventBus';
 import { SoundManager } from '../managers/soundManager';
 
 /**
@@ -47,11 +47,32 @@ export class GameOverScene extends BaseScene {
 
     // Neustart-Button
     this.createButton(centerX, centerY + 100, 'Restart', () => {
-      this.scene.start(Constants.SCENE_GAME);
+      // Vollständiger Reset vor dem Neustart
+      // Zurücksetzen des EventBus
+      EventBus.resetInstance();
+      
+      // Stoppe alle Sounds
+      this.sound.stopAll();
+      
+      // Stoppe alle aktiven Szenen
+      this.scene.stop(Constants.SCENE_GAME_OVER);
+      
+      // Kleine Pause für Ressourcenfreigabe
+      setTimeout(() => {
+        // Starte die Spielszene neu
+        this.scene.start(Constants.SCENE_GAME);
+      }, 50);
     });
 
     // Hauptmenü-Button
     this.createButton(centerX, centerY + 160, 'Main Menu', () => {
+      // Zurücksetzen des EventBus
+      EventBus.resetInstance();
+      
+      // Stoppe alle Sounds
+      this.sound.stopAll();
+      
+      // Starte direkt das Hauptmenü
       this.scene.start(Constants.SCENE_MAIN_MENU);
     });
   }

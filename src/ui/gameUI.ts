@@ -16,10 +16,14 @@ export class GameUI {
   private toolbar: Phaser.GameObjects.Graphics;
   private levelDisplay: Phaser.GameObjects.Text;
   private eventBus: EventBus;
+  private isMobile: boolean;
+  private toolbarHeight: number;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
     this.eventBus = EventBus.getInstance();
+    this.isMobile = this.scene.sys.game.device.input.touch;
+    this.toolbarHeight = Constants.getToolbarHeight(this.isMobile);
     
     // Erstelle die Toolbar
     this.createToolbar();
@@ -27,21 +31,24 @@ export class GameUI {
     // Berechne die Positionen basierend auf der Bildschirmbreite
     const screenWidth = this.scene.scale.width;
     
+    // Einheitlicher Abstand vom Rand für alle Elemente
+    const margin = 15;
+    
     // Erstelle die Punkteanzeige (links)
     this.scoreDisplay = new ScoreDisplay(
       this.scene,
-      100,
-      Constants.TOOLBAR_HEIGHT / 2,
+      margin,
+      this.toolbarHeight / 2,
       'P1 >> '
     );
     
-    // Erstelle die Level-Anzeige (mitte)
+    // Erstelle die Level-Anzeige (exakt in der Mitte)
     this.levelDisplay = this.scene.add.text(
       screenWidth / 2,
-      Constants.TOOLBAR_HEIGHT / 2,
+      this.toolbarHeight / 2,
       'LEVEL 1',
       {
-        fontSize: '20px',
+        fontSize: this.isMobile ? '16px' : '20px',
         color: '#00ffff',
         fontFamily: 'monospace',
         stroke: '#000',
@@ -53,14 +60,14 @@ export class GameUI {
     // Erstelle die Gesundheitsanzeige (rechts)
     this.healthBar = new HealthBar(
       this.scene,
-      screenWidth - 200,
-      Constants.TOOLBAR_HEIGHT / 2,
-      150,
-      20
+      screenWidth - margin,
+      this.toolbarHeight / 2,
+      this.isMobile ? 90 : 110,
+      this.isMobile ? 16 : 20
     );
     
     // Erstelle Touch-Steuerung, wenn auf einem Touch-Gerät
-    if (this.scene.sys.game.device.input.touch) {
+    if (this.isMobile) {
       this.touchControls = new TouchControls(this.scene);
     }
     
@@ -86,18 +93,11 @@ export class GameUI {
     
     // Zeichne den Hintergrund
     this.toolbar.fillStyle(0x000000, 0.8);
-    this.toolbar.fillRect(0, 0, this.scene.scale.width, Constants.TOOLBAR_HEIGHT);
+    this.toolbar.fillRect(0, 0, this.scene.scale.width, this.toolbarHeight);
     
     // Zeichne den Rahmen
     this.toolbar.lineStyle(2, 0x00ffff, 0.8);
-    this.toolbar.strokeRect(0, 0, this.scene.scale.width, Constants.TOOLBAR_HEIGHT);
-    
-    // Zeichne vertikale Trennlinien
-    const leftThirdX = this.scene.scale.width / 3;
-    const rightThirdX = this.scene.scale.width * 2 / 3;
-    this.toolbar.lineStyle(1, 0x00ffff, 0.4);
-    this.toolbar.lineBetween(leftThirdX, 5, leftThirdX, Constants.TOOLBAR_HEIGHT - 5);
-    this.toolbar.lineBetween(rightThirdX, 5, rightThirdX, Constants.TOOLBAR_HEIGHT - 5);
+    this.toolbar.strokeRect(0, 0, this.scene.scale.width, this.toolbarHeight);
     
     // Setze die Tiefe, damit die Toolbar hinter den UI-Elementen gezeichnet wird
     this.toolbar.setDepth(90);

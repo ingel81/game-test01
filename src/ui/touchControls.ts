@@ -19,13 +19,18 @@ export class TouchControls {
     const width = this.scene.scale.width;
     const height = this.scene.scale.height;
 
-    // Linke Zone für Bewegung
-    this.leftZone = this.scene.add.zone(0, 0, width / 2, height)
+    // Linke Zone für Bewegung (größter Teil des Bildschirms)
+    this.leftZone = this.scene.add.zone(0, 0, width * 0.7, height)
       .setOrigin(0, 0)
       .setInteractive();
 
-    // Rechte Zone für Schießen
-    this.rightZone = this.scene.add.zone(width / 2, 0, width / 2, height)
+    // Rechts unten für Schießen
+    const buttonSize = Math.min(70, width * 0.14);
+    const buttonX = width - buttonSize;
+    const buttonY = height - buttonSize * 1.5;
+
+    // Schießen-Zone (kleinere Zone rechts unten)
+    this.rightZone = this.scene.add.zone(buttonX, buttonY, buttonSize, buttonSize)
       .setOrigin(0, 0)
       .setInteractive();
 
@@ -65,6 +70,13 @@ export class TouchControls {
 
     this.rightZone.on('pointerup', () => {
       this.isShooting = false;
+    });
+    
+    // Zusätzlich: Schießen beenden, wenn der Pointer den Bildschirm verlässt
+    this.scene.input.on('pointerup', () => {
+      if (this.isShooting) {
+        this.isShooting = false;
+      }
     });
   }
 
