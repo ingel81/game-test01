@@ -1,6 +1,7 @@
 import { Constants } from '../utils/constants';
 import { EventBus, EventType } from '../utils/eventBus';
 import { GameObjects } from 'phaser';
+import { PlanetsBackground } from '../ui/planetsBackground';
 
 /**
  * BaseScene-Klasse
@@ -9,6 +10,7 @@ import { GameObjects } from 'phaser';
 export abstract class BaseScene extends Phaser.Scene {
   protected eventBus: EventBus;
   protected stars!: GameObjects.Group;
+  protected planetsBackground!: PlanetsBackground;
 
   constructor(key: string) {
     super(key);
@@ -23,6 +25,12 @@ export abstract class BaseScene extends Phaser.Scene {
     
     // Lade die Hintergrund-Assets
     this.load.image('background', 'assets/background/bg-preview-big.png');
+    this.load.image('bg-planet', 'assets/background/layered/bg-planet.png');
+    
+    // Lade alle Planeten
+    for (let i = 1; i <= 16; i++) {
+      this.load.image(`planet-${i}`, `assets/planets/planet-${i}.png`);
+    }
     
     // Lade die Sound-Assets
     this.load.audio('click', 'assets/sounds/laser1.wav');
@@ -41,6 +49,9 @@ export abstract class BaseScene extends Phaser.Scene {
     
     // Erstelle Sternenfeld-Hintergrund für alle Szenen
     this.createStars();
+    
+    // Erstelle den Planeten-Hintergrund für alle Szenen
+    this.createPlanetsBackground();
   }
   
   /**
@@ -49,6 +60,11 @@ export abstract class BaseScene extends Phaser.Scene {
   update(time: number, delta: number): void {
     // Aktualisiere die Sterne in jeder Szene
     this.updateStars(delta);
+    
+    // Aktualisiere die Planeten im Hintergrund
+    if (this.planetsBackground) {
+      this.planetsBackground.update(time, delta);
+    }
   }
 
   /**
@@ -186,6 +202,17 @@ export abstract class BaseScene extends Phaser.Scene {
       });
     } catch (error) {
       console.error('Fehler beim Aktualisieren der Sterne:', error);
+    }
+  }
+
+  /**
+   * Erstellt die Planeten im Hintergrund
+   */
+  protected createPlanetsBackground(): void {
+    try {
+      this.planetsBackground = new PlanetsBackground(this);
+    } catch (error) {
+      console.error('Fehler beim Erstellen der Planeten:', error);
     }
   }
 } 
