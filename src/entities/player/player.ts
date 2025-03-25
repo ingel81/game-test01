@@ -26,6 +26,11 @@ export class Player extends GameObject {
     pointer: Phaser.Input.Pointer | null;
   };
   private powerUpHandler: () => void;
+  private energyPickupHandler: (amount: number) => void;
+  
+  // Geheimer Heilungssequenz-Tracker
+  private lastKeyPressTime: number = 0;
+  private readonly KEY_TIMEOUT: number = 2000; // 2 Sekunden Timeout für Tastenkombination
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, Constants.ASSET_PLAYER, Constants.PLAYER_INITIAL_HEALTH);
@@ -65,6 +70,10 @@ export class Player extends GameObject {
     // Binde den PowerUp-Handler
     this.powerUpHandler = () => this.onPowerUpCollected();
     this.eventBus.on(EventType.POWER_PICKUP_COLLECTED, this.powerUpHandler);
+    
+    // Binde den EnergyPickup-Handler
+    this.energyPickupHandler = (amount: number) => this.onEnergyPickupCollected(amount);
+    this.eventBus.on(EventType.PICKUP_COLLECTED, this.energyPickupHandler);
 
     // Prüfen, ob Touch-Gerät
     this.isTouchDevice = this.scene.sys.game.device.input.touch;
@@ -89,6 +98,9 @@ export class Player extends GameObject {
   public update(time: number, delta: number): void {
     this.handleMovement(delta);
     this.handleShooting(time);
+    
+    // Überprüfe die Tasten für Cheats
+    this.handleCheatKeys(time);
     
     // Aktualisiere die Waffe, um Projektile zu verwalten
     this.weapon.update(delta);
@@ -357,6 +369,7 @@ export class Player extends GameObject {
   protected onDestroy(): void {
     // Entferne Event-Listener
     this.eventBus.off(EventType.POWER_PICKUP_COLLECTED, this.powerUpHandler);
+    this.eventBus.off(EventType.PICKUP_COLLECTED, this.energyPickupHandler);
     
     // Erstelle eine Explosion
     const explosion = this.scene.add.sprite(this.sprite.x, this.sprite.y, Constants.ASSET_EXPLOSION_1);
@@ -479,5 +492,107 @@ export class Player extends GameObject {
       ease: 'Power2',
       onComplete: () => text.destroy()
     });
+  }
+
+  /**
+   * Wird aufgerufen, wenn ein Energy-Pickup eingesammelt wird
+   */
+  private onEnergyPickupCollected(amount: number): void {
+    // Heile den Spieler um den angegebenen Betrag
+    this.heal(amount);
+    
+    // Zeige Info-Text an
+    const text = this.scene.add.text(
+      this.sprite.x, 
+      this.sprite.y - 50, 
+      `+${amount} ENERGIE!`, 
+      {
+        fontSize: '24px',
+        color: '#00ffff',
+        fontFamily: 'monospace',
+        stroke: '#000000',
+        strokeThickness: 4
+      }
+    ).setOrigin(0.5);
+    
+    // Animation für den Text
+    this.scene.tweens.add({
+      targets: text,
+      y: this.sprite.y - 100,
+      alpha: 0,
+      duration: 1500,
+      ease: 'Power2',
+      onComplete: () => text.destroy()
+    });
+    
+    // Debug-Ausgabe
+    console.log(`Spieler hat Energy-Pickup erhalten: +${amount} Gesundheit`);
+  }
+
+  /**
+   * Behandelt die Cheat-Tasten
+   */
+  private handleCheatKeys(time: number): void {
+    // Heiltaste (9) überprüfen
+    const key9 = this.scene.input.keyboard.addKey('NINE');
+    if (Phaser.Input.Keyboard.JustDown(key9)) {
+      // Vollständige Heilung
+      this.heal(Constants.PLAYER_INITIAL_HEALTH);
+      
+      // Zeige Bestätigungsmeldung
+      const healText = this.scene.add.text(
+        this.sprite.x, 
+        this.sprite.y - 50, 
+        `VOLLE ENERGIE!`, 
+        {
+          fontSize: '24px',
+          color: '#00ff00',
+          fontFamily: 'monospace',
+          stroke: '#000000',
+          strokeThickness: 4
+        }
+      ).setOrigin(0.5);
+      
+      // Animation für den Text
+      this.scene.tweens.add({
+        targets: healText,
+        y: this.sprite.y - 100,
+        alpha: 0,
+        duration: 1500,
+        ease: 'Power2',
+        onComplete: () => healText.destroy()
+      });
+    }
+    
+    // Power-Up Taste (0) überprüfen
+    const key0 = this.scene.input.keyboard.addKey('ZERO');
+    if (Phaser.Input.Keyboard.JustDown(key0)) {
+      // Power-Level erhöhen
+      this.weapon.upgradePowerLevel();
+      
+      // Zeige Bestätigungsmeldung
+      const powerText = this.scene.add.text(
+        this.sprite.x, 
+        this.sprite.y - 50, 
+        `POWER-UP!`, 
+        {
+          fontSize: '24px',
+          color: '#00ffff',
+          fontFamily: 'monospace',
+          stroke: '#000000',
+          strokeThickness: 4
+        }
+      ).setOrigin(0.5);
+      
+      // Animation für den Text
+      this.scene.tweens.add({
+        targets: powerText,
+        y: this.sprite.y - 100,
+        alpha: 0,
+        duration: 1500,
+        ease: 'Power2',
+        onComplete: () => powerText.destroy()
+      });
+    }
   }
 } 

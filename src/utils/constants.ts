@@ -22,7 +22,7 @@ export class Constants {
   public static readonly BULLET_DAMAGE: number = 25;
   public static readonly ENEMY_BULLET_SPEED: number = 300;
   public static readonly ENEMY_BULLET_DAMAGE: number = 10;
-  public static readonly PLAYER_MAX_POWER_LEVEL: number = 4; // Maximales Power-Level für Spielerwaffe
+  public static readonly PLAYER_MAX_POWER_LEVEL: number = 7; // Maximales Power-Level für Spielerwaffe
   
   // Schaden und Heilung
   public static readonly DAMAGE = {
