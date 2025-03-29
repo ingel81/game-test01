@@ -8,6 +8,7 @@ import { GameUI } from '../ui/gameUI';
 import { DifficultyManager } from '../managers/difficultyManager';
 import { SoundManager } from '../managers/soundManager';
 import { EnemyManager } from '../managers/enemyManager';
+import { GlowPipeline } from '../pipelines/glowPipeline';
 
 /**
  * Hauptspielszene
@@ -25,6 +26,7 @@ export class GameScene extends BaseScene {
   private mouseMoveTimer: number = 0;
   private mouseCursorVisible: boolean = false;
   private readonly mouseHideDelay: number = 3000; // 3 Sekunden
+  private glowPipeline!: GlowPipeline;
 
   constructor() {
     super(Constants.SCENE_GAME);
@@ -42,6 +44,7 @@ export class GameScene extends BaseScene {
     
     // Lade die Feind-Assets
     this.load.image(Constants.ASSET_ENEMY, 'assets/enemy/sprites/enemy1.png');
+    this.load.image('enemy6', 'assets/enemy/sprites/enemy6.png');
     this.load.image(Constants.ASSET_ENEMY_BULLET, 'assets/shoot/shoot2.png');
     this.load.image(Constants.ASSET_BOSS, 'assets/enemy/sprites/enemy1.png');
     
@@ -93,6 +96,12 @@ export class GameScene extends BaseScene {
       // Kamera für flüssigeres Scrolling optimieren
       this.cameras.main.setRoundPixels(true);
       
+      // Erstelle die Glow-Pipeline
+      this.glowPipeline = new GlowPipeline(this.game);
+      if (this.game.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer) {
+        this.game.renderer.pipelines.add('Glow', this.glowPipeline);
+      }
+      
       console.log('GameScene: Erstelle Explosion-Animation');
       // Erstelle die Explosions-Animation
       if (!this.anims.exists('explode')) {
@@ -118,7 +127,12 @@ export class GameScene extends BaseScene {
       // Stelle sicher, dass der Spieler im sichtbaren Bereich ist
       const playerSprite = this.player.getSprite();
       playerSprite.setDepth(10); // Setze den Spieler in den Vordergrund
-
+      
+      // Aktiviere die Glow-Pipeline für die Schüsse
+      if (this.player instanceof Player) {
+        this.player.getWeapon().setBulletPipeline('Glow');
+      }
+      
       console.log('GameScene: Erstelle Manager');
       // Erstelle die Manager
       this.createManagers();

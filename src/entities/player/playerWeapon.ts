@@ -13,6 +13,7 @@ export class PlayerWeapon {
   private powerLevel: number = 1; // Stärke-Level der Waffe, startet bei 1
   private eventBus: EventBus;
   private powerUpHandler: () => void;
+  private bulletPipeline: string = '';
   
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -31,6 +32,13 @@ export class PlayerWeapon {
     
     // Event-Listener für Power-Pickup
     this.eventBus.on(EventType.POWER_PICKUP_COLLECTED, this.powerUpHandler);
+  }
+
+  /**
+   * Setzt die Pipeline für die Schüsse
+   */
+  public setBulletPipeline(pipelineName: string): void {
+    this.bulletPipeline = pipelineName;
   }
 
   /**
@@ -154,7 +162,12 @@ export class PlayerWeapon {
     // Aktiviere die Kugel
     bullet.setActive(true);
     bullet.setVisible(true);
-    bullet.setScale(1.5);
+    bullet.setScale(1.5); // Zurück zur ursprünglichen Größe
+    
+    // Aktiviere die Glow-Pipeline wenn vorhanden
+    if (this.bulletPipeline) {
+      bullet.setPipeline(this.bulletPipeline);
+    }
     
     // Stelle sicher, dass die Physik aktiviert ist
     if (!bullet.body || !bullet.body.enable) {
@@ -211,8 +224,13 @@ export class PlayerWeapon {
     // Aktiviere die Kugel
     bullet.setActive(true);
     bullet.setVisible(true);
-    bullet.setScale(1.5);
-    bullet.setRotation(Phaser.Math.DegToRad(angle)); // Drehe das Sprite entsprechend dem Winkel
+    bullet.setScale(1.5); // Zurück zur ursprünglichen Größe
+    bullet.setRotation(Phaser.Math.DegToRad(angle));
+    
+    // Aktiviere die Glow-Pipeline wenn vorhanden
+    if (this.bulletPipeline) {
+      bullet.setPipeline(this.bulletPipeline);
+    }
     
     // Stelle sicher, dass die Physik aktiviert ist
     if (!bullet.body || !bullet.body.enable) {
@@ -274,8 +292,13 @@ export class PlayerWeapon {
     // Aktiviere die Kugel
     bullet.setActive(true);
     bullet.setVisible(true);
-    bullet.setScale(1.5);
-    bullet.setRotation(Phaser.Math.DegToRad(180)); // Drehe das Sprite um 180 Grad (nach hinten)
+    bullet.setScale(1.5); // Zurück zur ursprünglichen Größe
+    bullet.setRotation(Math.PI);
+    
+    // Aktiviere die Glow-Pipeline wenn vorhanden
+    if (this.bulletPipeline) {
+      bullet.setPipeline(this.bulletPipeline);
+    }
     
     // Stelle sicher, dass die Physik aktiviert ist
     if (!bullet.body || !bullet.body.enable) {
@@ -332,8 +355,13 @@ export class PlayerWeapon {
     // Aktiviere die Kugel
     bullet.setActive(true);
     bullet.setVisible(true);
-    bullet.setScale(1.5);
-    bullet.setRotation(Phaser.Math.DegToRad(angle)); // Drehe das Sprite entsprechend dem Winkel
+    bullet.setScale(1.5); // Zurück zur ursprünglichen Größe
+    bullet.setRotation(Phaser.Math.DegToRad(angle));
+    
+    // Aktiviere die Glow-Pipeline wenn vorhanden
+    if (this.bulletPipeline) {
+      bullet.setPipeline(this.bulletPipeline);
+    }
     
     // Stelle sicher, dass die Physik aktiviert ist
     if (!bullet.body || !bullet.body.enable) {

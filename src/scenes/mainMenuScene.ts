@@ -50,7 +50,7 @@ export class MainMenuScene extends BaseScene {
     // Füge einen leichten Glow-Effekt hinzu
     this.tweens.add({
       targets: logo,
-      alpha: 0.9,
+      alpha: 0.7,
       duration: 1500,
       yoyo: true,
       repeat: -1,

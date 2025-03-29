@@ -44,23 +44,22 @@ export class Player extends GameObject {
     this.isDestroyed = false;
     
     // Optimierte Sprite-Einstellungen für flüssigeres Rendering
-    this.sprite.setOrigin(0.5, 0.5); // Zentrum als Ursprung für pixelgenaues Rendering
-    this.sprite.setCollideWorldBounds(true); // Bildschirmgrenzen einhalten
-    this.sprite.setRotation(0); // Keine Rotation
-    this.sprite.setScale(2);    // Größeres Sprite 
+    const sprite = this.getSprite();
+    sprite.setOrigin(0.5, 0.5);
+    sprite.setCollideWorldBounds(true);
+    sprite.setRotation(0);
+    sprite.setScale(2);
     
     // Texturen für besseres Rendering optimieren
-    if (this.sprite.texture) {
-      this.sprite.texture.setFilter(Phaser.Textures.NEAREST);
+    if (sprite.texture) {
+      sprite.texture.setFilter(Phaser.Textures.NEAREST);
     }
     
     // Physik optimieren für direktere Kontrolle
-    if (this.sprite.body instanceof Phaser.Physics.Arcade.Body) {
-      this.sprite.body.setMaxVelocity(400, 400); // Maximale Geschwindigkeit setzen
-      this.sprite.body.setFriction(0, 0);        // Keine Reibung für direktere Kontrolle
-      
-      // Wichtig: Stelle sicher, dass die Geschwindigkeit auf 0 gesetzt ist
-      this.sprite.body.reset(x, y);
+    if (sprite.body instanceof Phaser.Physics.Arcade.Body) {
+      sprite.body.setMaxVelocity(400, 400);
+      sprite.body.setFriction(0, 0);
+      sprite.body.reset(x, y);
     }
 
     this.cursors = this.scene.input.keyboard.createCursorKeys();
@@ -594,5 +593,12 @@ export class Player extends GameObject {
         onComplete: () => powerText.destroy()
       });
     }
+  }
+
+  /**
+   * Gibt die Waffe des Spielers zurück
+   */
+  public getWeapon(): PlayerWeapon {
+    return this.weapon;
   }
 } 

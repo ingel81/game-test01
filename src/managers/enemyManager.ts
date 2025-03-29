@@ -1,8 +1,13 @@
 import { BasicEnemy } from '../entities/enemies/basicEnemy';
 import { BossEnemy } from '../entities/enemies/bossEnemy';
+import { Enemy6 } from '../entities/enemies/Enemy6';
+import { Enemy } from '../entities/enemies/enemy';
 import { Constants } from '../utils/constants';
 import { Player } from '../entities/player/player';
 import { EventBus, EventType } from '../utils/eventBus';
+
+// Definiere einen Typ für normale Feinde
+type NormalEnemy = BasicEnemy | Enemy6;
 
 /**
  * EnemyManager-Klasse
@@ -11,7 +16,7 @@ import { EventBus, EventType } from '../utils/eventBus';
 export class EnemyManager {
   private scene: Phaser.Scene;
   private player: Player;
-  private basicEnemies: BasicEnemy[] = [];
+  private basicEnemies: NormalEnemy[] = [];
   private bossEnemies: BossEnemy[] = [];
   private enemySpawnTimer: Phaser.Time.TimerEvent;
   private bossSpawnTimer: Phaser.Time.TimerEvent;
@@ -98,12 +103,16 @@ export class EnemyManager {
     
     const x = this.scene.scale.width + 50;
     const y = Phaser.Math.Between(100, this.scene.scale.height - 100);
-    const enemy = new BasicEnemy(this.scene, x, y, this.player);
+    
+    // Zufällig zwischen BasicEnemy und Enemy6 wählen
+    const enemy = Math.random() > 0.7 
+      ? new Enemy6(this.scene, x, y, this.player)
+      : new BasicEnemy(this.scene, x, y, this.player);
     
     // Manuell den aktuellen Schwierigkeitsgrad setzen, damit neue Gegner sofort angepasst werden
     if (this.difficulty > 1) {
       // Event manuell auslösen für den neuen Gegner, um aktuelle Schwierigkeit zu übernehmen
-      enemy.applyDifficulty({
+      this.eventBus.emit(EventType.DIFFICULTY_CHANGED, {
         difficulty: this.difficulty,
         factor: 1.0 + (this.difficulty - 1) * 0.1 + Math.pow(this.difficulty - 1, 1.5) * 0.01
       });
@@ -330,47 +339,43 @@ export class EnemyManager {
   }
 
   /**
-   * Gibt alle aktuellen Feinde zurück
+   * Gibt alle Feinde zurück
    */
-  public getAllEnemies(): (BasicEnemy | BossEnemy)[] {
+  public getAllEnemies(): (NormalEnemy | BossEnemy)[] {
     return [...this.basicEnemies, ...this.bossEnemies];
   }
 
   /**
-   * Gibt alle Bullets der Feinde zurück
+   * Gibt die zentrale Projektilgruppe zurück
    */
   public getBullets(): Phaser.Physics.Arcade.Group {
-    // Verwende die zentrale Gruppe, die alle Projektile enthält, auch von zerstörten Feinden
     return this.allEnemyBullets;
   }
 
   /**
-   * Zerstört einen bestimmten Feind
+   * Zerstört einen Feind basierend auf seinem Sprite
    */
   public destroyEnemy(enemySprite: Phaser.GameObjects.GameObject): void {
-    console.log('EnemyManager: destroyEnemy aufgerufen');
-    
-    // Suche nach dem Feind in der Liste der normalen Feinde
-    for (let i = 0; i < this.basicEnemies.length; i++) {
-      if (this.basicEnemies[i].getSprite() === enemySprite) {
-        console.log('EnemyManager: Normaler Feind gefunden, wird zerstört');
-        this.basicEnemies[i].destroy();
-        this.basicEnemies.splice(i, 1);
-        return;
+    // Suche zuerst in den normalen Feinden
+    const basicEnemy = this.basicEnemies.find(enemy => enemy.getSprite() === enemySprite);
+    if (basicEnemy) {
+      basicEnemy.destroy();
+      const index = this.basicEnemies.indexOf(basicEnemy);
+      if (index > -1) {
+        this.basicEnemies.splice(index, 1);
+      }
+      return;
+    }
+
+    // Wenn nicht gefunden, suche in den Bossen
+    const bossEnemy = this.bossEnemies.find(boss => boss.getSprite() === enemySprite);
+    if (bossEnemy) {
+      bossEnemy.destroy();
+      const index = this.bossEnemies.indexOf(bossEnemy);
+      if (index > -1) {
+        this.bossEnemies.splice(index, 1);
       }
     }
-    
-    // Suche nach dem Feind in der Liste der Bosse
-    for (let i = 0; i < this.bossEnemies.length; i++) {
-      if (this.bossEnemies[i].getSprite() === enemySprite) {
-        console.log('EnemyManager: Boss gefunden, wird zerstört');
-        this.bossEnemies[i].destroy();
-        this.bossEnemies.splice(i, 1);
-        return;
-      }
-    }
-    
-    console.log('EnemyManager: Kein passender Feind gefunden');
   }
 
   /**

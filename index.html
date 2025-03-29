@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>Echoes from the Rift</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <!-- Cache-Kontrolle: Verhindert das Caching NUR der HTML-Seite -->
+    <!-- Cache-Kontrolle: Verhindert das Caching der HTML-Seite -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -27,22 +27,6 @@
             max-height: 100vh;
         }
     </style>
-    <script>
-        // Kleine Funktion, die sicherstellt, dass die HTML-Seite immer neu geladen wird
-        // Der Zeitstempel verhindert das Caching der HTML-Seite
-        window.addEventListener('load', function() {
-            if (window.location.href.indexOf('nocache') === -1) {
-                const timestamp = new Date().getTime();
-                const currentUrl = window.location.href;
-                const separator = currentUrl.indexOf('?') !== -1 ? '&' : '?';
-                // Nur bei normalen Seitenaufrufen, nicht bei Hot-Reloading
-                if (!window.location.href.includes('webpack-dev-server')) {
-                    history.replaceState(null, document.title, 
-                        currentUrl + separator + 'nocache=' + timestamp);
-                }
-            }
-        });
-    </script>
 </head>
 <body>
     <div id="game"></div>
