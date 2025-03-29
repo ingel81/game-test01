@@ -211,9 +211,15 @@ export class NewEnemyManager {
     }
     
     console.log(`[ENEMY_MANAGER] Boss-Spawn-Timer ausgelöst. Starte Boss-Spawn...`);
-    // Boss näher am rechten Bildschirmrand spawnen, damit er schneller ins Bild kommt
-    const x = this.scene.scale.width * 0.85;
-    const y = this.scene.scale.height / 2;
+    
+    // FIX: Zufällige Position (x und y) für den Boss-Spawn
+    const x = this.scene.scale.width + 50;
+    
+    // FIX: Zufällige vertikale Position im sicheren Bereich des Bildschirms
+    // Vorher war es immer in der Mitte (this.scene.scale.height / 2)
+    const minY = 150; // Sicherer Abstand vom oberen Rand
+    const maxY = this.scene.scale.height - 150; // Sicherer Abstand vom unteren Rand
+    const y = Phaser.Math.Between(minY, maxY);
     
     console.log(`[ENEMY_MANAGER] Boss-Spawn Position: (${x}, ${y}), Bildschirmgröße: ${this.scene.scale.width}x${this.scene.scale.height}`);
     

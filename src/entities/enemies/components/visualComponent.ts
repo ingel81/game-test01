@@ -237,18 +237,27 @@ export class VisualComponent {
         this.destroy();
       });
     } else {
-      // Standardmäßige Todes-Effekte ohne Animation
+      // FIX: Bevor wir den Tween starten, stellen wir sicher, dass die Tint zurückgesetzt wird
+      this.sprite.clearTint();
+      
+      // Schnellere Todes-Animation ohne lange Verzögerung
       this.scene.tweens.add({
         targets: this.sprite,
         alpha: 0,
-        scaleX: 1.5,
-        scaleY: 1.5,
-        duration: 300,
+        scaleX: 1.2, // Reduziert von 1.5 auf 1.2
+        scaleY: 1.2, // Reduziert von 1.5 auf 1.2
+        duration: 150, // Reduziert von 300 auf 150 (schnellere Animation)
         ease: 'Quad.easeOut',
+        // FIX: Sofort das Sprite zerstören, nachdem der Tween abgeschlossen ist
         onComplete: () => {
-          this.destroy();
+          if (this.sprite && this.sprite.active) {
+            this.sprite.destroy();
+          }
         }
       });
+      
+      // FIX: Wir verzichten auf den direkten Aufruf von destroy() hier, 
+      // da dies im onComplete-Handler des Tweens passiert
     }
   }
 

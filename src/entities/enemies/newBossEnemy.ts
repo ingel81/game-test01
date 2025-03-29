@@ -136,9 +136,9 @@ export class BossEnemy extends BaseEnemy {
     const healthPercent = this.health / this.maxHealth;
     const barWidth = this.healthBarWidth * healthPercent;
     
-    // Position der Anzeige über dem Boss
+    // Position der Anzeige - FIX: Direkter über dem Boss
     const barX = this.sprite.x - this.healthBarWidth / 2;
-    const barY = this.sprite.y - this.sprite.height / 2 - 15;
+    const barY = this.sprite.y - this.sprite.height / 2 - 5; // Vorher -15, jetzt näher am Boss (-5)
     
     // Zeichne den Hintergrund (grauer Balken)
     this.healthBar.fillStyle(0x666666, 0.8);
@@ -207,6 +207,8 @@ export class BossEnemy extends BaseEnemy {
     this.currentPhase = phase;
     this.phaseTimer = this.scene.time.now + this.phaseDuration;
     
+    console.log(`[BOSS] Wechsel zu Phase: ${phase}`);
+    
     // Setze Bewegungs- und Schussmuster
     const patterns = this.phasePatterns[phase];
     this.movementComponent.setPattern(patterns.movement);
@@ -218,18 +220,30 @@ export class BossEnemy extends BaseEnemy {
         // Eingangsphase: Bewegung auf den Bildschirm
         this.sprite.setData('invulnerable', true);
         this.isInvulnerable = true;
+        console.log(`[BOSS] Entry-Phase: Unverwundbar gesetzt: ${this.isInvulnerable}`);
         
         // Nach 3 Sekunden zur Phase 1 wechseln
         this.scene.time.delayedCall(3000, () => {
-          this.enterPhase('phase1');
+          if (!this.isDestroyed) {
+            this.enterPhase('phase1');
+          }
         });
         break;
         
       case 'phase1':
-        // Phase 1: Normaler Angriff
+        // Phase 1: Normaler Angriff - Wichtig: Boss kann jetzt Schaden nehmen
         this.sprite.setData('invulnerable', false);
         this.isInvulnerable = false;
         this.attackInterval = 3000;
+        // Stelle DEFINITIV sicher, dass die Unverwundbarkeit aufgehoben wird
+        setTimeout(() => {
+          if (!this.isDestroyed) {
+            this.isInvulnerable = false;
+            this.sprite.setData('invulnerable', false);
+            console.log(`[BOSS] FINAL CHECK: Unverwundbarkeit nochmals zurückgesetzt: ${this.isInvulnerable}`);
+          }
+        }, 100);
+        console.log(`[BOSS] Phase 1: Unverwundbar zurückgesetzt: ${this.isInvulnerable}`);
         break;
         
       case 'phase2':
@@ -279,8 +293,8 @@ export class BossEnemy extends BaseEnemy {
     this.scene.tweens.add({
       targets: this.sprite,
       alpha: 0.5,
-      scaleX: 1.7,
-      scaleY: 1.7,
+      scaleX: 0.6,
+      scaleY: 0.6,
       duration: 300,
       yoyo: true,
       ease: 'Quad.easeOut'
@@ -449,45 +463,185 @@ export class BossEnemy extends BaseEnemy {
   private performPhaseAttack(): void {
     switch (this.currentPhase) {
       case 'phase1':
-        if (Math.random() < 0.3) {
-          this.fire360Degrees(8); // 8 Projektile
+        // FIX: In Phase 1 mehr 360-Grad-Angriffe und Spiralmuster
+        if (Math.random() < 0.5) { // Erhöht von 0.3 auf 0.5
+          this.fire360Degrees(8);
+        } else if (Math.random() < 0.5) {
+          this.fireSpiralPattern(6, 0.2); // Neues Spiralmuster
         }
         break;
         
       case 'phase2':
-        if (Math.random() < 0.4) {
+        // FIX: In Phase 2 mehr Wellenangriffe und Kreuzfeuer
+        if (Math.random() < 0.6) { // Erhöht von 0.4 auf 0.6
           this.fireWave();
+        } else {
+          this.fireCrossPattern(); // Neues Kreuzmuster
         }
         break;
         
       case 'phase3':
-        if (Math.random() < 0.5) {
-          this.fire360Degrees(12); // 12 Projektile
+        // FIX: In Phase 3 komplexere Kombinationsangriffe
+        const attack3 = Math.random();
+        if (attack3 < 0.4) {
+          this.fire360Degrees(12);
+        } else if (attack3 < 0.7) {
+          this.fireSpiralPattern(8, 0.15);
+        } else {
+          this.fireWave();
+          // Nach kurzer Verzögerung ein Kreuzfeuer
+          this.scene.time.delayedCall(300, () => {
+            if (!this.isDestroyed) {
+              this.fireCrossPattern();
+            }
+          });
         }
         break;
         
       case 'rage':
-        // In Rage-Modus häufiger spezielle Angriffe
-        const attackType = Math.floor(Math.random() * 3);
+        // FIX: In Rage-Modus noch spektakulärere Angriffsmuster
+        const attackType = Math.floor(Math.random() * 4); // Erweitert auf 4 Angriffsmuster
         
         switch (attackType) {
           case 0:
-            this.fire360Degrees(16); // 16 Projektile
+            this.fire360Degrees(16);
             break;
           case 1:
             this.fireWave();
-            break;
-          case 2:
-            // Beide Angriffe kombinieren
-            this.fire360Degrees(12);
-            this.scene.time.delayedCall(500, () => {
+            // Nach einer kurzen Verzögerung einen zweiten Wellenangriff
+            this.scene.time.delayedCall(300, () => {
               if (!this.isDestroyed) {
                 this.fireWave();
               }
             });
             break;
+          case 2:
+            // Kombinationsangriff
+            this.fireSpiralPattern(10, 0.12);
+            this.scene.time.delayedCall(400, () => {
+              if (!this.isDestroyed) {
+                this.fireCrossPattern();
+              }
+            });
+            break;
+          case 3:
+            // Mehrfache 360-Grad-Angriffe in Abständen
+            this.fireFollowUpPattern();
+            break;
         }
         break;
+    }
+  }
+  
+  /**
+   * Feuert Projektile in einem Spiralmuster
+   */
+  private fireSpiralPattern(bulletCount: number, angleStep: number): void {
+    let currentAngle = 0;
+    
+    // Erstellt eine Spirale von Projektilen
+    for (let i = 0; i < bulletCount; i++) {
+      this.scene.time.delayedCall(i * 80, () => {
+        if (this.isDestroyed) return;
+        
+        currentAngle += 30;
+        
+        for (let j = 0; j < 3; j++) {
+          const angle = currentAngle + j * 120; // 3 Projektile gleichzeitig, 120 Grad auseinander
+          
+          const radians = Phaser.Math.DegToRad(angle);
+          const x = this.sprite.x + Math.cos(radians) * 30;
+          const y = this.sprite.y + Math.sin(radians) * 30;
+          
+          const bullet = this.weaponComponent.getBullets().get(x, y) as Phaser.Physics.Arcade.Sprite;
+          
+          if (bullet) {
+            bullet.setActive(true);
+            bullet.setVisible(true);
+            bullet.setData('type', 'enemyBullet');
+            
+            const speed = 200;
+            bullet.setVelocity(Math.cos(radians) * speed, Math.sin(radians) * speed);
+            bullet.setRotation(radians);
+            
+            this.eventBus.emit('REGISTER_ENEMY_BULLET', bullet);
+          }
+        }
+        
+        // Sound-Effekt bei jedem dritten Schuss
+        if (i % 3 === 0) {
+          this.scene.sound.play(Constants.SOUND_ENEMY_SHOOT, { volume: 0.2 });
+        }
+      });
+    }
+    
+    // Visuelles Feedback
+    this.scene.tweens.add({
+      targets: this.sprite,
+      scaleX: 0.55,
+      scaleY: 0.55,
+      duration: 300,
+      yoyo: true
+    });
+  }
+  
+  /**
+   * Feuert Projektile im Kreuzmuster
+   */
+  private fireCrossPattern(): void {
+    // Feuert in 4 Richtungen (horizontal und vertikal)
+    const angles = [0, 90, 180, 270];
+    
+    for (const angle of angles) {
+      for (let i = 0; i < 3; i++) {
+        this.scene.time.delayedCall(i * 100, () => {
+          if (this.isDestroyed) return;
+          
+          const radians = Phaser.Math.DegToRad(angle);
+          const x = this.sprite.x + Math.cos(radians) * 30;
+          const y = this.sprite.y + Math.sin(radians) * 30;
+          
+          const bullet = this.weaponComponent.getBullets().get(x, y) as Phaser.Physics.Arcade.Sprite;
+          
+          if (bullet) {
+            bullet.setActive(true);
+            bullet.setVisible(true);
+            bullet.setData('type', 'enemyBullet');
+            
+            const speed = 220 + i * 20; // Projektile werden schneller
+            bullet.setVelocity(Math.cos(radians) * speed, Math.sin(radians) * speed);
+            bullet.setRotation(radians);
+            
+            this.eventBus.emit('REGISTER_ENEMY_BULLET', bullet);
+          }
+        });
+      }
+    }
+    
+    // Sound-Effekt
+    this.scene.sound.play(Constants.SOUND_ENEMY_SHOOT, { volume: 0.3 });
+    
+    // Visuelles Feedback
+    this.scene.tweens.add({
+      targets: this.sprite,
+      angle: this.sprite.angle + 45,
+      duration: 200,
+      yoyo: true
+    });
+  }
+  
+  /**
+   * Feuert mehrere Wellen von 360-Grad-Projektilen
+   */
+  private fireFollowUpPattern(): void {
+    // Drei Wellen von 360-Grad-Schüssen
+    const bulletCounts = [6, 8, 10];
+    
+    for (let i = 0; i < bulletCounts.length; i++) {
+      this.scene.time.delayedCall(i * 300, () => {
+        if (this.isDestroyed) return;
+        this.fire360Degrees(bulletCounts[i]);
+      });
     }
   }
   
@@ -532,11 +686,11 @@ export class BossEnemy extends BaseEnemy {
       volume: 0.4
     });
     
-    // Visueller Effekt
+    // Visueller Effekt - reduziere die Größenänderung
     this.scene.tweens.add({
       targets: this.sprite,
-      scaleX: 1.3,
-      scaleY: 1.3,
+      scaleX: 0.6,
+      scaleY: 0.6,
       duration: 200,
       yoyo: true
     });
@@ -583,6 +737,15 @@ export class BossEnemy extends BaseEnemy {
    * Überschriebene takeDamage-Methode für Boss-spezifisches Verhalten
    */
   public takeDamage(amount: number): boolean {
+    console.log(`[BOSS] Schaden erhalten: ${amount}, Unverwundbar: ${this.isInvulnerable}, Schild aktiv: ${this.shieldActive}, Minions: ${this.minions.length}, Phase: ${this.currentPhase}`);
+    
+    // WICHTIG: Wenn der Boss in Phase 1 oder höher ist, ignoriere die isInvulnerable-Flag
+    if (this.currentPhase !== 'entry' && this.currentPhase !== 'retreat') {
+      // Force-Set die Unverwundbarkeit in Kampfphasen auf false
+      this.isInvulnerable = false;
+      this.sprite.setData('invulnerable', false);
+    }
+    
     // Wenn der Boss unverwundbar ist oder der Schild aktiv ist und Minions existieren
     if (this.isInvulnerable || (this.shieldActive && this.minions.length > 0)) {
       // Visuelles Feedback, aber kein Schaden
@@ -595,11 +758,16 @@ export class BossEnemy extends BaseEnemy {
         });
       }
       
+      console.log(`[BOSS] Schaden geblockt durch Unverwundbarkeit oder Schild, Phase: ${this.currentPhase}`);
       return false;
     }
     
     // Normaler Schadensverlauf
+    console.log(`[BOSS] Schaden wird angewendet: ${amount}`);
     const wasDestroyed = super.takeDamage(amount);
+    
+    // Log den aktuellen Gesundheitszustand
+    console.log(`[BOSS] Nach Schaden: HP=${this.health}/${this.maxHealth}, Prozent=${this.getHealthPercentage()}`);
     
     // Aktualisiere die Gesundheitsanzeige
     this.updateHealthBar();
@@ -617,6 +785,13 @@ export class BossEnemy extends BaseEnemy {
    */
   private onBossDestroyed(): void {
     console.log(`[BOSS] Boss wird zerstört mit ${this.health} HP`);
+    
+    // Entferne sofort die Gesundheitsanzeige
+    if (this.healthBar) {
+      this.healthBar.clear();
+      this.healthBar.destroy();
+      this.healthBar = null;
+    }
     
     // Event auslösen, dass der Boss zerstört wurde
     this.eventBus.emit('BOSS_DESTROYED', this);
@@ -653,11 +828,45 @@ export class BossEnemy extends BaseEnemy {
       this.shieldSprite = null;
     }
     
+    // NEUE FUNKTION: Spawne PowerUps
+    this.spawnBossPowerups();
+    
     // Benachrichtige das Spiel über den Boss-Tod
     this.eventBus.emit(EventType.BOSS_DESTROYED, {
       boss: this,
       score: this.scoreValue
     });
+  }
+  
+  /**
+   * Spawnt PowerUps nach der Zerstörung des Bosses
+   */
+  private spawnBossPowerups(): void {
+    // 30% Chance für ein Power-Pickups
+    if (Math.random() < 0.3) {
+      const powerPickupCount = 1;
+      
+      for (let i = 0; i < powerPickupCount; i++) {
+        const offsetX = Phaser.Math.Between(-30, 30);
+        const offsetY = Phaser.Math.Between(-30, 30);
+        
+        this.eventBus.emit('CREATE_POWER_PICKUP', { 
+          x: this.sprite.x + offsetX, 
+          y: this.sprite.y + offsetY 
+        });
+      }
+    }
+    
+    // 50% Chance für 1 Energie-Pickup
+    if (Math.random() < 0.5) {
+      const offsetX = Phaser.Math.Between(-40, 40);
+      const offsetY = Phaser.Math.Between(-40, 40);
+      
+      this.eventBus.emit('CREATE_ENERGY_PICKUP', { 
+        x: this.sprite.x + offsetX, 
+        y: this.sprite.y + offsetY 
+      });
+    }
   }
   
   /**

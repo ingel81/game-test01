@@ -23,7 +23,7 @@ export class MainMenuScene extends BaseScene {
     this.load.audio(Constants.SOUND_BACKGROUND, 'assets/music/01.mp3');
     
     // Lade das Titel-Logo
-    this.load.image('logo', 'assets/logo/title.png');
+    this.load.image('logo', 'assets/logo/title4.png');
   }
 
   /**
@@ -50,8 +50,8 @@ export class MainMenuScene extends BaseScene {
     // Füge einen leichten Glow-Effekt hinzu
     this.tweens.add({
       targets: logo,
-      alpha: 0.7,
-      duration: 1500,
+      alpha: 0.5,
+      duration: 2500,
       yoyo: true,
       repeat: -1,
       ease: 'Sine.easeInOut'

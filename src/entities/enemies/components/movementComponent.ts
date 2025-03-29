@@ -134,6 +134,43 @@ export class MovementComponent {
         this.moveRandom(time, normalizedDelta);
         break;
     }
+    
+    // NEU: Prüfe und beschränke die Y-Position, um zu verhindern, dass Gegner den Bildschirm verlassen
+    this.keepEnemyOnScreen();
+  }
+
+  /**
+   * Sorgt dafür, dass der Gegner im sichtbaren Bereich des Bildschirms bleibt
+   */
+  private keepEnemyOnScreen(): void {
+    // Sicherheitsabstand zum Rand
+    const padding = 30;
+    
+    // Bildschirmgrenzen mit Sicherheitsabstand
+    const minY = padding + this.sprite.height / 2;
+    const maxY = this.scene.scale.height - padding - this.sprite.height / 2;
+    
+    // Aktuelle Position
+    let currentY = this.sprite.y;
+    let currentVelocityY = this.sprite.body.velocity.y;
+    
+    // Wenn der Gegner den oberen oder unteren Rand erreicht, Position anpassen und Bewegung umkehren
+    if (currentY < minY) {
+      this.sprite.y = minY;
+      
+      // Wenn sich der Gegner nach oben bewegt, Bewegung umkehren
+      if (currentVelocityY < 0) {
+        this.sprite.setVelocityY(-currentVelocityY * 0.5); // Dämpfung bei Richtungsumkehr
+      }
+    } 
+    else if (currentY > maxY) {
+      this.sprite.y = maxY;
+      
+      // Wenn sich der Gegner nach unten bewegt, Bewegung umkehren
+      if (currentVelocityY > 0) {
+        this.sprite.setVelocityY(-currentVelocityY * 0.5); // Dämpfung bei Richtungsumkehr
+      }
+    }
   }
 
   /**
@@ -181,13 +218,21 @@ export class MovementComponent {
   private moveZigzag(time: number, normalizedDelta: number): void {
     this.sprite.setVelocityX(this.baseVelocityX);
     
-    // Berechne die Sinusbewegung mit reduzierter Amplitude
-    const baseY = this.lastPositionY;
-    const yOffset = Math.sin(time * this.zigzagFrequency) * this.zigzagAmplitude;
+    // NEU: Begrenze die Amplitude, damit die Zickzack-Bewegung nicht aus dem Bildschirm führt
+    const screenHeight = this.scene.scale.height;
+    const safetyMargin = 60; // Sicherheitsabstand vom Bildschirmrand
+    const maxAmplitude = (screenHeight / 2) - safetyMargin - this.sprite.height / 2;
     
-    // Sanftere Bewegung zum Ziel mit dämpfendem Faktor
+    // Nutze die kleinere der beiden Amplituden
+    const effectiveAmplitude = Math.min(this.zigzagAmplitude, maxAmplitude);
+    
+    // Berechne die Sinusbewegung mit begrenzter Amplitude
+    const baseY = this.lastPositionY;
+    const yOffset = Math.sin(time * this.zigzagFrequency) * effectiveAmplitude;
+    
+    // FIX: Sanftere Bewegung zum Ziel mit stärkerem dämpfendem Faktor
     const targetY = baseY + yOffset;
-    const smoothingFactor = 3.0; // Niedriger für sanftere Bewegung
+    const smoothingFactor = 1.5; // Vorher 3.0 - reduziert für sanftere vertikale Bewegung
     const currentVelocityY = (targetY - this.sprite.y) * smoothingFactor;
     
     this.sprite.setVelocityY(currentVelocityY);
@@ -200,7 +245,15 @@ export class MovementComponent {
     this.circleAngle += this.circleSpeed * normalizedDelta;
     this.sprite.setVelocityX(this.baseVelocityX);
     
-    const targetY = this.lastPositionY + Math.sin(this.circleAngle) * this.circleRadius;
+    // NEU: Begrenze den Radius der Kreisbewegung für die Bildschirmgrenzen
+    const screenHeight = this.scene.scale.height;
+    const safetyMargin = 60; // Sicherheitsabstand vom Bildschirmrand
+    const maxRadius = (screenHeight / 2) - safetyMargin - this.sprite.height / 2;
+    
+    // Nutze den kleineren der beiden Radien
+    const effectiveRadius = Math.min(this.circleRadius, maxRadius);
+    
+    const targetY = this.lastPositionY + Math.sin(this.circleAngle) * effectiveRadius;
     const velocityY = (targetY - this.sprite.y) * 10;
     this.sprite.setVelocityY(velocityY);
   }
@@ -237,6 +290,12 @@ export class MovementComponent {
       const maxX = this.scene.scale.width - this.sprite.width * 0.5;
       targetX = Math.min(maxX, targetX);
       
+      // NEU: Begrenze auch die Y-Position innerhalb des sichtbaren Bereichs
+      const safetyMargin = 40; // Sicherheitsabstand vom Bildschirmrand
+      const minY = safetyMargin + this.sprite.height / 2;
+      const maxY = this.scene.scale.height - safetyMargin - this.sprite.height / 2;
+      targetY = Math.max(minY, Math.min(maxY, targetY));
+      
       // Debug-Logging
       if (Math.random() < 0.01) {
         console.log(`[MOVEMENT] Tracking: Position (${this.sprite.x.toFixed(0)}, ${this.sprite.y.toFixed(0)}), Ziel (${targetX.toFixed(0)}, ${targetY.toFixed(0)})`);
@@ -256,6 +315,12 @@ export class MovementComponent {
       
       targetX = this.sprite.x + normCenterX * Math.abs(this.trackingFactor) * normalizedDelta * 0.1;
       targetY = this.sprite.y + normCenterY * Math.abs(this.trackingFactor) * normalizedDelta * 0.1;
+      
+      // NEU: Begrenze die Y-Position
+      const safetyMargin = 40; // Sicherheitsabstand vom Bildschirmrand
+      const minY = safetyMargin + this.sprite.height / 2;
+      const maxY = this.scene.scale.height - safetyMargin - this.sprite.height / 2;
+      targetY = Math.max(minY, Math.min(maxY, targetY));
     }
     
     // Setze die neue Position
@@ -280,7 +345,22 @@ export class MovementComponent {
       const direction = this.sprite.y > this.player.getSprite().y ? 1 : -1;
       const randOffset = (Math.random() * 100) + 50;
       
-      this.sprite.setVelocityY(direction * randOffset);
+      // NEU: Prüfe, ob das Ausweichmanöver innerhalb des Bildschirms bleibt
+      const safetyMargin = 40; // Sicherheitsabstand vom Bildschirmrand
+      const minY = safetyMargin + this.sprite.height / 2;
+      const maxY = this.scene.scale.height - safetyMargin - this.sprite.height / 2;
+      
+      // Berechne geplante neue Position
+      const plannedY = this.sprite.y + direction * randOffset;
+      
+      // Wenn die geplante Position außerhalb des sicheren Bereichs liegt, Richtung umkehren
+      if ((plannedY < minY && direction < 0) || (plannedY > maxY && direction > 0)) {
+        // Richtung umkehren und Geschwindigkeit anpassen
+        this.sprite.setVelocityY(-direction * randOffset);
+      } else {
+        // Normal ausweichen
+        this.sprite.setVelocityY(direction * randOffset);
+      }
       
       // Nächstes Manöver planen
       this.evasiveManeuverTime = time + 1000 + Math.random() * 1000;
@@ -295,11 +375,20 @@ export class MovementComponent {
     
     // Berechne die sinusförmige Bewegung
     const baseY = this.lastPositionY;
-    const yOffset = Math.sin(time * this.sinFrequency) * this.sinAmplitude;
     
-    // Sanfte Bewegung zum Ziel
+    // NEU: Begrenze die Amplitude, damit die Sinusbewegung nicht aus dem Bildschirm führt
+    const screenHeight = this.scene.scale.height;
+    const safetyMargin = 60; // Sicherheitsabstand vom Bildschirmrand
+    const maxAmplitude = (screenHeight / 2) - safetyMargin - this.sprite.height / 2;
+    
+    // Nutze die kleinere der beiden Amplituden
+    const effectiveAmplitude = Math.min(this.sinAmplitude, maxAmplitude);
+    
+    const yOffset = Math.sin(time * this.sinFrequency) * effectiveAmplitude;
+    
+    // FIX: Sanftere Bewegung zum Ziel mit reduziertem Multiplikator
     const targetY = baseY + yOffset;
-    const currentVelocityY = (targetY - this.sprite.y) * 5; // Multiplikator für Smoothing
+    const currentVelocityY = (targetY - this.sprite.y) * 2.5; // Vorher 5 - reduziert für sanftere Bewegung
     
     this.sprite.setVelocityY(currentVelocityY);
   }
@@ -312,9 +401,10 @@ export class MovementComponent {
     
     // Neues Ziel wählen, wenn Timer abgelaufen ist
     if (this.randomMoveTimer <= time) {
-      // Berechne einen neuen zufälligen Punkt innerhalb des sichtbaren Bereichs
-      const minY = 100;
-      const maxY = this.scene.scale.height - 100;
+      // NEU: Berechne einen neuen zufälligen Punkt innerhalb des sicheren sichtbaren Bereichs
+      const safetyMargin = 60; // Sicherheitsabstand vom Bildschirmrand
+      const minY = safetyMargin + this.sprite.height / 2;
+      const maxY = this.scene.scale.height - safetyMargin - this.sprite.height / 2;
       const randomY = minY + Math.random() * (maxY - minY);
       
       this.randomMoveTarget.set(this.sprite.x, randomY);

@@ -220,6 +220,13 @@ export class BaseEnemy extends GameObject {
    * Wird aufgerufen, wenn der Gegner zerstört wird
    */
   protected onDestroy(): void {
+    // Zerstöre sofort den Debug-Text
+    if (this.debugText) {
+      console.log(`[DEBUG-DESTROY] Zerstöre Debug-Text sofort in onDestroy() für ${this.constructor.name}`);
+      this.debugText.destroy();
+      this.debugText = null;
+    }
+    
     // Spiele Todes-Animation ab
     this.visualComponent.playDeathAnimation();
     
