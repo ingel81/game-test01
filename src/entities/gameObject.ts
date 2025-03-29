@@ -7,7 +7,7 @@ import { Entity } from './entity';
 export abstract class GameObject extends Entity {
   protected health: number;
   protected maxHealth: number;
-  protected isDestroyed: boolean = false;
+  public isDestroyed: boolean = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number, texture: string, health: number) {
     super(scene, x, y, texture);

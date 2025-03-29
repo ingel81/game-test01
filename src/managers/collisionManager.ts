@@ -1,6 +1,6 @@
 import { Scene, GameObjects, Physics } from 'phaser';
 import { Player } from '../entities/player/player';
-import { EnemyManager } from './enemyManager';
+import { NewEnemyManager } from './newEnemyManager';
 import { SpawnManager } from './spawnManager';
 import { Constants } from '../utils/constants';
 import { EventBus, EventType } from '../utils/eventBus';
@@ -12,7 +12,7 @@ import { EventBus, EventType } from '../utils/eventBus';
 export class CollisionManager {
   private scene: Scene;
   private player: Player;
-  private enemyManager: EnemyManager | null = null;
+  private enemyManager: NewEnemyManager | null = null;
   private spawnManager: SpawnManager | null = null;
   private eventBus: EventBus;
 
@@ -25,7 +25,7 @@ export class CollisionManager {
   /**
    * Setzt die Manager für Kollisionen
    */
-  public setManagers(enemyManager: EnemyManager, spawnManager: SpawnManager): void {
+  public setManagers(enemyManager: NewEnemyManager, spawnManager: SpawnManager): void {
     this.enemyManager = enemyManager;
     this.spawnManager = spawnManager;
     this.setupCollisions();
@@ -201,18 +201,40 @@ export class CollisionManager {
     if (!this.enemyManager || !bullet || !enemy) return;
     if (!bullet.active || !enemy.active) return;
     
+    // Hole den Schaden des Projektils (Standard ist Constants.BULLET_DAMAGE)
+    const damage = bullet.getData('damage') || Constants.BULLET_DAMAGE;
+    
     // Entferne das Projektil
     bullet.destroy();
     
-    // Zerstöre den Feind
-    this.enemyManager.destroyEnemy(enemy);
-    
-    // Emit event für Punktzahl
-    this.eventBus.emit(EventType.ENEMY_DESTROYED);
-    
-    // Explosionseffekt
-    const enemySprite = enemy as Phaser.Physics.Arcade.Sprite;
-    this.createExplosion(enemySprite.x, enemySprite.y);
+    // Feind nimmt Schaden (anstatt direkt zu zerstören)
+    const enemyInstance = (enemy as Phaser.Physics.Arcade.Sprite).getData('instance');
+    if (enemyInstance && typeof enemyInstance.takeDamage === 'function') {
+      // Der Rückgabewert von takeDamage ist true, wenn der Feind zerstört wurde
+      const wasDestroyed = enemyInstance.takeDamage(damage);
+      
+      // Nur ein Event auslösen, wenn der Feind zerstört wurde
+      if (wasDestroyed) {
+        // Emit event für Punktzahl
+        this.eventBus.emit(EventType.ENEMY_DESTROYED);
+        
+        // Explosionseffekt
+        const enemySprite = enemy as Phaser.Physics.Arcade.Sprite;
+        this.createExplosion(enemySprite.x, enemySprite.y);
+      } else {
+        // Kleiner Treffereffekt, wenn der Feind nur Schaden nimmt
+        const enemySprite = enemy as Phaser.Physics.Arcade.Sprite;
+        this.createExplosion(enemySprite.x, enemySprite.y, 0.3);
+      }
+    } else {
+      // Fallback für den Fall, dass der Feind keine takeDamage-Methode hat
+      this.enemyManager.destroyEnemy(enemy);
+      this.eventBus.emit(EventType.ENEMY_DESTROYED);
+      
+      // Explosionseffekt
+      const enemySprite = enemy as Phaser.Physics.Arcade.Sprite;
+      this.createExplosion(enemySprite.x, enemySprite.y);
+    }
   }
 
   /**

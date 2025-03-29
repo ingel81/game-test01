@@ -7,7 +7,7 @@ import { CollisionManager } from '../managers/collisionManager';
 import { GameUI } from '../ui/gameUI';
 import { DifficultyManager } from '../managers/difficultyManager';
 import { SoundManager } from '../managers/soundManager';
-import { EnemyManager } from '../managers/enemyManager';
+import { NewEnemyManager } from '../managers/newEnemyManager';
 import { GlowPipeline } from '../pipelines/glowPipeline';
 
 /**
@@ -16,7 +16,7 @@ import { GlowPipeline } from '../pipelines/glowPipeline';
 export class GameScene extends BaseScene {
   private player!: Player;
   private spawnManager!: SpawnManager;
-  private enemyManager!: EnemyManager;
+  private enemyManager!: NewEnemyManager;
   private collisionManager!: CollisionManager;
   private uiManager!: GameUI;
   private difficultyManager!: DifficultyManager;
@@ -43,10 +43,9 @@ export class GameScene extends BaseScene {
     this.load.image(Constants.ASSET_BULLET, 'assets/shoot/shoot1.png');
     
     // Lade die Feind-Assets
-    this.load.image(Constants.ASSET_ENEMY, 'assets/enemy/sprites/enemy1.png');
-    this.load.image('enemy6', 'assets/enemy/sprites/enemy6.png');
     this.load.image(Constants.ASSET_ENEMY_BULLET, 'assets/shoot/shoot2.png');
-    this.load.image(Constants.ASSET_BOSS, 'assets/enemy/sprites/enemy1.png');
+    this.load.image(Constants.ASSET_ENEMY, 'assets/enemy/sprites/enemy1.png');
+    this.load.image(Constants.ASSET_BOSS, 'assets/enemy/sprites/enemy6.png');
     
     // Lade die Umgebungs-Assets
     this.load.image(Constants.ASSET_ASTEROID, 'assets/asteroids/asteroid.png');
@@ -371,7 +370,7 @@ export class GameScene extends BaseScene {
    */
   private createManagers(): void {
     // Erstelle den Enemy Manager
-    this.enemyManager = new EnemyManager(this, this.player);
+    this.enemyManager = new NewEnemyManager(this, this.player);
     
     // Füge den Enemy Manager zur Registry hinzu, damit andere Klassen ihn finden können
     this.registry.set('enemyManager', this.enemyManager);

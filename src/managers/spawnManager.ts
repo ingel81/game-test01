@@ -273,7 +273,7 @@ export class SpawnManager {
    * Gibt den EnemyManager zurück
    */
   public getEnemyManager(): any {
-    return null; // TODO: Implementiere den EnemyManager
+    return this.scene.registry.get('enemyManager');
   }
 
   /**
