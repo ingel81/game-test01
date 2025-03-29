@@ -1,4 +1,4 @@
-# Spielentwicklung mit Phaser 3 - Dokumentation
+# Echoes From The Rift - Dokumentation
 
 ## 1. Übersicht
 
@@ -18,6 +18,7 @@ Die Anwendung ist wie folgt strukturiert:
 │   │   ├── enemies/   # Gegner-Klassen
 │   │   ├── player/    # Spieler-Klassen
 │   │   ├── pickups/   # Sammelgegenstände
+│   │   ├── environment/ # Umgebungsobjekte (Asteroiden, etc.)
 │   ├── managers/      # Manager-Klassen
 │   ├── scenes/        # Spielszenen
 │   ├── shaders/       # GLSL-Shader
@@ -27,6 +28,8 @@ Die Anwendung ist wie folgt strukturiert:
 ├── index.html         # Haupt-HTML-Datei
 ├── tsconfig.json      # TypeScript-Konfiguration
 ├── webpack.config.js  # Webpack-Konfiguration
+├── convert-assets.js  # Asset-Konvertierungsskript
+├── generate-sounds.js # Sound-Generierungsskript
 ```
 
 ## 3. Architektur
@@ -58,7 +61,7 @@ Abstrakte Basisklasse für alle Spielobjekte mit grundlegenden Funktionen für P
 - `sprite`: Phaser-Sprite für Rendering und Physik
 - `scene`: Referenz auf die aktuelle Szene
 
-**Methoden:**
+**Öffentliche Methoden:**
 - `getSprite()`: Gibt das Phaser-Sprite zurück
 - `update(time, delta)`: Abstrakte Methode für Frame-Updates
 - `destroy()`: Gibt Ressourcen frei
@@ -83,12 +86,15 @@ Erweitert Entity um Gesundheits- und Kollisionssystem.
 - `maxHealth`: Maximaler Gesundheitswert
 - `isDestroyed`: Flag, ob das Objekt zerstört wurde
 
-**Methoden:**
+**Öffentliche Methoden:**
 - `takeDamage(amount)`: Verarbeitet eingehenden Schaden
 - `getHealth()`: Gibt aktuelle Gesundheit zurück
 - `getMaxHealth()`: Gibt maximale Gesundheit zurück
 - `getHealthPercentage()`: Gibt Gesundheit als Prozentsatz zurück
 - `heal(amount)`: Erhöht die Gesundheit
+- `destroy()`: Überschreibt die Entity-Methode und ruft onDestroy auf
+
+**Geschützte Methoden:**
 - `onCollision(other)`: Abstrakte Methode für Kollisionsverarbeitung
 - `onDestroy()`: Abstrakte Methode, die bei Zerstörung aufgerufen wird
 
@@ -116,13 +122,16 @@ Hauptspielerklasse mit Steuerung, Bewegung und Waffensystem.
 - `acceleration`: Beschleunigungswert für Bewegung
 - `deceleration`: Abbremswert für Bewegung
 
-**Methoden:**
+**Öffentliche Methoden:**
 - `update(time, delta)`: Aktualisiert Spielerzustand
+- `takeDamage(amount)`: Überschriebene Methode für Spielerschaden
+
+**Private Methoden:**
 - `handleMovement(delta)`: Verarbeitet Bewegungseingaben
 - `handleShooting(time)`: Verarbeitet Schusseingaben
-- `takeDamage(amount)`: Überschriebene Methode für Spielerschaden
 - `onPowerUpCollected()`: Verarbeitet Power-Up-Sammlungen
 - `onEnergyPickupCollected(amount)`: Verarbeitet Energie-Sammlungen
+- `setupTouchControls()`: Richtet Touch-Steuerung ein (für mobile Geräte)
 
 ```typescript
 export class Player extends GameObject {
@@ -140,12 +149,16 @@ Verwaltet das Waffensystem des Spielers mit verschiedenen Waffenarten und Projek
 - `powerLevel`: Aktuelles Power-Level der Waffe
 - `lastShotTime`: Zeitpunkt des letzten Schusses
 
-**Methoden:**
+**Öffentliche Methoden:**
 - `shoot(x, y)`: Erzeugt Projektile
 - `upgradePowerLevel()`: Verbessert Waffenstärke
 - `update(delta)`: Aktualisiert aktive Projektile
 - `getActiveBulletCount()`: Gibt Anzahl aktiver Projektile zurück
+
+**Private Methoden:**
 - `shootBackward()`: Spezialfunktion für rückwärtige Schüsse
+- `createBullet(x, y, velX, velY)`: Erzeugt ein Projektil
+- `handleWorldBoundsCollision(body)`: Behandelt Kollisionen mit Weltgrenzen
 
 ### 3.4 Gegner-System
 
@@ -161,13 +174,17 @@ Hauptbasisklasse für alle Gegner mit Komponenten für Bewegung, Waffen und visu
 - `weaponComponent`: Waffenkomponente
 - `visualComponent`: Visuelle Effektkomponente
 
-**Methoden:**
+**Öffentliche Methoden:**
 - `update(time, delta)`: Aktualisiert alle Komponenten
 - `takeDamage(amount)`: Verarbeitet Schaden
+- `applyDifficulty(data)`: Passt Gegner an Schwierigkeitsgrad an
+
+**Geschützte Methoden:**
 - `getRandomMovementPattern()`: Gibt ein zufälliges Bewegungsmuster zurück
 - `getRandomShootingPattern()`: Gibt ein zufälliges Schussmuster zurück
 - `initComponents(config)`: Initialisiert alle Komponenten
-- `applyDifficulty(data)`: Passt Gegner an Schwierigkeitsgrad an
+- `onCollision(other)`: Verarbeitet Kollisionen
+- `onDestroy()`: Wird bei Zerstörung aufgerufen
 
 ```typescript
 export class BaseEnemy extends GameObject {
@@ -192,7 +209,23 @@ Verwaltet alle Bewegungsmuster für Gegner.
 - `sinusoidal`: Wellenförmige Bewegung
 - `random`: Zufällige Bewegung
 
-**Wichtige Methoden:**
+**Konfigurationsoptionen:**
+- `pattern`: Das zu verwendende Bewegungsmuster
+- `speed`: Bewegungsgeschwindigkeit
+- `baseVelocityX`: Grundgeschwindigkeit in X-Richtung
+- `amplitude`: Allgemeine Amplitude für Bewegungsmuster
+- `frequency`: Allgemeine Frequenz für Bewegungsmuster
+- `zigzagAmplitude`: Spezifische Amplitude für Zickzack-Bewegung
+- `zigzagFrequency`: Spezifische Frequenz für Zickzack-Bewegung
+- `circleRadius`: Radius für Kreisbewegung
+- `circleSpeed`: Geschwindigkeit für Kreisbewegung
+- `trackingFactor`: Faktor für Spielerverfolgung
+- `predictiveAimFactor`: Faktor für vorausschauendes Zielen
+- `evadeDistance`: Abstand für Ausweichbewegungen
+- `changePatternRandomly`: Ob das Muster zufällig gewechselt werden soll
+- `patternChangeInterval`: Intervall für Musterwechsel
+
+**Öffentliche Methoden:**
 - `update(time, delta)`: Aktualisiert die Bewegung
 - `setPattern(pattern)`: Setzt ein bestimmtes Bewegungsmuster
 - `adjustForDifficulty(difficulty)`: Passt Bewegung an Schwierigkeit an
@@ -207,24 +240,41 @@ Verwaltet alle Schussmuster und Projektilerzeugung.
 - `spread`: Fächerschuss
 - `random`: Zufällige Kombination aus verschiedenen Schussmustern
 
-**Wichtige Methoden:**
+**Konfigurationsoptionen:**
+- `pattern`: Das zu verwendende Schussmuster
+- `fireRate`: Schussfrequenz in Millisekunden
+- `bulletSpeed`: Geschwindigkeit der Projektile
+- `bulletTexture`: Textur für Projektile
+- `burstCount`: Anzahl der Projektile in einer Burst-Serie
+- `burstDelay`: Verzögerung zwischen Burst-Schüssen
+- `spreadAngle`: Winkel für Fächerschüsse
+- `spreadCount`: Anzahl der Projektile bei Fächerschüssen
+- `predictiveAim`: Ob vorausschauend gezielt werden soll
+- `targetPlayer`: Ob direkt auf den Spieler gezielt werden soll
+- `changePatternRandomly`: Ob das Muster zufällig gewechselt werden soll
+- `patternChangeInterval`: Intervall für Musterwechsel
+
+**Öffentliche Methoden:**
 - `update(time, delta)`: Aktualisiert Waffensystem
 - `setPattern(pattern)`: Setzt ein bestimmtes Schussmuster
+- `adjustForDifficulty(difficulty)`: Passt Waffe an Schwierigkeit an
+
+**Private Methoden:**
 - `fireBullet()`: Erzeugt ein einzelnes Projektil
 - `fireSpread()`: Erzeugt einen Fächer aus Projektilen
-- `adjustForDifficulty(difficulty)`: Passt Waffe an Schwierigkeit an
+- `changePattern()`: Ändert das Schussmuster zufällig
 
 ##### VisualComponent
 Verwaltet visuelle Aspekte von Gegnern.
 
-**Funktionen:**
-- Farbeffekte und Tints
-- Treffereffekte (Blinken, Farbwechsel)
-- Todesanimationen
-- Partikeleffekte
-- Skalierung und Rotation
+**Konfigurationsoptionen:**
+- `tint`: Farbton für den Sprite
+- `scale`: Skalierungsfaktor
+- `hitEffectDuration`: Dauer des Treffereffekts
+- `glowEffect`: Ob ein Glüheffekt aktiviert sein soll
+- `particleEffect`: Ob Partikeleffekte aktiviert sein sollen
 
-**Wichtige Methoden:**
+**Öffentliche Methoden:**
 - `update(time, delta)`: Aktualisiert visuelle Effekte
 - `playHitEffect()`: Zeigt Treffereffekt
 - `playDeathEffect()`: Zeigt Todeseffekt
@@ -233,7 +283,7 @@ Verwaltet visuelle Aspekte von Gegnern.
 - **StandardEnemy**: Einfacher Standardgegner
 - **AdvancedEnemy**: Fortgeschrittener Gegner mit komplexeren Verhaltensweisen
 - **EliteEnemy**: Elitegegner mit Spezialangriffen
-- **BossEnemy**: Komplexer Bossgegner mit mehreren Phasen
+- **BossEnemy**: Komplexer Bossgegner mit mehreren Phasen (Dateiname: newBossEnemy.ts)
 
 ### 3.5 Szenen-System
 
@@ -246,7 +296,7 @@ Abstrakte Basisklasse für alle Spielszenen mit gemeinsamen Funktionen.
 - `planetsBackground`: Planetenhintergrund
 - `fpsDisplay`: FPS-Anzeige
 
-**Methoden:**
+**Öffentliche/Protected Methoden:**
 - `preload()`: Lädt gemeinsame Assets
 - `create()`: Erstellt UI-Elemente und Hintergrund
 - `update(time, delta)`: Standardupdates für alle Szenen
@@ -256,7 +306,7 @@ Abstrakte Basisklasse für alle Spielszenen mit gemeinsamen Funktionen.
 - `createStars()`: Erstellt Sternenhintergrund
 - `updateStars(delta)`: Aktualisiert Sternenhintergrund
 - `createPlanetsBackground()`: Erstellt Planetenhintergrund
-- `createFpsDisplay()`: Erstellt FPS-Anzeige
+- `createFpsDisplay()`: Erstellt FPS-Anzeige für Debug-Zwecke
 
 ```typescript
 export abstract class BaseScene extends Phaser.Scene {
@@ -277,7 +327,7 @@ export abstract class BaseScene extends Phaser.Scene {
 #### EventBus (src/utils/eventBus.ts)
 Implementiert ein Publisher-Subscriber-Muster für die Kommunikation zwischen verschiedenen Spielkomponenten.
 
-**Methoden:**
+**Öffentliche Methoden:**
 - `getInstance()`: Gibt die Singleton-Instanz zurück
 - `resetInstance()`: Setzt die EventBus-Instanz zurück
 - `on(event, callback)`: Registriert einen Event-Listener
@@ -286,7 +336,7 @@ Implementiert ein Publisher-Subscriber-Muster für die Kommunikation zwischen ve
 - `removeAllListeners(event)`: Entfernt alle Listener für ein Event
 - `removeAllEvents()`: Entfernt alle Event-Listener
 
-**Verfügbare Events (EventType):**
+**Im EventType-Enum definierte Events:**
 - `PLAYER_CREATED`: Spieler wurde erstellt
 - `ENEMY_KILLED`: Gegner wurde getötet (durch Spieler)
 - `ENEMY_DESTROYED`: Gegner wurde zerstört (allgemein)
@@ -304,6 +354,8 @@ Implementiert ein Publisher-Subscriber-Muster für die Kommunikation zwischen ve
 - `BOSS_DESTROYED`: Boss wurde zerstört
 - `GAME_START`: Spiel wurde gestartet
 - `POWER_PICKUP_COLLECTED`: Power-Pickup wurde gesammelt
+
+**Zusätzliche String-Events (nicht im Enum):**
 - `CREATE_SMALL_ASTEROID`: Erstellt einen kleinen Asteroiden
 - `CREATE_ENERGY_PICKUP`: Erstellt ein Energie-Pickup
 - `CREATE_POWER_PICKUP`: Erstellt ein Power-Pickup
@@ -313,7 +365,7 @@ Implementiert ein Publisher-Subscriber-Muster für die Kommunikation zwischen ve
 // Beispiel zur Verwendung
 const eventBus = EventBus.getInstance();
 eventBus.on(EventType.ENEMY_DESTROYED, this.handleEnemyDestroyed);
-eventBus.emit(EventType.SCORE_UPDATED, points);
+eventBus.emit(EventType.SCORE_CHANGED, points);
 ```
 
 ## 4. Implementierungsleitfaden
@@ -390,6 +442,12 @@ export class MyNewEnemy extends BaseEnemy {
   }
   
   // Spezifische Anpassungen falls benötigt
+  protected onDestroy(): void {
+    super.onDestroy(); // Falls die Basisklasse eine Implementierung hat
+    
+    // Eigene Logik für Zerstörung hinzufügen
+    this.eventBus.emit('CREATE_ENERGY_PICKUP', { x: this.sprite.x, y: this.sprite.y });
+  }
 }
 ```
 
@@ -510,3 +568,70 @@ node generate-sounds.js
 ## 10. Schlussfolgerung
 
 Dieses Projekt bietet eine solide Grundlage für die Entwicklung von 2D-Spielen mit Phaser 3. Die komponentenbasierte Architektur ermöglicht einfache Erweiterbarkeit und Wartbarkeit. Die vorgeschlagenen Verbesserungen können als Fahrplan für die Weiterentwicklung des Projekts dienen. 
+
+## 11. To-Do: Dokumentation aktualisieren
+
+Die folgende Liste enthält Unstimmigkeiten zwischen dieser README und dem tatsächlichen Code, die in zukünftigen Updates der Dokumentation adressiert werden sollten:
+
+### 11.1 Fehlende oder unvollständige Dokumentation
+
+1. **Shader-System**: Das `/src/shaders/` Verzeichnis ist leer, die GLSL-Shader sind direkt in der `glowPipeline.ts` im `/src/pipelines/` Verzeichnis als Strings implementiert.
+
+2. **Enemy-Manager**: Der `newEnemyManager.ts` (23KB) ist umfangreicher als in der Dokumentation beschrieben und verdient eine detailliertere Erklärung.
+
+3. **VisualComponent**: Die tatsächliche Implementierung enthält mehr Funktionen und Parameter als dokumentiert, wie z.B.:
+   - `animationPrefix`
+   - `rotationSpeed`
+   - `deathAnimationKey`
+   - Methoden für pulsierende Kreise
+   - Komplexere Glow-Effekte mit Tweens
+
+4. **UI-Komponenten**: Die README beschreibt nicht die spezifischen UI-Komponenten:
+   - `fpsDisplay.ts`
+   - `planetsBackground.ts`
+   - `scoreDisplay.ts`
+   - `healthBar.ts`
+   - `gameUI.ts`
+
+5. **Kollisionsmanagement**: Der `collisionManager.ts` (14KB) sollte detaillierter beschrieben werden.
+
+6. **SpawnManager**: Die `spawnManager.ts`-Datei (12KB) wird nicht in der README erwähnt, ist aber ein wichtiger Bestandteil des Spiels.
+
+7. **DifficultyManager**: Der `difficultyManager.ts` implementiert ein Schwierigkeitssystem, das in der Dokumentation kaum erwähnt wird.
+
+8. **Animationssystem**: Das in `VisualComponent` implementierte Animationssystem sollte dokumentiert werden.
+
+9. **Touch-Controls**: Die `touchControls.ts` bietet mehr Funktionalität als in der README beschrieben.
+
+~~10. **Spielertitel**: Das Spiel heißt in der `index.html` "Echoes from the Rift", in der README wird es allgemein als "2D-Weltraum-Shooter" bezeichnet.~~
+
+### 11.2 Strukturelle Unstimmigkeiten
+
+~~1. **Doppelte Konfiguration**: Es gibt zwei Konfigurationsdateien:~~
+   - `src/core/config.ts` 
+   - ~~`src/gameConfig.ts`~~
+   ~~Die README erwähnt nur eine Konfigurationsklasse.~~
+
+
+2. **Dateinamen**: Es gibt Diskrepanzen zwischen den in der README genannten Dateinamen und den tatsächlichen Dateinamen im Projekt.
+
+~~3. **Zusätzliche Dokumentation**: Es gibt eine separate `README_ENEMY_SYSTEM.md`, die in der Haupt-README nicht erwähnt wird.~~
+
+### 11.3 Nicht dokumentierte Funktionen
+
+1. **Spieler-Cheats**: Die `Player`-Klasse enthält einen `handleCheatKeys`-Mechanismus, der nicht dokumentiert ist.
+
+2. **Erweiterte PhysikEngine-Einstellungen**: Der Code in `gameConfig.ts` enthält fortgeschrittene Einstellungen, die in der README nicht vollständig beschrieben sind.
+
+### 11.4 Prioritätsliste für Dokumentationsaktualisierungen
+
+1. Aktualisierung der Projektstruktur und Dateinamen für Konsistenz
+2. Dokumentation der wichtigsten Manager-Klassen (EnemyManager, SpawnManager, CollisionManager)
+3. Detaillierte Beschreibung der UI-Komponenten
+4. Aktualisierung der Komponenten-Beschreibungen (VisualComponent, MovementComponent, WeaponComponent)
+5. Hinzufügen eines Abschnitts über Touch-Controls und mobile Optimierung
+6. Erklärung des Animationssystems
+7. Vereinheitlichung des Spieltitels in der gesamten Dokumentation
+8. Erklärung des Schwierigkeitssystems
+9. Hinzufügen von Informationen zu den nicht dokumentierten Funktionen
+10. Überarbeitung der Konfigurationsabschnitte, um beide Konfigurationsdateien zu beschreiben 
