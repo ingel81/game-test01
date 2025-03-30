@@ -201,6 +201,9 @@ export class WeaponComponent {
     bullet.setActive(true);
     bullet.setVisible(true);
     
+    // Drehe das Sprite um (statt Rotation)
+    bullet.setFlipX(true);
+    
     // Setze den Typ für Kollisionserkennung
     bullet.setData('type', 'enemyBullet');
     
@@ -262,6 +265,9 @@ export class WeaponComponent {
       
       bullet.setActive(true);
       bullet.setVisible(true);
+      
+      // Drehe das Sprite um (statt Rotation)
+      bullet.setFlipX(true);
       
       // Setze den Typ für Kollisionserkennung
       bullet.setData('type', 'enemyBullet');

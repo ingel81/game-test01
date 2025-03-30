@@ -48,6 +48,14 @@ const config = GameConfig.getConfig();
 const game = new Phaser.Game(config);
 ```
 
+Die Konfiguration enthält Einstellungen für:
+- Renderer-Typ (AUTO wählt WebGL oder Canvas)
+- Fenstergröße und Anpassungen
+- Physik-Engine-Parameter
+- Szenen-Management
+- Skalierungsoptionen für verschiedene Bildschirmgrößen
+- DOM-Container-Einstellungen
+
 ### 3.2 Entity-System
 
 Das Projekt verwendet ein hierarchisches Entity-System:
@@ -376,6 +384,24 @@ Verwaltet die Erzeugung, Aktualisierung und Verwaltung aller Gegner im Spiel.
 - Dynamische Gegner-Erzeugung basierend auf Spielfortschritt
 - Verwaltung verschiedener Gegnertypen und -muster
 
+```typescript
+// Kern-Funktionalität des EnemyManager
+export class EnemyManager {
+    private enemies: BaseEnemy[] = [];
+    private enemyPool: Map<string, BaseEnemy[]> = new Map();
+    private scene: GameScene;
+    private player: Player;
+    private difficultyManager: DifficultyManager;
+
+    // Hauptfunktionen:
+    public spawnEnemy(type: string, x: number, y: number): BaseEnemy;
+    public update(time: number, delta: number): void;
+    private recycleEnemy(enemy: BaseEnemy): void;
+    private getEnemyFromPool(type: string): BaseEnemy | null;
+    private createNewEnemy(type: string, x: number, y: number): BaseEnemy;
+}
+```
+
 #### SpawnManager (src/managers/spawnManager.ts)
 Koordiniert das Erscheinen von Gegnern, Powerups und Umgebungsobjekten.
 
@@ -383,6 +409,24 @@ Koordiniert das Erscheinen von Gegnern, Powerups und Umgebungsobjekten.
 - Wellenbasierte Gegnererzeugung
 - Zeitgesteuerte Spawns
 - Zufällige Verteilung von Pickups und Objekten
+
+```typescript
+export class SpawnManager {
+    private scene: GameScene;
+    private difficultyManager: DifficultyManager;
+    private waveConfig: WaveConfig[];
+    private currentWave: number = 0;
+    private waveTimer: number = 0;
+    private pickupProbability: number = 0.2;
+    
+    // Methoden zur Spawn-Steuerung
+    public update(time: number, delta: number): void;
+    private spawnWave(): void;
+    private spawnEnemyGroup(type: string, count: number, formation: string): void;
+    private spawnPickup(x: number, y: number, type: string): void;
+    private spawnAsteroid(size: string): void;
+}
+```
 
 #### CollisionManager (src/managers/collisionManager.ts)
 Verwaltet alle Kollisionen zwischen Spielobjekten.
@@ -392,6 +436,27 @@ Verwaltet alle Kollisionen zwischen Spielobjekten.
 - Behandlung verschiedener Kollisionstypen
 - Optimierte Kollisionserkennung
 
+```typescript
+export class CollisionManager {
+    private scene: GameScene;
+    private player: Player;
+    private playerBullets: Phaser.Physics.Arcade.Group;
+    private enemies: Phaser.Physics.Arcade.Group;
+    private enemyBullets: Phaser.Physics.Arcade.Group;
+    private pickups: Phaser.Physics.Arcade.Group;
+    private asteroids: Phaser.Physics.Arcade.Group;
+    
+    // Optimierte Kollisionsüberprüfungen
+    public setupCollisions(): void;
+    public update(): void;
+    
+    // Kollisionshandler
+    private handlePlayerEnemyCollision(player: any, enemy: any): void;
+    private handlePlayerPickupCollision(player: any, pickup: any): void;
+    private handleBulletEnemyCollision(bullet: any, enemy: any): void;
+}
+```
+
 #### DifficultyManager (src/managers/difficultyManager.ts)
 Steuert die Spielschwierigkeit dynamisch basierend auf Spielerfortschritt.
 
@@ -400,6 +465,24 @@ Steuert die Spielschwierigkeit dynamisch basierend auf Spielerfortschritt.
 - Anpassung von Gegnerparametern
 - Dynamische Skalierung der Herausforderung
 
+```typescript
+export class DifficultyManager {
+    private difficulty: number = 1.0;
+    private maxDifficulty: number = 5.0;
+    private timePlayed: number = 0;
+    private scoreMultiplier: number = 1.0;
+    private enemyHealthMultiplier: number = 1.0;
+    private enemySpeedMultiplier: number = 1.0;
+    private enemyFireRateMultiplier: number = 1.0;
+    
+    // Methoden zur Schwierigkeitsanpassung
+    public update(delta: number): void;
+    public getDifficulty(): number;
+    public getScoreMultiplier(): number;
+    public getEnemyAttributeMultipliers(): { health: number, speed: number, fireRate: number };
+}
+```
+
 #### SoundManager (src/managers/soundManager.ts)
 Verwaltet alle Soundeffekte und Musik im Spiel.
 
@@ -407,26 +490,229 @@ Verwaltet alle Soundeffekte und Musik im Spiel.
 - Abspielen und Stummschalten von Sounds
 - Lautstärkesteuerung
 - Optimiertes Audio-Ressourcenmanagement
+- Persistente Einstellungen im lokalen Speicher
+
+```typescript
+export class SoundManager {
+  private scene: Phaser.Scene;
+  private sounds: Map<string, Phaser.Sound.BaseSound>;
+  private volume: number = 1.0;
+  private muted: boolean = false;
+  
+  // Hauptmethoden
+  public playSound(key: string, config: Phaser.Types.Sound.SoundConfig = {}): void;
+  public setVolume(volume: number): void;
+  public toggleMute(): boolean;
+  private saveSettings(): void;
+  private loadSettings(): void;
+}
+```
 
 ### 3.8 UI-System
 
 #### GameUI (src/ui/gameUI.ts)
 Hauptklasse für die Spielbenutzeroberfläche, die alle UI-Komponenten koordiniert.
 
+```typescript
+export class GameUI {
+    private scene: GameScene;
+    private healthBar: HealthBar;
+    private scoreDisplay: ScoreDisplay;
+    private pauseButton: Phaser.GameObjects.Image;
+    
+    // Methoden zum Aktualisieren der UI-Elemente
+    public updateHealth(health: number, maxHealth: number): void;
+    public updateScore(score: number): void;
+    public showGameOverScreen(): void;
+}
+```
+
 #### HealthBar (src/ui/healthBar.ts)
 Zeigt die Spielergesundheit in einer visuell ansprechenden Leiste an.
+
+```typescript
+export class HealthBar {
+    private bar: Phaser.GameObjects.Graphics;
+    private x: number;
+    private y: number;
+    private width: number;
+    private height: number;
+    
+    // Methoden zum Aktualisieren und Animieren
+    public update(value: number, maxValue: number): void;
+    public animateDamage(oldValue: number, newValue: number): void;
+}
+```
 
 #### ScoreDisplay (src/ui/scoreDisplay.ts)
 Zeigt den aktuellen Punktestand und andere Spielstatistiken an.
 
+```typescript
+export class ScoreDisplay {
+    private scoreText: Phaser.GameObjects.Text;
+    private currentScore: number = 0;
+    private targetScore: number = 0;
+    
+    // Methoden für Punktestandsaktualisierung
+    public updateScore(score: number): void;
+    private animateScoreChange(): void;
+}
+```
+
 #### TouchControls (src/ui/touchControls.ts)
 Implementiert die Touch-Steuerung für mobile Geräte mit optimierter Reaktion.
+
+```typescript
+export class TouchControls {
+    private scene: GameScene;
+    private joystickBase: Phaser.GameObjects.Image;
+    private joystickThumb: Phaser.GameObjects.Image;
+    private shootButton: Phaser.GameObjects.Image;
+    
+    // Methoden zur Verarbeitung von Touch-Eingaben
+    public update(): void;
+    public getJoystickDirection(): { x: number, y: number };
+    public isShootPressed(): boolean;
+    
+    // Setup-Methoden
+    private setupJoystick(): void;
+    private setupFireButton(): void;
+}
+```
 
 #### PlanetsBackground (src/ui/planetsBackground.ts)
 Erstellt und verwaltet den dynamischen Planetenhintergrund.
 
+```typescript
+export class PlanetsBackground {
+    private scene: Phaser.Scene;
+    private planets: Phaser.GameObjects.Image[] = [];
+    
+    // Methoden zur Hintergrundverwaltung
+    public update(delta: number): void;
+    private createPlanet(depth: number): void;
+}
+```
+
 #### FpsDisplay (src/ui/fpsDisplay.ts)
 Zeigt die aktuelle Bildrate für Debugging-Zwecke an (nur im Entwicklungsmodus).
+
+```typescript
+export class FpsDisplay {
+    private text: Phaser.GameObjects.Text;
+    private lastTime: number = 0;
+    
+    // Methoden zur FPS-Anzeige
+    public update(time: number): void;
+    public toggle(): void;
+}
+```
+
+### 3.9 Komponenten-Systeme
+
+#### VisualComponent (src/entities/enemies/components/visualComponent.ts)
+Verwaltet alle visuellen Aspekte der Gegner.
+
+```typescript
+export interface VisualConfig {
+    tint?: number;                // Farbton für den Sprite
+    scale?: number;               // Skalierungsfaktor
+    alpha?: number;               // Transparenz
+    hitEffectDuration?: number;   // Dauer des Treffereffekts
+    hitEffectTint?: number;       // Farbe des Treffereffekts
+    useAnimations?: boolean;      // Ob Animationen verwendet werden
+    animationPrefix?: string;     // Präfix für Animationsschlüssel
+    rotationSpeed?: number;       // Rotationsgeschwindigkeit
+    glowEffect?: boolean;         // Ob Glow-Effekt aktiviert werden soll
+    particleEffect?: boolean;     // Ob Partikeleffekte aktiviert werden
+    deathAnimationKey?: string;   // Schlüssel für Todesanimation
+}
+```
+
+Die Komponente bietet zahlreiche visuelle Effekte:
+- Farbton- und Transparenzänderungen
+- Rotationseffekte
+- Animationen mit flexiblen Präfixen
+- Glow-Effekte
+- Partikeleffekte
+- Pulsierendes Leuchten
+
+```typescript
+// Beispiele für zusätzliche Methoden
+public playPulsingEffect(): void;
+public playGlowEffect(intensity: number): void;
+public createThrusterParticles(): void;
+```
+
+#### Animationssystem
+
+Das integrierte Animationssystem ermöglicht die Verwaltung komplexer Sprite-Animationen:
+
+```typescript
+// Animation einrichten
+private setupAnimations(): void {
+    if (!this.config.useAnimations) return;
+    
+    const prefix = this.config.animationPrefix || 'enemy';
+    
+    // Idle-Animation
+    if (!this.sprite.anims.exists(`${prefix}_idle`)) {
+        this.sprite.anims.create({
+            key: `${prefix}_idle`,
+            frames: this.sprite.anims.generateFrameNumbers(this.sprite.texture.key, { start: 0, end: 3 }),
+            frameRate: 10,
+            repeat: -1
+        });
+    }
+    
+    // Damage-Animation
+    if (!this.sprite.anims.exists(`${prefix}_damage`)) {
+        this.sprite.anims.create({
+            key: `${prefix}_damage`,
+            frames: this.sprite.anims.generateFrameNumbers(this.sprite.texture.key, { start: 4, end: 5 }),
+            frameRate: 12,
+            repeat: 0
+        });
+    }
+    
+    // Animation starten
+    this.sprite.play(`${prefix}_idle`);
+}
+```
+
+### 3.10 Shader und visuelle Effekte
+
+#### GlowPipeline (src/pipelines/glowPipeline.ts)
+Implementiert einen WebGL-Shader für Glow-Effekte.
+
+```typescript
+export class GlowPipeline extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline {
+    private _intensity: number;
+
+    constructor(game: Game) {
+        super({
+            game,
+            renderTarget: true,
+            fragShader: `
+                precision mediump float;
+                uniform sampler2D uMainSampler;
+                uniform float intensity;
+                varying vec2 outTexCoord;
+
+                // Shader-Code für Glow-Effekt
+                void main() {
+                    // ...
+                }
+            `
+        });
+    }
+
+    // Methoden zur Intensitätssteuerung
+    public setIntensity(value: number): this;
+}
+```
+
+**Hinweis:** Aktuell sind die Shader direkt in der `glowPipeline.ts` als Strings implementiert. Eine geplante Verbesserung ist die Auslagerung in separate `.glsl`-Dateien im `/src/shaders/`-Verzeichnis.
 
 ## 4. Implementierungsleitfaden
 
@@ -600,7 +886,7 @@ this.sound.play('sound-key');
 
 - **Phaser 3**: JavaScript/TypeScript Spieleentwicklungsframework
 - **TypeScript**: Typsicheres JavaScript für robustere Codebasis
-- **Webpack**: Bundling und Build-Toolchain
+- **Vite**: Modernes und schnelles Build-Tool und Entwicklungsserver
 - **Node.js**: Entwicklungsumgebung für Build-Prozesse
 
 ## 9. Build und Deployment
@@ -620,87 +906,67 @@ npm run build
 npm run preview
 ```
 
-## 10. Schlussfolgerung
+### 9.4 Asset-Handhabung mit Vite
 
-Dieses Projekt bietet eine solide Grundlage für die Entwicklung von 2D-Spielen mit Phaser 3. Die komponentenbasierte Architektur ermöglicht einfache Erweiterbarkeit und Wartbarkeit. Die vorgeschlagenen Verbesserungen können als Fahrplan für die Weiterentwicklung des Projekts dienen. 
+Assets werden im `assets/`-Verzeichnis platziert und sind automatisch unter dem Root-Pfad `/` verfügbar:
 
-## 11. To-Do: Dokumentation aktualisieren
+```typescript
+// Beispiel für Asset-Ladung in Vite
+preload() {
+  // Assets werden direkt aus dem publicDir geladen
+  this.load.image('player', '/images/player.png');
+  this.load.spritesheet('explosion', '/sprites/explosion.png', { 
+    frameWidth: 64, 
+    frameHeight: 64 
+  });
+  this.load.audio('shoot', '/sounds/shoot.wav');
+}
+```
 
-Die folgende Liste enthält Unstimmigkeiten zwischen dieser README und dem tatsächlichen Code, die in zukünftigen Updates der Dokumentation adressiert werden sollten:
+## 10. Entwicklungshilfen
 
-### 11.1 Fehlende oder unvollständige Dokumentation
+### 10.1 Cheat-System
 
-1. **Shader-System**: Das `/src/shaders/` Verzeichnis ist leer, die GLSL-Shader sind direkt in der `glowPipeline.ts` im `/src/pipelines/` Verzeichnis als Strings implementiert.
+Das Spiel enthält ein Cheat-System für Entwicklungs- und Testzwecke:
 
-2. **Enemy-Manager**: Der `newEnemyManager.ts` (23KB) ist umfangreicher als in der Dokumentation beschrieben und verdient eine detailliertere Erklärung.
+```typescript
+/**
+ * Verarbeitet Cheat-Tastenkombinationen.
+ * HINWEIS: Diese Funktion dient nur Entwicklungszwecken und sollte in der
+ * Produktionsversion deaktiviert oder entfernt werden.
+ * 
+ * Unterstützte Cheats:
+ * - "HEAL": Stellt 50 Gesundheitspunkte wieder her
+ * - "POWER": Erhöht die Waffenstärke um eine Stufe
+ * - "EXTRA": Gewährt ein zusätzliches Leben
+ */
+private handleCheatKeys(time: number): void {
+    // Implementierung...
+}
+```
 
-3. **VisualComponent**: Die tatsächliche Implementierung enthält mehr Funktionen und Parameter als dokumentiert, wie z.B.:
-   - `animationPrefix`
-   - `rotationSpeed`
-   - `deathAnimationKey`
-   - Methoden für pulsierende Kreise
-   - Komplexere Glow-Effekte mit Tweens
+## 11. To-Do: Verbleibende Aufgaben
 
-4. **UI-Komponenten**: Die README beschreibt nicht die spezifischen UI-Komponenten:
-   - `fpsDisplay.ts`
-   - `planetsBackground.ts`
-   - `scoreDisplay.ts`
-   - `healthBar.ts`
-   - `gameUI.ts`
+Die folgende Liste enthält verbleibende Aufgaben zur Verbesserung des Projekts:
 
-5. **Kollisionsmanagement**: Der `collisionManager.ts` (14KB) sollte detaillierter beschrieben werden.
+### 11.1 Technische Verbesserungen
 
-6. **SpawnManager**: Die `spawnManager.ts`-Datei (12KB) wird nicht in der README erwähnt, ist aber ein wichtiger Bestandteil des Spiels.
+1. **Shader-Implementierung**: Die GLSL-Shader sollten in separate `.glsl`-Dateien im `/src/shaders/`-Verzeichnis ausgelagert werden, anstatt als Strings in `glowPipeline.ts` definiert zu sein.
 
-7. **DifficultyManager**: Der `difficultyManager.ts` implementiert ein Schwierigkeitssystem, das in der Dokumentation kaum erwähnt wird.
+2. **Animation-Framework**: Implementation eines zentralen AnimationService für bessere Wiederverwendbarkeit:
+   ```typescript
+   export class AnimationService {
+       // Zentralisierte Animation-Verwaltung
+       public createAnimation(key, spritesheet, frames, frameRate, repeat): void;
+       public playAnimation(sprite, key): void;
+   }
+   ```
 
-8. **Animationssystem**: Das in `VisualComponent` implementierte Animationssystem sollte dokumentiert werden.
+3. **Dateinamen-Konsistenz**: Die Dateinamen-Konventionen sollten vereinheitlicht werden, insbesondere:
+   - `newBossEnemy.ts` sollte in `bossEnemy.ts` umbenannt werden
 
-9. **Touch-Controls**: Die `touchControls.ts` bietet mehr Funktionalität als in der README beschrieben.
+### 11.2 Dokumentations-Verbesserungen
 
-~~10. **Spielertitel**: Das Spiel heißt in der `index.html` "Echoes from the Rift", in der README wird es allgemein als "2D-Weltraum-Shooter" bezeichnet.~~
+1. **Code-Beispiele**: Mehr praktische Beispiele für die Verwendung der Manager-Klassen hinzufügen
 
-### 11.2 Strukturelle Unstimmigkeiten
-
-~~1. **Doppelte Konfiguration**: Es gibt zwei Konfigurationsdateien:~~
-   - `src/core/config.ts` 
-   - ~~`src/gameConfig.ts`~~
-   ~~Die README erwähnt nur eine Konfigurationsklasse.~~
-
-
-2. **Dateinamen**: Es gibt Diskrepanzen zwischen den in der README genannten Dateinamen und den tatsächlichen Dateinamen im Projekt.
-
-~~3. **Zusätzliche Dokumentation**: Es gibt eine separate `README_ENEMY_SYSTEM.md`, die in der Haupt-README nicht erwähnt wird.~~
-
-### 11.3 Nicht dokumentierte Funktionen
-
-1. **Spieler-Cheats**: Die `Player`-Klasse enthält einen `handleCheatKeys`-Mechanismus, der nicht dokumentiert ist.
-
-2. **Erweiterte PhysikEngine-Einstellungen**: Der Code in `gameConfig.ts` enthält fortgeschrittene Einstellungen, die in der README nicht vollständig beschrieben sind.
-
-### 11.4 Prioritätsliste für Dokumentationsaktualisierungen
-
-1. Aktualisierung der Projektstruktur und Dateinamen für Konsistenz
-2. Dokumentation der wichtigsten Manager-Klassen (EnemyManager, SpawnManager, CollisionManager)
-3. Detaillierte Beschreibung der UI-Komponenten
-4. Aktualisierung der Komponenten-Beschreibungen (VisualComponent, MovementComponent, WeaponComponent)
-5. Hinzufügen eines Abschnitts über Touch-Controls und mobile Optimierung
-6. Erklärung des Animationssystems
-7. Vereinheitlichung des Spieltitels in der gesamten Dokumentation
-8. Erklärung des Schwierigkeitssystems
-9. Hinzufügen von Informationen zu den nicht dokumentierten Funktionen
-10. Überarbeitung der Konfigurationsabschnitte, um beide Konfigurationsdateien zu beschreiben 
-
-### 11.5 Build-System-Updates
-1. **Umstellung auf Vite**: Die README wurde aktualisiert, um die Migration von Webpack zu Vite zu reflektieren, inklusive der neuen Konfigurationsdatei `vite.config.ts`.
-2. **Entfernung veralteter Skripte**: Die Erwähnungen von `convert-assets.js` und `generate-sounds.js` sollten vollständig aus der Dokumentation entfernt werden.
-3. **Aktualisierung der Build-Anweisungen**: Die Build- und Deployment-Anweisungen sollten weiter detailliert werden, insbesondere bezüglich der Asset-Handhabung in Vite.
-
-### 11.6 Neue Managersysteme
-1. **Detaillierte Manager-Dokumentation**: Die Manager-Klassen (insbesondere `newEnemyManager.ts`, `spawnManager.ts`, `collisionManager.ts`) benötigen umfassendere Dokumentation mit Beispielen.
-2. **Mobile Optimierungen**: Die Touch-Steuerung sollte umfassender dokumentiert werden, einschließlich Konfigurationsoptionen und Event-Handling.
-
-### 11.7 Technische Schulden
-1. **Shader-Implementierung**: Die GLSL-Shader werden direkt in `glowPipeline.ts` als Strings definiert, sollten aber in separate Dateien im `/src/shaders/`-Verzeichnis ausgelagert werden.
-2. **Cheat-System**: Das in `Player`-Klasse implementierte Cheat-System sollte entweder dokumentiert oder als Entwicklungshilfe gekennzeichnet werden.
-3. **Animation-Framework**: Das Animationssystem sollte besser dokumentiert werden, insbesondere im Zusammenhang mit `VisualComponent`. 
+2. **Detaillierte API-Dokumentation**: Ausführlichere Dokumentation der öffentlichen APIs für bessere Entwicklerfreundlichkeit

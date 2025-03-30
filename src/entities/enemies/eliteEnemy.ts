@@ -131,6 +131,9 @@ export class EliteEnemy extends BaseEnemy {
             bullet.setActive(true);
             bullet.setVisible(true);
             
+            // Drehe das Sprite um (statt Rotation)
+            bullet.setFlipX(true);
+            
             // Setze den Typ für Kollisionserkennung
             bullet.setData('type', 'enemyBullet');
             

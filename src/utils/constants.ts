@@ -80,6 +80,8 @@ export class Constants {
   
   // Assettags
   public static readonly ASSET_PLAYER: string = 'player';
+  public static readonly ASSET_PLAYER_UP: string = 'player-up';
+  public static readonly ASSET_PLAYER_DOWN: string = 'player-down';
   public static readonly ASSET_BULLET: string = 'bullet';
   public static readonly ASSET_ENEMY: string = 'enemy';
   public static readonly ASSET_ENEMY_BULLET: string = 'enemyBullet';

@@ -40,6 +40,8 @@ export class GameScene extends BaseScene {
 
     // Lade die Spieler-Assets
     this.load.image(Constants.ASSET_PLAYER, Constants.getAssetPath('player/sprites/player1.png'));
+    this.load.image(Constants.ASSET_PLAYER_UP, Constants.getAssetPath('player/sprites/player2.png'));
+    this.load.image(Constants.ASSET_PLAYER_DOWN, Constants.getAssetPath('player/sprites/player3.png'));
     this.load.image(Constants.ASSET_BULLET, Constants.getAssetPath('shoot/shoot1.png'));
     
     // Lade die Feind-Assets

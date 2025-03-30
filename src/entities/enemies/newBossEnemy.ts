@@ -563,6 +563,9 @@ export class BossEnemy extends BaseEnemy {
             bullet.setVisible(true);
             bullet.setData('type', 'enemyBullet');
             
+            // Drehe das Sprite um (statt Rotation)
+            bullet.setFlipX(true);
+            
             const speed = 200;
             bullet.setVelocity(Math.cos(radians) * speed, Math.sin(radians) * speed);
             bullet.setRotation(radians);
@@ -610,6 +613,9 @@ export class BossEnemy extends BaseEnemy {
             bullet.setActive(true);
             bullet.setVisible(true);
             bullet.setData('type', 'enemyBullet');
+            
+            // Drehe das Sprite um (statt Rotation)
+            bullet.setFlipX(true);
             
             const speed = 220 + i * 20; // Projektile werden schneller
             bullet.setVelocity(Math.cos(radians) * speed, Math.sin(radians) * speed);
@@ -669,6 +675,9 @@ export class BossEnemy extends BaseEnemy {
         bullet.setActive(true);
         bullet.setVisible(true);
         
+        // Drehe das Sprite um (statt Rotation)
+        bullet.setFlipX(true);
+        
         // Setze den Typ für Kollisionserkennung
         bullet.setData('type', 'enemyBullet');
         
@@ -719,11 +728,17 @@ export class BossEnemy extends BaseEnemy {
         bullet.setActive(true);
         bullet.setVisible(true);
         
+        // Drehe das Sprite um (statt Rotation)
+        bullet.setFlipX(true);
+        
         // Setze den Typ für Kollisionserkennung
         bullet.setData('type', 'enemyBullet');
         
         // Setze Geschwindigkeit (nach links)
         bullet.setVelocity(-bulletSpeed, 0);
+        
+        // Bei horizontalen Projektilen keine Rotation nötig
+        // bullet.setRotation(Math.PI);
         
         // Registriere das Projektil
         this.eventBus.emit('REGISTER_ENEMY_BULLET', bullet);

@@ -150,6 +150,18 @@ export class Player extends GameObject {
       targetVelocityY *= normalizer;
     }
 
+    // Sprite basierend auf der Bewegungsrichtung aktualisieren
+    if (targetVelocityY < 0) {
+      // Bewegung nach oben
+      this.sprite.setTexture(Constants.ASSET_PLAYER_UP);
+    } else if (targetVelocityY > 0) {
+      // Bewegung nach unten
+      this.sprite.setTexture(Constants.ASSET_PLAYER_DOWN);
+    } else {
+      // Standard-Sprite (keine vertikale Bewegung)
+      this.sprite.setTexture(Constants.ASSET_PLAYER);
+    }
+
     // Für flüssigere Bewegung direkt mit der Physik-Engine arbeiten
     if (this.sprite.body instanceof Phaser.Physics.Arcade.Body) {
       // Erhöhte Physikbeschleunigung für schnellere Reaktion
