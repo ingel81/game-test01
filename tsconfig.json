@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es2020",
-    "module": "esnext",
+    "target": "ES2020",
+    "module": "ESNext",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -9,11 +9,11 @@
     "outDir": "./dist",
     "sourceMap": true,
     "strictNullChecks": false,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": false,
-    "lib": ["dom", "es2020"]
+    "noEmit": true,
+    "lib": ["dom", "ES2020"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

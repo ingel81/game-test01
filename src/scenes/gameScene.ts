@@ -39,30 +39,26 @@ export class GameScene extends BaseScene {
     super.preload();
 
     // Lade die Spieler-Assets
-    this.load.image(Constants.ASSET_PLAYER, 'assets/player/sprites/player1.png');
-    this.load.image(Constants.ASSET_BULLET, 'assets/shoot/shoot1.png');
+    this.load.image(Constants.ASSET_PLAYER, Constants.getAssetPath('player/sprites/player1.png'));
+    this.load.image(Constants.ASSET_BULLET, Constants.getAssetPath('shoot/shoot1.png'));
     
     // Lade die Feind-Assets
-    this.load.image(Constants.ASSET_ENEMY_BULLET, 'assets/shoot/shoot2.png');
-    this.load.image(Constants.ASSET_ENEMY, 'assets/enemy/sprites/enemy1.png');
-    this.load.image(Constants.ASSET_BOSS, 'assets/enemy/sprites/enemy6.png');
+    this.load.image(Constants.ASSET_ENEMY_BULLET, Constants.getAssetPath('shoot/shoot2.png'));
+    this.load.image(Constants.ASSET_ENEMY, Constants.getAssetPath('enemy/sprites/enemy1.png'));
+    this.load.image(Constants.ASSET_BOSS, Constants.getAssetPath('enemy/sprites/enemy6.png'));
     
     // Lade die Umgebungs-Assets
-    this.load.image(Constants.ASSET_ASTEROID, 'assets/asteroids/asteroid.png');
-    this.load.image(Constants.ASSET_ASTEROID_SMALL, 'assets/asteroids/asteroid-small.png');
+    this.load.image(Constants.ASSET_ASTEROID, Constants.getAssetPath('asteroids/asteroid.png'));
+    this.load.image(Constants.ASSET_ASTEROID_SMALL, Constants.getAssetPath('asteroids/asteroid-small.png'));
     
     // Lade die Explosions-Animation
-    this.load.image(Constants.ASSET_EXPLOSION_1, 'assets/explosion/sprites/explosion1.png');
-    this.load.image(Constants.ASSET_EXPLOSION_2, 'assets/explosion/sprites/explosion2.png');
-    this.load.image(Constants.ASSET_EXPLOSION_3, 'assets/explosion/sprites/explosion3.png');
-    this.load.image(Constants.ASSET_EXPLOSION_4, 'assets/explosion/sprites/explosion4.png');
-    this.load.image(Constants.ASSET_EXPLOSION_5, 'assets/explosion/sprites/explosion5.png');
+    this.load.image(Constants.ASSET_EXPLOSION_1, Constants.getAssetPath('explosion/sprites/explosion1.png'));
+    this.load.image(Constants.ASSET_EXPLOSION_2, Constants.getAssetPath('explosion/sprites/explosion2.png'));
+    this.load.image(Constants.ASSET_EXPLOSION_3, Constants.getAssetPath('explosion/sprites/explosion3.png'));
+    this.load.image(Constants.ASSET_EXPLOSION_4, Constants.getAssetPath('explosion/sprites/explosion4.png'));
+    this.load.image(Constants.ASSET_EXPLOSION_5, Constants.getAssetPath('explosion/sprites/explosion5.png'));
     
-    // Lade die Sound-Assets mit den korrekten Pfaden
-    this.load.audio(Constants.SOUND_SHOOT, 'assets/Sound FX/shot 1.wav');
-    this.load.audio(Constants.SOUND_ENEMY_SHOOT, 'assets/Sound FX/shot 2.wav');
-    this.load.audio(Constants.SOUND_EXPLOSION, 'assets/Sound FX/explosion.wav');
-    this.load.audio(Constants.SOUND_BACKGROUND, 'assets/music/01.mp3');
+    // Sounds werden in BaseScene geladen
   }
 
   /**

@@ -20,10 +20,10 @@ export class MainMenuScene extends BaseScene {
     super.preload();
     
     // Lade die Sound-Assets
-    this.load.audio(Constants.SOUND_BACKGROUND, 'assets/music/01.mp3');
+    this.load.audio(Constants.SOUND_BACKGROUND, Constants.getAssetPath('music/01.mp3'));
     
     // Lade das Titel-Logo
-    this.load.image('logo', 'assets/logo/title4.png');
+    this.load.image('logo', Constants.getAssetPath('logo/title4.png'));
   }
 
   /**

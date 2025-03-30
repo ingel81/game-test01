@@ -15,6 +15,9 @@ import { EventBus, EventType } from '../../utils/eventBus';
 type BossPhase = 'entry' | 'phase1' | 'phase2' | 'phase3' | 'rage' | 'retreat';
 
 export class BossEnemy extends BaseEnemy {
+  // Statischer Klassenname, der im Build erhalten bleibt
+  public static enemyType = 'BossEnemy';
+  
   // Boss-spezifische Eigenschaften
   private currentPhase: BossPhase = 'entry';
   private phaseHealthThresholds: Record<BossPhase, number> = {

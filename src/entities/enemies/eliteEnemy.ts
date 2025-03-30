@@ -11,6 +11,9 @@ import { ShootingPattern } from './components/weaponComponent';
 import { GameObject } from '../gameObject';
 
 export class EliteEnemy extends BaseEnemy {
+  // Statischer Klassenname, der im Build erhalten bleibt
+  public static enemyType = 'EliteEnemy';
+  
   // Zusätzliche Eigenschaften für EliteEnemy
   private specialAttackTimer: number = 0;
   private specialAttackInterval: number = 5000; // Alle 5 Sekunden

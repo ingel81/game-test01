@@ -121,8 +121,13 @@ export class BaseEnemy extends GameObject {
    * Erstellt den Debug-Text über dem Gegner
    */
   private createDebugText(): void {
-    // Extrahiere den Klassennamen (z.B. "StandardEnemy" von "StandardEnemy")
-    const className = this.constructor.name;
+    // Klassen-Typ als explizite Eigenschaft statt constructor.name verwenden
+    let className = this.constructor.name;
+    
+    // Versuche eine statische Klassennamen-Eigenschaft zu finden
+    if ((this.constructor as any).enemyType) {
+      className = (this.constructor as any).enemyType;
+    }
     
     console.log(`[DEBUG-CREATE] Erstelle Debug-Text für ${className} an Position (${this.sprite.x}, ${this.sprite.y})`);
     

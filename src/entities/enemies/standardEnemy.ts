@@ -10,6 +10,9 @@ import { MovementPattern } from './components/movementComponent';
 import { ShootingPattern } from './components/weaponComponent';
 
 export class StandardEnemy extends BaseEnemy {
+  // Statischer Klassenname, der im Build erhalten bleibt
+  public static enemyType = 'StandardEnemy';
+  
   constructor(scene: Phaser.Scene, x: number, y: number, player: Player) {
     // Konfiguriere den Gegner durch ein Konfigurationsobjekt
     const config: EnemyConfig = {

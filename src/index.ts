@@ -1,4 +1,4 @@
-import 'phaser';
+import Phaser from 'phaser';
 import { GameConfig } from './core/config';
 
 // Füge Type-Declaration für window.game hinzu

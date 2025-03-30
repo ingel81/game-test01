@@ -18,6 +18,11 @@ export class SoundManager {
    * Startet die Hintergrundmusik
    */
   public playBackgroundMusic(): void {
+    // DEBUG: Wenn Sound deaktiviert ist, führe keine Sound-Aktionen aus
+    if (Constants.DEBUG_DISABLE_SOUNDS) {
+      return;
+    }
+    
     try {
       console.log('Versuche Hintergrundmusik zu laden...');
       this.backgroundMusic = this.scene.sound.add(Constants.SOUND_BACKGROUND, {
@@ -64,14 +69,30 @@ export class SoundManager {
    * Spielt einen Sound
    */
   public playSound(key: string, config: Phaser.Types.Sound.SoundConfig = {}): void {
+    // DEBUG: Wenn Sound deaktiviert ist, führe keine Sound-Aktionen aus
+    if (Constants.DEBUG_DISABLE_SOUNDS) {
+      return;
+    }
+    
     if (this.muted) return;
     
-    const finalConfig = {
-      ...config,
-      volume: (config.volume || 1.0) * this.volume
-    };
-    
-    this.scene.sound.play(key, finalConfig);
+    try {
+      // Überprüfe, ob der Sound existiert
+      if (!this.scene.sound.get(key)) {
+        console.warn(`Sound "${key}" nicht gefunden. Überspringe Wiedergabe.`);
+        return;
+      }
+      
+      const finalConfig = {
+        ...config,
+        volume: (config.volume || 1.0) * this.volume
+      };
+      
+      this.scene.sound.play(key, finalConfig);
+    } catch (error) {
+      console.error(`Fehler beim Abspielen des Sounds "${key}":`, error);
+      // Führe das Spiel trotz Sound-Fehler fort
+    }
   }
 
   /**

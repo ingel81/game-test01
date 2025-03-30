@@ -26,20 +26,26 @@ export abstract class BaseScene extends Phaser.Scene {
     // Lade die UI-Assets - Verwende temporär einen farbigen Rechteck statt Button
     
     // Lade die Hintergrund-Assets
-    this.load.image('background', 'assets/background/bg-preview-big.png');
-    this.load.image('bg-planet', 'assets/background/layered/bg-planet.png');
+    this.load.image('background', Constants.getAssetPath('background/bg-preview-big.png'));
+    this.load.image('bg-planet', Constants.getAssetPath('background/layered/bg-planet.png'));
+    
+    // Lade die Pickup-Assets
+    this.load.image(Constants.ASSET_ENERGY_DROP, Constants.getAssetPath('pickups/energy.png'));
+    this.load.image(Constants.ASSET_POWER_DROP, Constants.getAssetPath('pickups/power.png'));
     
     // Lade alle Planeten
     for (let i = 1; i <= 16; i++) {
-      this.load.image(`planet-${i}`, `assets/planets/planet-${i}.png`);
+      this.load.image(`planet-${i}`, Constants.getAssetPath(`planets/planet-${i}.png`));
     }
     
     // Lade die Sound-Assets
-    this.load.audio('click', 'assets/sounds/laser1.wav');
-    this.load.audio(Constants.SOUND_BACKGROUND, 'assets/music/01.mp3');
-    this.load.audio(Constants.SOUND_SHOOT, 'assets/Sound FX/shot 1.wav');
-    this.load.audio(Constants.SOUND_ENEMY_SHOOT, 'assets/Sound FX/shot 2.wav');
-    this.load.audio(Constants.SOUND_EXPLOSION, 'assets/Sound FX/explosion.wav');
+    this.load.audio('click', Constants.getAssetPath('sounds/laser1.wav'));
+    this.load.audio(Constants.SOUND_BACKGROUND, Constants.getAssetPath('music/01.mp3'));
+    
+    // Sound FX mit korrektem Pfad
+    this.load.audio(Constants.SOUND_SHOOT, Constants.getAssetPath('sounds/shot 1.wav'));
+    this.load.audio(Constants.SOUND_ENEMY_SHOOT, Constants.getAssetPath('sounds/shot 2.wav')); 
+    this.load.audio(Constants.SOUND_EXPLOSION, Constants.getAssetPath('sounds/explosion.wav'));
   }
 
   /**

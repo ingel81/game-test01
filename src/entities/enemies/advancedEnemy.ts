@@ -11,6 +11,9 @@ import { ShootingPattern } from './components/weaponComponent';
 import { GameObject } from '../gameObject';
 
 export class AdvancedEnemy extends BaseEnemy {
+  // Statischer Klassenname, der im Build erhalten bleibt
+  public static enemyType = 'AdvancedEnemy';
+  
   constructor(scene: Phaser.Scene, x: number, y: number, player: Player) {
     // Konfiguriere den fortgeschrittenen Gegner
     const config: EnemyConfig = {

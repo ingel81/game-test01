@@ -3,6 +3,9 @@
  * Zentrale Sammlung von Konstanten für das Spiel
  */
 export class Constants {
+  // Debugging-Optionen
+  public static readonly DEBUG_DISABLE_SOUNDS: boolean = false; // Sounds sind jetzt aktiviert
+  
   // Allgemeine Spielkonstanten
   public static readonly GAME_TITLE: string = 'Echoes from the Rift';
   public static readonly TOOLBAR_HEIGHT: number = 60;
@@ -96,4 +99,37 @@ export class Constants {
   public static readonly SOUND_ENEMY_SHOOT: string = 'enemyShoot';
   public static readonly SOUND_EXPLOSION: string = 'explosion';
   public static readonly SOUND_BACKGROUND: string = 'background';
+  
+  // Events für Animationen
+  public static readonly ANIMATION_PLAYER_IDLE = 'player-idle';
+  public static readonly ANIMATION_PLAYER_MOVE = 'player-move';
+  
+  // Sonstige Konstanten
+  public static readonly PLAYER_BULLET_SPEED = 800;
+  public static readonly MAX_ENEMIES = 10;
+  
+  // Schwierigkeitsgrade
+  public static readonly DIFFICULTY_EASY = 'easy';
+  public static readonly DIFFICULTY_NORMAL = 'normal';
+  public static readonly DIFFICULTY_HARD = 'hard';
+  
+  /**
+   * Gibt den richtigen Asset-Pfad abhängig vom Modus (Entwicklung oder Produktion) zurück
+   * @param path Der relative Pfad zum Asset
+   * @returns Der vollständige Pfad zum Asset
+   */
+  public static getAssetPath(path: string): string {
+    // Mit 'publicDir: assets' sind alle Assets direkt im Root-Verzeichnis verfügbar
+    // So entfernen wir ein eventuelles "/assets/" Präfix
+    if (path.startsWith('/assets/')) {
+      return path.substring('/assets/'.length);
+    }
+    
+    // Wenn der Pfad mit einem Slash beginnt, entferne ihn
+    if (path.startsWith('/')) {
+      return path.substring(1);
+    }
+    
+    return path;
+  }
 } 
