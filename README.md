@@ -27,9 +27,7 @@ Die Anwendung ist wie folgt strukturiert:
 │   ├── pipelines/     # Render-Pipelines
 ├── index.html         # Haupt-HTML-Datei
 ├── tsconfig.json      # TypeScript-Konfiguration
-├── webpack.config.js  # Webpack-Konfiguration
-├── convert-assets.js  # Asset-Konvertierungsskript
-├── generate-sounds.js # Sound-Generierungsskript
+├── vite.config.ts     # Vite-Konfiguration
 ```
 
 ## 3. Architektur
@@ -368,6 +366,68 @@ eventBus.on(EventType.ENEMY_DESTROYED, this.handleEnemyDestroyed);
 eventBus.emit(EventType.SCORE_CHANGED, points);
 ```
 
+### 3.7 Manager-Systeme
+
+#### EnemyManager (src/managers/newEnemyManager.ts)
+Verwaltet die Erzeugung, Aktualisierung und Verwaltung aller Gegner im Spiel.
+
+**Hauptfunktionen:**
+- Gegner-Pooling für optimierte Leistung
+- Dynamische Gegner-Erzeugung basierend auf Spielfortschritt
+- Verwaltung verschiedener Gegnertypen und -muster
+
+#### SpawnManager (src/managers/spawnManager.ts)
+Koordiniert das Erscheinen von Gegnern, Powerups und Umgebungsobjekten.
+
+**Hauptfunktionen:**
+- Wellenbasierte Gegnererzeugung
+- Zeitgesteuerte Spawns
+- Zufällige Verteilung von Pickups und Objekten
+
+#### CollisionManager (src/managers/collisionManager.ts)
+Verwaltet alle Kollisionen zwischen Spielobjekten.
+
+**Hauptfunktionen:**
+- Registrierung von Kollisionsgruppen
+- Behandlung verschiedener Kollisionstypen
+- Optimierte Kollisionserkennung
+
+#### DifficultyManager (src/managers/difficultyManager.ts)
+Steuert die Spielschwierigkeit dynamisch basierend auf Spielerfortschritt.
+
+**Hauptfunktionen:**
+- Progressive Schwierigkeitsstufen
+- Anpassung von Gegnerparametern
+- Dynamische Skalierung der Herausforderung
+
+#### SoundManager (src/managers/soundManager.ts)
+Verwaltet alle Soundeffekte und Musik im Spiel.
+
+**Hauptfunktionen:**
+- Abspielen und Stummschalten von Sounds
+- Lautstärkesteuerung
+- Optimiertes Audio-Ressourcenmanagement
+
+### 3.8 UI-System
+
+#### GameUI (src/ui/gameUI.ts)
+Hauptklasse für die Spielbenutzeroberfläche, die alle UI-Komponenten koordiniert.
+
+#### HealthBar (src/ui/healthBar.ts)
+Zeigt die Spielergesundheit in einer visuell ansprechenden Leiste an.
+
+#### ScoreDisplay (src/ui/scoreDisplay.ts)
+Zeigt den aktuellen Punktestand und andere Spielstatistiken an.
+
+#### TouchControls (src/ui/touchControls.ts)
+Implementiert die Touch-Steuerung für mobile Geräte mit optimierter Reaktion.
+
+#### PlanetsBackground (src/ui/planetsBackground.ts)
+Erstellt und verwaltet den dynamischen Planetenhintergrund.
+
+#### FpsDisplay (src/ui/fpsDisplay.ts)
+Zeigt die aktuelle Bildrate für Debugging-Zwecke an (nur im Entwicklungsmodus).
+
 ## 4. Implementierungsleitfaden
 
 ### 4.1 Erstellen einer neuen Szene
@@ -555,14 +615,9 @@ npm run dev
 npm run build
 ```
 
-### 9.3 Assets konvertieren
+### 9.3 Build-Vorschau anzeigen
 ```bash
-node convert-assets.js
-```
-
-### 9.4 Sound-Assets generieren
-```bash
-node generate-sounds.js
+npm run preview
 ```
 
 ## 10. Schlussfolgerung
@@ -635,3 +690,17 @@ Die folgende Liste enthält Unstimmigkeiten zwischen dieser README und dem tats�
 8. Erklärung des Schwierigkeitssystems
 9. Hinzufügen von Informationen zu den nicht dokumentierten Funktionen
 10. Überarbeitung der Konfigurationsabschnitte, um beide Konfigurationsdateien zu beschreiben 
+
+### 11.5 Build-System-Updates
+1. **Umstellung auf Vite**: Die README wurde aktualisiert, um die Migration von Webpack zu Vite zu reflektieren, inklusive der neuen Konfigurationsdatei `vite.config.ts`.
+2. **Entfernung veralteter Skripte**: Die Erwähnungen von `convert-assets.js` und `generate-sounds.js` sollten vollständig aus der Dokumentation entfernt werden.
+3. **Aktualisierung der Build-Anweisungen**: Die Build- und Deployment-Anweisungen sollten weiter detailliert werden, insbesondere bezüglich der Asset-Handhabung in Vite.
+
+### 11.6 Neue Managersysteme
+1. **Detaillierte Manager-Dokumentation**: Die Manager-Klassen (insbesondere `newEnemyManager.ts`, `spawnManager.ts`, `collisionManager.ts`) benötigen umfassendere Dokumentation mit Beispielen.
+2. **Mobile Optimierungen**: Die Touch-Steuerung sollte umfassender dokumentiert werden, einschließlich Konfigurationsoptionen und Event-Handling.
+
+### 11.7 Technische Schulden
+1. **Shader-Implementierung**: Die GLSL-Shader werden direkt in `glowPipeline.ts` als Strings definiert, sollten aber in separate Dateien im `/src/shaders/`-Verzeichnis ausgelagert werden.
+2. **Cheat-System**: Das in `Player`-Klasse implementierte Cheat-System sollte entweder dokumentiert oder als Entwicklungshilfe gekennzeichnet werden.
+3. **Animation-Framework**: Das Animationssystem sollte besser dokumentiert werden, insbesondere im Zusammenhang mit `VisualComponent`. 
