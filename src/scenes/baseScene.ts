@@ -5,14 +5,29 @@ import { PlanetsBackground } from '../ui/planetsBackground';
 import { FpsDisplay } from '../ui/fpsDisplay';
 
 /**
+ * Debug-Modus Enum
+ */
+export enum DebugMode {
+  OFF = 'off',      // Kein Debug
+  LIGHT = 'light',  // Nur Gegner-Beschriftungen
+  FULL = 'full'     // Voller Debug-Modus mit Hitboxen
+}
+
+/**
  * BaseScene-Klasse
  * Basisklasse für alle Spielszenen
  */
 export abstract class BaseScene extends Phaser.Scene {
+  // Statische Variable für den globalen Debug-Status
+  protected static globalDebugMode: DebugMode = DebugMode.OFF;
+
   protected eventBus: EventBus;
   protected stars!: GameObjects.Group;
   protected planetsBackground!: PlanetsBackground;
   protected fpsDisplay!: FpsDisplay;
+  protected debugMode: DebugMode = DebugMode.OFF;
+  protected debugKey!: Phaser.Input.Keyboard.Key;
+  protected debugInfoText!: Phaser.GameObjects.Text;
 
   constructor(key: string) {
     super(key);
@@ -63,6 +78,9 @@ export abstract class BaseScene extends Phaser.Scene {
     
     // Erstelle die FPS-Anzeige
     this.createFpsDisplay();
+    
+    // Initialisiere den Debug-Modus
+    this.setupDebugMode();
   }
   
   /**
@@ -81,6 +99,9 @@ export abstract class BaseScene extends Phaser.Scene {
     if (this.fpsDisplay) {
       this.fpsDisplay.update(time);
     }
+    
+    // Überprüfe Debug-Taste
+    this.checkDebugToggle();
   }
 
   /**
@@ -121,6 +142,19 @@ export abstract class BaseScene extends Phaser.Scene {
     // Bereinige die Sterne
     if (this.stars) {
       this.stars.clear(true, true);
+    }
+    
+    // Bereinige Debug-Ressourcen
+    if (this.debugInfoText && this.debugInfoText.active) {
+      this.debugInfoText.destroy();
+    }
+    
+    // Bereinige Physik-Debug-Grafik, falls vorhanden
+    if (this.physics && this.physics.world) {
+      const world = this.physics.world as Phaser.Physics.Arcade.World;
+      if (world.debugGraphic) {
+        world.debugGraphic.clear();
+      }
     }
   }
 
@@ -240,6 +274,162 @@ export abstract class BaseScene extends Phaser.Scene {
       this.fpsDisplay = new FpsDisplay(this);
     } catch (error) {
       console.error('Fehler beim Erstellen der FPS-Anzeige:', error);
+    }
+  }
+
+  /**
+   * Richtet den Debug-Modus ein
+   */
+  protected setupDebugMode(): void {
+    try {
+      // Registriere die F9-Taste zum Umschalten des Debug-Modus
+      this.debugKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F9);
+      
+      // Übernehme den globalen Debug-Status
+      this.debugMode = BaseScene.globalDebugMode;
+      
+      // Erstelle Debug-Info-Text (anfangs unsichtbar, es sei denn, Debug ist aktiviert)
+      this.debugInfoText = this.add.text(12, 2, this.getDebugStatusText(), {
+        fontSize: '16px',
+        fontFamily: 'monospace',
+        color: this.getDebugStatusColor(),
+        backgroundColor: '#000000',
+        padding: { x: 5, y: 2 }
+      }).setDepth(1000).setScrollFactor(0).setVisible(this.debugMode !== DebugMode.OFF);
+      
+      // Wenn der Debug-Modus bereits aktiviert ist, stelle sicher, dass die Physik-Debug-Anzeige aktiviert wird
+      if (this.debugMode === DebugMode.FULL && this.physics && this.physics.world) {
+        const world = this.physics.world as Phaser.Physics.Arcade.World;
+        world.drawDebug = true;
+        world.createDebugGraphic();
+      }
+    } catch (error) {
+      console.error('Fehler beim Einrichten des Debug-Modus:', error);
+    }
+  }
+  
+  /**
+   * Hilfsmethode, um den Text für den aktuellen Debug-Status zu erhalten
+   */
+  private getDebugStatusText(): string {
+    switch (this.debugMode) {
+      case DebugMode.LIGHT:
+        return 'Debug: LIGHT';
+      case DebugMode.FULL:
+        return 'Debug: FULL';
+      default:
+        return 'Debug: AUS';
+    }
+  }
+  
+  /**
+   * Hilfsmethode, um die Farbe für den aktuellen Debug-Status zu erhalten
+   */
+  private getDebugStatusColor(): string {
+    switch (this.debugMode) {
+      case DebugMode.LIGHT:
+        return '#00ffff'; // Türkis für LIGHT-Modus
+      case DebugMode.FULL:
+        return '#00ff00'; // Grün für FULL-Modus
+      default:
+        return '#ff0000'; // Rot für AUS
+    }
+  }
+  
+  /**
+   * Prüft, ob die Debug-Taste gedrückt wurde und schaltet den Debug-Modus um
+   */
+  protected checkDebugToggle(): void {
+    try {
+      // Prüfe, ob debugKey korrekt initialisiert ist
+      if (this.debugKey && this.debugKey.isDown !== undefined) {
+        if (Phaser.Input.Keyboard.JustDown(this.debugKey)) {
+          this.toggleDebugMode();
+        }
+      }
+    } catch (error) {
+      console.error('Fehler beim Überprüfen der Debug-Taste:', error);
+    }
+  }
+  
+  /**
+   * Schaltet zwischen den Debug-Modi um (OFF -> LIGHT -> FULL -> OFF)
+   */
+  protected toggleDebugMode(): void {
+    try {
+      // State Machine: wechsle zum nächsten Zustand
+      switch (this.debugMode) {
+        case DebugMode.OFF:
+          this.debugMode = DebugMode.LIGHT;
+          break;
+        case DebugMode.LIGHT:
+          this.debugMode = DebugMode.FULL;
+          break;
+        case DebugMode.FULL:
+          this.debugMode = DebugMode.OFF;
+          break;
+      }
+      
+      // Aktualisiere den globalen Debug-Status
+      BaseScene.globalDebugMode = this.debugMode;
+      
+      // Aktualisiere die Physik-Debug-Anzeige
+      if (this.physics && this.physics.world) {
+        const world = this.physics.world as Phaser.Physics.Arcade.World;
+        
+        // Sicherheitscheck, ob debugGraphic existiert
+        if (world.debugGraphic) {
+          world.debugGraphic.clear();
+        }
+        
+        // Setze Debug-Status nur im FULL-Modus
+        world.drawDebug = (this.debugMode === DebugMode.FULL);
+        
+        // Erstelle Debug-Grafik neu, wenn FULL-Modus aktiviert
+        if (this.debugMode === DebugMode.FULL) {
+          world.createDebugGraphic();
+        }
+      }
+      
+      // Stelle sicher, dass debugInfoText existiert
+      if (!this.debugInfoText || !this.debugInfoText.active) {
+        // Falls debugInfoText nicht existiert, neu erstellen
+        this.debugInfoText = this.add.text(10, 10, this.getDebugStatusText(), {
+          fontSize: '16px',
+          fontFamily: 'monospace',
+          color: this.getDebugStatusColor(),
+          backgroundColor: '#000000',
+          padding: { x: 5, y: 2 }
+        }).setDepth(1000).setScrollFactor(0);
+      } else {
+        // Zeige oder verstecke Debug-Info-Text
+        this.debugInfoText.setText(this.getDebugStatusText());
+        this.debugInfoText.setVisible(this.debugMode !== DebugMode.OFF);
+        
+        // Farbe des Debug-Texts aktualisieren
+        this.debugInfoText.setStyle({ 
+          backgroundColor: '#000000',
+          color: this.getDebugStatusColor(),
+          fontFamily: 'monospace',
+          padding: { x: 5, y: 2 }
+        });
+        
+        // Blende die Debug-Info nach 3 Sekunden aus, wenn Debug ausgeschaltet wird
+        if (this.debugMode === DebugMode.OFF) {
+          this.time.delayedCall(3000, () => {
+            if (this.debugInfoText && this.debugInfoText.active) {
+              this.debugInfoText.setVisible(false);
+            }
+          });
+        }
+      }
+      
+      console.log(`Debug-Modus gewechselt zu: ${this.debugMode}`);
+      
+      // Emit ein Ereignis, damit andere Komponenten darauf reagieren können
+      this.eventBus.emit(EventType.DEBUG_TOGGLED, this.debugMode);
+    } catch (error) {
+      console.error('Fehler beim Umschalten des Debug-Modus:', error);
     }
   }
 } 

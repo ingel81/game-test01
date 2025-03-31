@@ -10,6 +10,7 @@ import { EventBus, EventType } from '../../utils/eventBus';
 import { MovementComponent, MovementConfig, MovementPattern } from './components/movementComponent';
 import { WeaponComponent, WeaponConfig, ShootingPattern } from './components/weaponComponent';
 import { VisualComponent, VisualConfig } from './components/visualComponent';
+import { DebugMode } from '../../scenes/baseScene';
 
 // Konfigurationsoptionen für Gegner
 export interface EnemyConfig {
@@ -37,6 +38,7 @@ export class BaseEnemy extends GameObject {
   
   // Debug-Text für die Anzeige des Namens
   protected debugText: Phaser.GameObjects.Text;
+  private debugToggleHandler: (mode: DebugMode) => void;
   
   constructor(
     scene: Phaser.Scene, 
@@ -66,6 +68,25 @@ export class BaseEnemy extends GameObject {
     
     // Füge Debug-Text hinzu, der den Klassennamen zeigt
     this.createDebugText();
+    
+    // Handler für Debug-Events registrieren
+    this.setupDebugHandlers();
+  }
+
+  /**
+   * Richtet die Debug-Handler ein
+   */
+  private setupDebugHandlers(): void {
+    // Handler für Debug-Modus-Änderungen
+    this.debugToggleHandler = (mode: DebugMode) => {
+      if (this.debugText && !this.isDestroyed) {
+        // Setze Sichtbarkeit basierend auf Debug-Modus
+        this.debugText.setVisible(mode === DebugMode.LIGHT || mode === DebugMode.FULL);
+      }
+    };
+    
+    // Registriere Event-Handler
+    this.eventBus.on(EventType.DEBUG_TOGGLED, this.debugToggleHandler);
   }
 
   /**
@@ -149,6 +170,17 @@ export class BaseEnemy extends GameObject {
     const debugId = `debug_${className}_${Math.floor(Math.random() * 10000)}`;
     this.debugText.setName(debugId);
     this.debugText.setData('enemyId', this.sprite.getData('instance'));
+    
+    // Setze anfängliche Sichtbarkeit basierend auf aktuellem Debug-Modus
+    // Verwende das erste Szenen-Objekt, um den aktuellen Debug-Status zu erhalten
+    // Wir gehen davon aus, dass BaseScene.globalDebugMode korrekt ist
+    if (this.scene.game.scene.scenes.length > 0) {
+      const currentDebugMode = (this.scene.game.scene.scenes[0] as any).debugMode || DebugMode.OFF;
+      this.debugText.setVisible(currentDebugMode === DebugMode.LIGHT || currentDebugMode === DebugMode.FULL);
+    } else {
+      // Standard: unsichtbar
+      this.debugText.setVisible(false);
+    }
     
     console.log(`[DEBUG-CREATE] Debug-Text erstellt mit ID ${debugId}, aktiv: ${this.debugText.active}, sichtbar: ${this.debugText.visible}`);
   }
@@ -314,6 +346,11 @@ export class BaseEnemy extends GameObject {
    * Zerstört die Entität und gibt Ressourcen frei
    */
   public destroy(): void {
+    // Entferne Debug-Event-Handler
+    if (this.debugToggleHandler) {
+      this.eventBus.off(EventType.DEBUG_TOGGLED, this.debugToggleHandler);
+    }
+    
     // Zerstöre den Debug-Text
     if (this.debugText) {
       console.log(`[DEBUG] Versuche Debug-Text zu zerstören für ${this.constructor.name} an Position (${this.sprite.x}, ${this.sprite.y})`);

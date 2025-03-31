@@ -11,6 +11,7 @@ import { BossEnemy } from '../entities/enemies/newBossEnemy';
 import { Constants } from '../utils/constants';
 import { Player } from '../entities/player/player';
 import { EventBus, EventType } from '../utils/eventBus';
+import { DebugMode } from '../scenes/baseScene';
 
 // Gegnertypen für die Erzeugung
 type EnemyType = 'standard' | 'advanced' | 'elite' | 'boss';
@@ -27,6 +28,7 @@ export class NewEnemyManager {
   private isPaused: boolean = false;
   private bossActive: boolean = false;
   private allEnemyBullets: Phaser.Physics.Arcade.Group;
+  private currentDebugMode: DebugMode = DebugMode.OFF;
   
   // Wahrscheinlichkeiten für das Spawn verschiedener Gegnertypen
   private enemySpawnChance: Record<EnemyType, number> = {
@@ -56,6 +58,7 @@ export class NewEnemyManager {
     this.eventBus.on(EventType.GAME_OVER, this.stopSpawning);
     this.eventBus.on('REGISTER_ENEMY_BULLET', this.registerEnemyBullet);
     this.eventBus.on('BOSS_DESTROYED', this.onBossDestroyed);
+    this.eventBus.on(EventType.DEBUG_TOGGLED, this.onDebugModeChanged);
     
     // Starte Spawn-Timer
     this.startSpawnTimers();
@@ -575,6 +578,7 @@ export class NewEnemyManager {
     this.eventBus.off(EventType.GAME_OVER, this.stopSpawning);
     this.eventBus.off('REGISTER_ENEMY_BULLET', this.registerEnemyBullet);
     this.eventBus.off('BOSS_DESTROYED', this.onBossDestroyed);
+    this.eventBus.off(EventType.DEBUG_TOGGLED, this.onDebugModeChanged);
     
     // Zerstöre Timer
     if (this.enemySpawnTimer) {
@@ -627,5 +631,44 @@ export class NewEnemyManager {
         textObj.destroy();
       }
     }
+  }
+  
+  /**
+   * Handler für Änderungen des Debug-Modus
+   */
+  private onDebugModeChanged = (mode: DebugMode): void => {
+    console.log(`[ENEMY_MANAGER] Debug-Modus geändert zu: ${mode}`);
+    this.currentDebugMode = mode;
+    
+    // Aktualisiere Debug-Text-Sichtbarkeit für alle Gegner
+    this.updateAllEnemyDebugTexts();
+  }
+  
+  /**
+   * Aktualisiert die Sichtbarkeit aller Gegner-Debug-Texte
+   */
+  private updateAllEnemyDebugTexts(): void {
+    // Finde alle Text-Objekte in der Szene, die Debug-Texte von Gegnern sind
+    const allGameObjects = this.scene.children.list;
+    
+    // Finde alle Debug-Text-Objekte für Gegner
+    const enemyTextObjects = allGameObjects.filter(obj => {
+      if (obj.type !== 'Text') return false;
+      
+      const text = obj as Phaser.GameObjects.Text;
+      // Prüfe, ob der Text ein Gegner-Debug-Text ist
+      return text.text && ['StandardEnemy', 'AdvancedEnemy', 'EliteEnemy', 'BossEnemy'].some(
+        name => text.text.includes(name)
+      );
+    }) as Phaser.GameObjects.Text[];
+    
+    // Setze Sichtbarkeit basierend auf Debug-Modus
+    const isVisible = this.currentDebugMode === DebugMode.LIGHT || this.currentDebugMode === DebugMode.FULL;
+    
+    console.log(`[ENEMY_MANAGER] Setze Sichtbarkeit von ${enemyTextObjects.length} Debug-Texten auf ${isVisible}`);
+    
+    enemyTextObjects.forEach(text => {
+      text.setVisible(isVisible);
+    });
   }
 } 

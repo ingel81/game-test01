@@ -116,16 +116,22 @@ export class Player extends GameObject {
     let targetVelocityX = 0;
     let targetVelocityY = 0;
 
-    // Tastatureingaben sammeln
-    if (this.cursors.left.isDown) {
+    // WASD-Tasten und Pfeiltasten definieren
+    const keyW = this.scene.input.keyboard.addKey('W');
+    const keyA = this.scene.input.keyboard.addKey('A');
+    const keyS = this.scene.input.keyboard.addKey('S');
+    const keyD = this.scene.input.keyboard.addKey('D');
+
+    // Tastatureingaben sammeln (Pfeiltasten und WASD)
+    if (this.cursors.left.isDown || keyA.isDown) {
       targetVelocityX = -this.speed;
-    } else if (this.cursors.right.isDown) {
+    } else if (this.cursors.right.isDown || keyD.isDown) {
       targetVelocityX = this.speed;
     }
 
-    if (this.cursors.up.isDown) {
+    if (this.cursors.up.isDown || keyW.isDown) {
       targetVelocityY = -this.speed;
-    } else if (this.cursors.down.isDown) {
+    } else if (this.cursors.down.isDown || keyS.isDown) {
       targetVelocityY = this.speed;
     }
 

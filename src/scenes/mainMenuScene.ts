@@ -66,9 +66,10 @@ export class MainMenuScene extends BaseScene {
     // Steuerungshinweise - nach unten verschoben
     const controls = [
       'Controls:',
-      'Arrow Keys - Move',
+      'Arrow Keys / WASD - Move',
       'Space - Shoot',
-      'ESC - Pause'
+      'ESC - Pause',
+      'F9 - Toggle Debug Modes (Off/Light/Full)'
     ];
 
     controls.forEach((text, index) => {
