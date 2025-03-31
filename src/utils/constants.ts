@@ -83,11 +83,12 @@ export class Constants {
   public static readonly ASSET_PLAYER_UP: string = 'player-up';
   public static readonly ASSET_PLAYER_DOWN: string = 'player-down';
   public static readonly ASSET_BULLET: string = 'bullet';
-  public static readonly ASSET_ENEMY: string = 'enemy';
+  public static readonly ASSET_ENEMY01: string = 'enemy01';
+  public static readonly ASSET_ENEMY02: string = 'enemy02';
   public static readonly ASSET_ENEMY_BULLET: string = 'enemyBullet';
   public static readonly ASSET_ASTEROID: string = 'asteroid';
   public static readonly ASSET_ASTEROID_SMALL: string = 'asteroid-small';
-  public static readonly ASSET_BOSS: string = 'boss';
+  public static readonly ASSET_BOSS01: string = 'boss01';
   public static readonly ASSET_EXPLOSION_1: string = 'explosion1';
   public static readonly ASSET_EXPLOSION_2: string = 'explosion2';
   public static readonly ASSET_EXPLOSION_3: string = 'explosion3';

@@ -197,8 +197,21 @@ export class BaseEnemy extends GameObject {
       this.visualComponent.update(time, delta);
     }
     
-    // Debug-Text-Position aktualisieren
-    if (this.debugText) {
+    // Debug-Text aktualisieren (Position und Inhalt)
+    if (this.debugText && this.movementComponent) { // Stelle sicher, dass beide vorhanden sind
+      // Klassen-Typ wie in createDebugText ermitteln
+      let className = this.constructor.name;
+      if ((this.constructor as any).enemyType) {
+        className = (this.constructor as any).enemyType;
+      }
+      
+      // Aktuelles Bewegungsmuster holen
+      const currentPattern = this.movementComponent.getPattern();
+      
+      // Text aktualisieren
+      this.debugText.setText(`${className} (${currentPattern})`);
+      
+      // Position aktualisieren
       this.debugText.setPosition(
         this.sprite.x,
         this.sprite.y - this.sprite.height/2 - 15

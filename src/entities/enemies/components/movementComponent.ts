@@ -26,6 +26,7 @@ export interface MovementConfig {
   rotateToDirection?: boolean;
   evadeDistance?: number;
   randomMovementInterval?: number;
+  allowedPatterns?: MovementPattern[]; // NEU: Liste der erlaubten Muster für den zufälligen Wechsel
 }
 
 export class MovementComponent {
@@ -52,6 +53,7 @@ export class MovementComponent {
   private rotateToDirection: boolean;
   private evadeDistance: number;
   private randomMovementInterval: number;
+  private allowedPatterns: MovementPattern[] | null; // NEU: Member zum Speichern der erlaubten Muster
   
   private sprite: Phaser.Physics.Arcade.Sprite;
   private player: Player;
@@ -78,6 +80,7 @@ export class MovementComponent {
     // Muster-Wechsel-Einstellungen
     this.patternChangeInterval = config.patternChangeInterval || 4000;
     this.changePatternRandomly = config.changePatternRandomly || false;
+    this.allowedPatterns = config.allowedPatterns || null; // NEU: Erlaubte Muster speichern
     
     // Spieler-Tracking-Einstellungen
     this.trackingFactor = config.trackingFactor || 0.02;
@@ -177,15 +180,22 @@ export class MovementComponent {
    * Ändert das Bewegungsmuster zufällig
    */
   private changePattern(): void {
-    const patterns: MovementPattern[] = ['linear', 'zigzag', 'circular', 'tracking', 'evasive', 'sinusoidal', 'random'];
-    let newPatternIndex = Math.floor(Math.random() * patterns.length);
-    
-    // Vermeide Wiederholung des gleichen Musters
-    if (patterns[newPatternIndex] === this.pattern && patterns.length > 1) {
-      newPatternIndex = (newPatternIndex + 1) % patterns.length;
+    // NEU: Wähle die Liste, aus der gewählt werden soll
+    const patternsToChooseFrom = this.allowedPatterns || ['linear', 'zigzag', 'circular', 'tracking', 'evasive', 'sinusoidal', 'random'];
+
+    // Stelle sicher, dass es mehr als ein Muster zur Auswahl gibt
+    if (patternsToChooseFrom.length <= 1) {
+      return; // Kein Wechsel möglich/nötig
     }
-    
-    this.pattern = patterns[newPatternIndex];
+
+    let newPatternIndex = Math.floor(Math.random() * patternsToChooseFrom.length);
+
+    // Vermeide Wiederholung des gleichen Musters
+    if (patternsToChooseFrom[newPatternIndex] === this.pattern) {
+      newPatternIndex = (newPatternIndex + 1) % patternsToChooseFrom.length;
+    }
+
+    this.pattern = patternsToChooseFrom[newPatternIndex];
 
     // Visuelles Feedback beim Musterwechsel
     this.scene.tweens.add({
@@ -202,6 +212,13 @@ export class MovementComponent {
    */
   public setPattern(pattern: MovementPattern): void {
     this.pattern = pattern;
+  }
+
+  /**
+   * Gibt das aktuelle Bewegungsmuster zurück
+   */
+  public getPattern(): MovementPattern {
+    return this.pattern;
   }
 
   /**

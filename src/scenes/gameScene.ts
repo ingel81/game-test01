@@ -46,8 +46,9 @@ export class GameScene extends BaseScene {
     
     // Lade die Feind-Assets
     this.load.image(Constants.ASSET_ENEMY_BULLET, Constants.getAssetPath('shoot/shoot2.png'));
-    this.load.image(Constants.ASSET_ENEMY, Constants.getAssetPath('enemy/sprites/enemy1.png'));
-    this.load.image(Constants.ASSET_BOSS, Constants.getAssetPath('enemy/sprites/enemy6.png'));
+    this.load.image(Constants.ASSET_ENEMY01, Constants.getAssetPath(`enemy/sprites/${Constants.ASSET_ENEMY01}.png`));
+    this.load.image(Constants.ASSET_ENEMY02, Constants.getAssetPath(`enemy/sprites/${Constants.ASSET_ENEMY02}.png`));
+    this.load.image(Constants.ASSET_BOSS01, Constants.getAssetPath(`enemy/sprites/${Constants.ASSET_BOSS01}.png`));
     
     // Lade die Umgebungs-Assets
     this.load.image(Constants.ASSET_ASTEROID, Constants.getAssetPath('asteroids/asteroid.png'));

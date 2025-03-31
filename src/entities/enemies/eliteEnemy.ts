@@ -14,6 +14,9 @@ export class EliteEnemy extends BaseEnemy {
   // Statischer Klassenname, der im Build erhalten bleibt
   public static enemyType = 'EliteEnemy';
   
+  // NEU: Definiere die erlaubten Elite-Bewegungsmuster
+  private static readonly ELITE_MOVEMENT_PATTERNS: MovementPattern[] = ['tracking', 'evasive', 'sinusoidal', 'random'];
+  
   // Zusätzliche Eigenschaften für EliteEnemy
   private specialAttackTimer: number = 0;
   private specialAttackInterval: number = 5000; // Alle 5 Sekunden
@@ -21,7 +24,7 @@ export class EliteEnemy extends BaseEnemy {
   constructor(scene: Phaser.Scene, x: number, y: number, player: Player) {
     // Konfiguriere den Elite-Gegner
     const config: EnemyConfig = {
-      texture: Constants.ASSET_ENEMY, // Verfügbare Textur
+      texture: Constants.ASSET_ENEMY02, // Verfügbare Textur
       health: 350, // Deutlich mehr Gesundheit
       speed: 180 + Math.random() * 50, // Sehr schnell
       scoreValue: 200, // Mehr Punkte
@@ -34,7 +37,8 @@ export class EliteEnemy extends BaseEnemy {
         changePatternRandomly: true,
         patternChangeInterval: 2000 + Math.random() * 1000,
         trackingFactor: 0.04, // Besseres Tracking
-        predictiveAimFactor: 0.6 // Mit verbesserter Vorhersage
+        predictiveAimFactor: 0.6, // Mit verbesserter Vorhersage
+        allowedPatterns: EliteEnemy.ELITE_MOVEMENT_PATTERNS // NEU: Nur diese Muster erlauben
       },
       
       // Waffeneinstellungen
@@ -52,9 +56,9 @@ export class EliteEnemy extends BaseEnemy {
       // Visuelle Einstellungen
       visual: {
         tint: 0xFF0000, // Rote Färbung für Elite-Gegner
-        scale: 1.2, // Größer
+        scale: 0.3, // Größer
         hitEffectDuration: 150,
-        glowEffect: true // Mit Gloweffekt
+        glowEffect: false // Mit Gloweffekt
       }
     };
     

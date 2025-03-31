@@ -14,10 +14,13 @@ export class AdvancedEnemy extends BaseEnemy {
   // Statischer Klassenname, der im Build erhalten bleibt
   public static enemyType = 'AdvancedEnemy';
   
+  // NEU: Definiere die erlaubten fortgeschrittenen Bewegungsmuster
+  private static readonly ADVANCED_MOVEMENT_PATTERNS: MovementPattern[] = ['zigzag', 'circular', 'tracking', 'evasive', 'sinusoidal'];
+  
   constructor(scene: Phaser.Scene, x: number, y: number, player: Player) {
     // Konfiguriere den fortgeschrittenen Gegner
     const config: EnemyConfig = {
-      texture: Constants.ASSET_ENEMY, // Verwende verfügbare Textur
+      texture: Constants.ASSET_ENEMY02, // Verwende verfügbare Textur
       health: 200, // Mehr Gesundheit
       speed: 150 + Math.random() * 50, // Schneller
       scoreValue: 100, // Mehr Punkte
@@ -30,7 +33,8 @@ export class AdvancedEnemy extends BaseEnemy {
         changePatternRandomly: true,
         patternChangeInterval: 2500 + Math.random() * 1000,
         trackingFactor: 0.03, // Besseres Tracking
-        predictiveAimFactor: 0.3 // Mit Vorhersage
+        predictiveAimFactor: 0.3, // Mit Vorhersage
+        allowedPatterns: AdvancedEnemy.ADVANCED_MOVEMENT_PATTERNS // NEU: Nur diese Muster erlauben
       },
       
       // Waffeneinstellungen
@@ -47,10 +51,10 @@ export class AdvancedEnemy extends BaseEnemy {
       
       // Visuelle Einstellungen
       visual: {
-        tint: 0xFF9000, // Orange-Färbung für fortgeschrittene Gegner
-        scale: 1.1, // Etwas größer
+        tint: 0xFF9000,
+        scale: 0.3,
         hitEffectDuration: 150,
-        glowEffect: true // Mit Gloweffekt
+        glowEffect: false
       }
     };
     
@@ -62,8 +66,8 @@ export class AdvancedEnemy extends BaseEnemy {
    */
   private static getRandomAdvancedMovementPattern(): MovementPattern {
     // Bevorzugt komplexere Bewegungsmuster
-    const patterns: MovementPattern[] = ['zigzag', 'circular', 'tracking', 'evasive', 'sinusoidal'];
-    return patterns[Math.floor(Math.random() * patterns.length)];
+    // Verwende die Konstante
+    return AdvancedEnemy.ADVANCED_MOVEMENT_PATTERNS[Math.floor(Math.random() * AdvancedEnemy.ADVANCED_MOVEMENT_PATTERNS.length)];
   }
   
   /**

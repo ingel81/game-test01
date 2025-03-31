@@ -54,7 +54,7 @@ export class BossEnemy extends BaseEnemy {
   constructor(scene: Phaser.Scene, x: number, y: number, player: Player) {
     // Konfiguriere den Boss-Gegner
     const config: EnemyConfig = {
-      texture: Constants.ASSET_BOSS,
+      texture: Constants.ASSET_BOSS01,
       health: 200, // Hohe Gesundheit
       speed: 80, // Langsamer als normale Gegner
       scoreValue: 1000, // Viele Punkte
@@ -377,7 +377,7 @@ export class BossEnemy extends BaseEnemy {
       // Hier musst du die entsprechende Klasse importieren und verwenden
       // Für dieses Beispiel nutzen wir BaseEnemy direkt
       const config: EnemyConfig = {
-        texture: Constants.ASSET_ENEMY,
+        texture: Constants.ASSET_ENEMY01,
         health: 50,
         speed: 120,
         scoreValue: 20,

@@ -13,10 +13,13 @@ export class StandardEnemy extends BaseEnemy {
   // Statischer Klassenname, der im Build erhalten bleibt
   public static enemyType = 'StandardEnemy';
   
+  // NEU: Definiere die erlaubten einfachen Bewegungsmuster
+  private static readonly EASY_MOVEMENT_PATTERNS: MovementPattern[] = ['linear', 'zigzag', 'circular'];
+  
   constructor(scene: Phaser.Scene, x: number, y: number, player: Player) {
     // Konfiguriere den Gegner durch ein Konfigurationsobjekt
     const config: EnemyConfig = {
-      texture: Constants.ASSET_ENEMY,
+      texture: Constants.ASSET_ENEMY01,
       health: 20,
       speed: 100 + Math.random() * 50, // Leichte Variation in der Geschwindigkeit
       scoreValue: 50,
@@ -27,7 +30,8 @@ export class StandardEnemy extends BaseEnemy {
         pattern: StandardEnemy.getRandomEasyMovementPattern(),
         speed: 100 + Math.random() * 50,
         changePatternRandomly: true,
-        patternChangeInterval: 3000 + Math.random() * 1000
+        patternChangeInterval: 3000 + Math.random() * 1000,
+        allowedPatterns: StandardEnemy.EASY_MOVEMENT_PATTERNS // NEU: Nur diese Muster erlauben
       },
       
       // Waffeneinstellungen
@@ -53,8 +57,8 @@ export class StandardEnemy extends BaseEnemy {
    * Standardgegner verwenden nur grundlegende Bewegungsmuster
    */
   private static getRandomEasyMovementPattern(): MovementPattern {
-    const easyPatterns: MovementPattern[] = ['linear', 'zigzag', 'circular'];
-    return easyPatterns[Math.floor(Math.random() * easyPatterns.length)];
+    // Verwende die Konstante
+    return StandardEnemy.EASY_MOVEMENT_PATTERNS[Math.floor(Math.random() * StandardEnemy.EASY_MOVEMENT_PATTERNS.length)];
   }
   
   /**
