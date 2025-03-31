@@ -83,6 +83,13 @@ export class Asteroid extends GameObject {
     const explosionX = this.sprite.x;
     const explosionY = this.sprite.y;
     
+    // Physik-Körper deaktivieren, um Debug-Anzeige zu entfernen
+    if (this.sprite.body) {
+      // Deaktiviere den Physik-Körper vollständig
+      this.scene.physics.world.disable(this.sprite);
+      this.sprite.body.enable = false;
+    }
+    
     // Erstelle eine Explosion
     const explosion = this.scene.add.sprite(explosionX, explosionY, Constants.ASSET_EXPLOSION_1);
     const explosionScale = this.size === 'large' ? 2 : 1.2;
