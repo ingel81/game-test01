@@ -8,6 +8,8 @@ import { Player } from "../player/player";
 import { Constants } from "../../utils/constants";
 import { MovementPattern } from "./components/movementComponent";
 import { ShootingPattern } from "./components/weaponComponent";
+import { EventBus } from "../../utils/eventBus";
+import { BulletFactory } from "../../factories/BulletFactory";
 
 export class TurretEnemy extends BaseEnemy {
   // Statischer Klassenname, der im Build erhalten bleibt
@@ -16,12 +18,17 @@ export class TurretEnemy extends BaseEnemy {
   // Spezifische Eigenschaften für den Turm
   private turretBase: Phaser.Physics.Arcade.Sprite;
   private turretTop: Phaser.GameObjects.Sprite;
+  private lastFireTime: number = 0;
+  private fireRate: number = 1500; // Standard-Feuerrate
+  private activeBarrel: number = 0; // Welcher Lauf als nächstes feuert (0 oder 1)
+  private barrelOffsetX: number = 15; // Horizontaler Abstand zwischen den Läufen
+  private barrelOffsetY: number = 7; // Vertikaler Abstand zwischen den Läufen
 
   constructor(scene: Phaser.Scene, x: number, y: number, player: Player) {
     // Konfiguration für den Geschützturm
     const config: EnemyConfig = {
       texture: Constants.ASSET_TURRET_BASE,
-      health: 150,
+      health: 100,
       speed: 30, // Sehr langsame Bewegung (nur in X-Richtung)
       scoreValue: 150,
       fireRate: 1500, // Etwas langsamere Feuerrate
@@ -56,6 +63,9 @@ export class TurretEnemy extends BaseEnemy {
 
     // Referenz auf die Basis speichern
     this.turretBase = this.sprite;
+    
+    // Feuerrate speichern
+    this.fireRate = config.fireRate;
 
     // Erstelle den oberen Teil des Turms
     this.turretTop = scene.add.sprite(x, y, Constants.ASSET_TURRET_TOP);
@@ -95,8 +105,61 @@ export class TurretEnemy extends BaseEnemy {
         );
 
         // Setze die Rotation des oberen Teils (plus 180°, da das Sprite nach rechts zeigt)
+        // und der Turm zum Spieler zeigen soll, nicht von ihm weg
         this.turretTop.rotation = angle + Math.PI; // Füge 180 Grad (π) hinzu
+        
+        // Eigenes Schussverhalten basierend auf der Rotation
+        this.fireTurret(time);
       }
+    }
+  }
+  
+  /**
+   * Überschreibt das Standard-Schussverhalten mit turretspezifischem Verhalten
+   */
+  private fireTurret(time: number): void {
+    // Überprüfe die Feuerrate
+    if (time > this.lastFireTime + this.fireRate) {
+      this.lastFireTime = time;
+      
+      // Die Richtung zum Spieler ist der berechnete Winkel aus der update-Methode
+      // Da wir dort aber 180° hinzugefügt haben, müssen wir hier den ursprünglichen Winkel verwenden
+      const firingAngle = this.turretTop.rotation - Math.PI;
+      
+      // Bestimme, welcher Lauf als nächstes feuern soll
+      this.activeBarrel = (this.activeBarrel === 0) ? 1 : 0;
+      
+      // Berechne Offset für den aktuellen Lauf
+      // Die Läufe sind horizontal nebeneinander, daher rotieren wir den Offset
+      const barrelOffsetX = this.activeBarrel === 0 ? this.barrelOffsetX : -this.barrelOffsetX;
+      const barrelOffsetY = this.activeBarrel === 0 ? this.barrelOffsetY : -this.barrelOffsetY;
+      
+      // Rotiere den Lauf-Offset entsprechend der Turm-Rotation
+      const rotatedOffsetX = barrelOffsetX * Math.cos(firingAngle) - barrelOffsetY * Math.sin(firingAngle);
+      const rotatedOffsetY = barrelOffsetX * Math.sin(firingAngle) + barrelOffsetY * Math.cos(firingAngle);
+      
+      // Berechne die Position, von der aus geschossen wird (relativ zum Turm)
+      const barrelLength = 40; // Länge der Läufe vom Drehpunkt aus
+      const startX = this.turretTop.x + Math.cos(firingAngle) * barrelLength + rotatedOffsetX;
+      const startY = this.turretTop.y + Math.sin(firingAngle) * barrelLength + rotatedOffsetY;
+      
+      // Erstelle einen Schuss mit der BulletFactory
+      const bulletFactory = BulletFactory.getInstance(this.scene);
+      bulletFactory.createTurretBullet(startX, startY, firingAngle);
+      
+      // Sound-Effekt
+      this.scene.sound.play(Constants.SOUND_ENEMY_SHOOT, {
+        volume: 0.2
+      });
+      
+      // Visuelles Feedback: kurzes Aufleuchten beim Schießen
+      this.scene.tweens.add({
+        targets: this.turretTop,
+        alpha: 0.8,
+        duration: 50,
+        yoyo: true,
+        ease: 'Sine.easeInOut'
+      });
     }
   }
 

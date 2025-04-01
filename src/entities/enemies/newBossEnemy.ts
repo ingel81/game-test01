@@ -10,6 +10,7 @@ import { MovementPattern } from './components/movementComponent';
 import { ShootingPattern } from './components/weaponComponent';
 import { GameObject } from '../gameObject';
 import { EventBus, EventType } from '../../utils/eventBus';
+import { BulletFactory } from '../../factories/BulletFactory';
 
 // Definiere die verschiedenen Bossphasen
 type BossPhase = 'entry' | 'phase1' | 'phase2' | 'phase3' | 'rage' | 'retreat';
@@ -541,6 +542,7 @@ export class BossEnemy extends BaseEnemy {
    */
   private fireSpiralPattern(bulletCount: number, angleStep: number): void {
     let currentAngle = 0;
+    const bulletFactory = BulletFactory.getInstance(this.scene);
     
     // Erstellt eine Spirale von Projektilen
     for (let i = 0; i < bulletCount; i++) {
@@ -556,22 +558,8 @@ export class BossEnemy extends BaseEnemy {
           const x = this.sprite.x + Math.cos(radians) * 30;
           const y = this.sprite.y + Math.sin(radians) * 30;
           
-          const bullet = this.weaponComponent.getBullets().get(x, y) as Phaser.Physics.Arcade.Sprite;
-          
-          if (bullet) {
-            bullet.setActive(true);
-            bullet.setVisible(true);
-            bullet.setData('type', 'enemyBullet');
-            
-            // Drehe das Sprite um (statt Rotation)
-            bullet.setFlipX(true);
-            
-            const speed = 200;
-            bullet.setVelocity(Math.cos(radians) * speed, Math.sin(radians) * speed);
-            bullet.setRotation(radians);
-            
-            this.eventBus.emit('REGISTER_ENEMY_BULLET', bullet);
-          }
+          // Erzeuge Bullet mit der Factory
+          bulletFactory.createEnemyBullet(x, y, radians);
         }
         
         // Sound-Effekt bei jedem dritten Schuss
@@ -597,6 +585,7 @@ export class BossEnemy extends BaseEnemy {
   private fireCrossPattern(): void {
     // Feuert in 4 Richtungen (horizontal und vertikal)
     const angles = [0, 90, 180, 270];
+    const bulletFactory = BulletFactory.getInstance(this.scene);
     
     for (const angle of angles) {
       for (let i = 0; i < 3; i++) {
@@ -607,22 +596,8 @@ export class BossEnemy extends BaseEnemy {
           const x = this.sprite.x + Math.cos(radians) * 30;
           const y = this.sprite.y + Math.sin(radians) * 30;
           
-          const bullet = this.weaponComponent.getBullets().get(x, y) as Phaser.Physics.Arcade.Sprite;
-          
-          if (bullet) {
-            bullet.setActive(true);
-            bullet.setVisible(true);
-            bullet.setData('type', 'enemyBullet');
-            
-            // Drehe das Sprite um (statt Rotation)
-            bullet.setFlipX(true);
-            
-            const speed = 220 + i * 20; // Projektile werden schneller
-            bullet.setVelocity(Math.cos(radians) * speed, Math.sin(radians) * speed);
-            bullet.setRotation(radians);
-            
-            this.eventBus.emit('REGISTER_ENEMY_BULLET', bullet);
-          }
+          // Erzeuge Bullet mit der Factory
+          bulletFactory.createEnemyBullet(x, y, radians);
         });
       }
     }
@@ -659,6 +634,7 @@ export class BossEnemy extends BaseEnemy {
    */
   private fire360Degrees(bulletCount: number): void {
     const angleStep = 360 / bulletCount;
+    const bulletFactory = BulletFactory.getInstance(this.scene);
     
     for (let i = 0; i < bulletCount; i++) {
       const angle = i * angleStep;
@@ -668,29 +644,8 @@ export class BossEnemy extends BaseEnemy {
       const x = this.sprite.x + Math.cos(radians) * 30;
       const y = this.sprite.y + Math.sin(radians) * 30;
       
-      // Erstelle Projektil im zentralen Bullet-Pool
-      const bullet = this.weaponComponent.getBullets().get(x, y) as Phaser.Physics.Arcade.Sprite;
-      
-      if (bullet) {
-        bullet.setActive(true);
-        bullet.setVisible(true);
-        
-        // Drehe das Sprite um (statt Rotation)
-        bullet.setFlipX(true);
-        
-        // Setze den Typ für Kollisionserkennung
-        bullet.setData('type', 'enemyBullet');
-        
-        // Setze Geschwindigkeit und Richtung
-        const speed = 200;
-        bullet.setVelocity(Math.cos(radians) * speed, Math.sin(radians) * speed);
-        
-        // Setze die Rotation des Projektils
-        bullet.setRotation(radians);
-        
-        // Registriere das Projektil
-        this.eventBus.emit('REGISTER_ENEMY_BULLET', bullet);
-      }
+      // Erzeuge Bullet mit der Factory
+      bulletFactory.createEnemyBullet(x, y, radians);
     }
     
     // Sound-Effekt
@@ -714,40 +669,29 @@ export class BossEnemy extends BaseEnemy {
   private fireWave(): void {
     const bulletCount = 12;
     const waveHeight = 200;
-    const bulletSpeed = 150;
+    const bulletFactory = BulletFactory.getInstance(this.scene);
     
     for (let i = 0; i < bulletCount; i++) {
       const x = this.sprite.x;
       const yOffset = -waveHeight/2 + (waveHeight * i / (bulletCount - 1));
       const y = this.sprite.y + yOffset;
       
-      // Erstelle Projektil im zentralen Bullet-Pool
-      const bullet = this.weaponComponent.getBullets().get(x, y) as Phaser.Physics.Arcade.Sprite;
-      
-      if (bullet) {
-        bullet.setActive(true);
-        bullet.setVisible(true);
-        
-        // Drehe das Sprite um (statt Rotation)
-        bullet.setFlipX(true);
-        
-        // Setze den Typ für Kollisionserkennung
-        bullet.setData('type', 'enemyBullet');
-        
-        // Setze Geschwindigkeit (nach links)
-        bullet.setVelocity(-bulletSpeed, 0);
-        
-        // Bei horizontalen Projektilen keine Rotation nötig
-        // bullet.setRotation(Math.PI);
-        
-        // Registriere das Projektil
-        this.eventBus.emit('REGISTER_ENEMY_BULLET', bullet);
-      }
+      // Erzeuge Bullet mit der Factory (nach links gerichtet)
+      bulletFactory.createEnemyBullet(x, y, Math.PI);
     }
     
     // Sound-Effekt
     this.scene.sound.play(Constants.SOUND_ENEMY_SHOOT, {
       volume: 0.3
+    });
+    
+    // Visuelles Feedback
+    this.scene.tweens.add({
+      targets: this.sprite,
+      scaleX: 0.45,
+      scaleY: 0.45,
+      duration: 200,
+      yoyo: true
     });
   }
   

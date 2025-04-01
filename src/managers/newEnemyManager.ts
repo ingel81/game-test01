@@ -28,16 +28,17 @@ export class NewEnemyManager {
   private eventBus: EventBus;
   private isPaused: boolean = false;
   private bossActive: boolean = false;
+  private turretActive: boolean = false;
   private allEnemyBullets: Phaser.Physics.Arcade.Group;
   private currentDebugMode: DebugMode = DebugMode.OFF;
   
   // Wahrscheinlichkeiten für das Spawn verschiedener Gegnertypen
   private enemySpawnChance: Record<EnemyType, number> = {
-    standard: 0.1,
-    advanced: 0.0,
-    elite: 0.0,
+    standard: 0.3,
+    advanced: 0.1,
+    elite: 0.1,
     boss: 0, // Boss wird über einen Timer gespawnt
-    turret: 0.9 // 90% Chance für Turrets
+    turret: 0.1 // 90% Chance für Turrets
   };
 
   constructor(scene: Phaser.Scene, player: Player) {
@@ -117,6 +118,12 @@ export class NewEnemyManager {
     const enemyTypes: EnemyType[] = ['standard', 'advanced', 'elite', 'turret', 'boss'];
     
     for (const type of enemyTypes) {
+      // Wenn für Turret bereits ein aktiver vorhanden ist, überspringe diesen Typ
+      if (type === 'turret' && this.turretActive) {
+        console.log(`[ENEMY_MANAGER] Turret-Spawn übersprungen - bereits ein aktiver Turret vorhanden`);
+        continue;
+      }
+      
       cumulativeProbability += this.enemySpawnChance[type];
       console.log(`[ENEMY_MANAGER] Typ: ${type}, Wahrscheinlichkeit: ${this.enemySpawnChance[type].toFixed(2)}, Kumulativ: ${cumulativeProbability.toFixed(2)}`);
       if (randomValue < cumulativeProbability) {
@@ -166,7 +173,9 @@ export class NewEnemyManager {
         break;
       case 'turret':
         enemy = new TurretEnemy(this.scene, x, y, this.player);
+        this.turretActive = true;
         console.log(`[ENEMY_MANAGER] TurretEnemy erstellt mit ${enemy.getHealth()} HP`);
+        console.log(`[ENEMY_MANAGER] TurretActive-Flag gesetzt auf ${this.turretActive}`);
         break;
       default:
         enemy = new StandardEnemy(this.scene, x, y, this.player);
@@ -194,11 +203,11 @@ export class NewEnemyManager {
    * Spawnt einen Boss-Gegner
    */
   private spawnBoss = (): void => {
-    if (this.isPaused || this.difficulty < 2 || this.bossActive) {
+    if (this.isPaused || this.difficulty < 5 || this.bossActive) {
       if (this.isPaused) {
         console.log(`[ENEMY_MANAGER] Boss-Spawn übersprungen: Spiel ist pausiert`);
-      } else if (this.difficulty < 2) {
-        console.log(`[ENEMY_MANAGER] Boss-Spawn übersprungen: Schwierigkeit (${this.difficulty}) zu niedrig für Boss`);
+      } else if (this.difficulty < 5) {
+        console.log(`[ENEMY_MANAGER] Boss-Spawn übersprungen: Schwierigkeit (${this.difficulty}) zu niedrig für Boss (min. 5)`);
       } else if (this.bossActive) {
         console.log(`[ENEMY_MANAGER] Boss-Spawn übersprungen: Bereits ein Boss aktiv`);
         
@@ -406,42 +415,71 @@ export class NewEnemyManager {
   
     // Basis-Spawn-Chance für jeden Gegnertyp
     switch (this.difficulty) {
-      case 1:
-        this.enemySpawnChance.standard = 0.1;
+      case 1: // Anfang: Hauptsächlich Standard-Gegner und wenige Turrets
+        this.enemySpawnChance.standard = 0.9;
         this.enemySpawnChance.advanced = 0.0;
         this.enemySpawnChance.elite = 0.0;
-        this.enemySpawnChance.turret = 0.9;
+        this.enemySpawnChance.turret = 0.1;
         break;
-      case 2:
-        this.enemySpawnChance.standard = 0.1;
-        this.enemySpawnChance.advanced = 0.0;
+      case 2: // Einführung von Advanced-Gegnern
+        this.enemySpawnChance.standard = 0.7;
+        this.enemySpawnChance.advanced = 0.2;
         this.enemySpawnChance.elite = 0.0;
-        this.enemySpawnChance.turret = 0.9;
+        this.enemySpawnChance.turret = 0.1;
         break;
-      case 3:
-        this.enemySpawnChance.standard = 0.1;
-        this.enemySpawnChance.advanced = 0.0;
+      case 3: // Mehr Advanced-Gegner
+        this.enemySpawnChance.standard = 0.5;
+        this.enemySpawnChance.advanced = 0.3;
         this.enemySpawnChance.elite = 0.0;
-        this.enemySpawnChance.turret = 0.9;
+        this.enemySpawnChance.turret = 0.2;
         break;
-      case 4:
-        this.enemySpawnChance.standard = 0.1;
-        this.enemySpawnChance.advanced = 0.0;
-        this.enemySpawnChance.elite = 0.0;
-        this.enemySpawnChance.turret = 0.9;
+      case 4: // Einführung von Elite-Gegnern
+        this.enemySpawnChance.standard = 0.4;
+        this.enemySpawnChance.advanced = 0.3;
+        this.enemySpawnChance.elite = 0.1;
+        this.enemySpawnChance.turret = 0.2;
         break;
-      case 5:
-        this.enemySpawnChance.standard = 0.1;
-        this.enemySpawnChance.advanced = 0.0;
-        this.enemySpawnChance.elite = 0.0;
-        this.enemySpawnChance.turret = 0.9;
+      case 5: // Erste Bosse + mehr Elite-Gegner
+        this.enemySpawnChance.standard = 0.3;
+        this.enemySpawnChance.advanced = 0.3;
+        this.enemySpawnChance.elite = 0.2;
+        this.enemySpawnChance.turret = 0.2;
         break;
-      default:
-        // Ab Stufe 6
+      case 6: // Mehr Elite-Gegner
+        this.enemySpawnChance.standard = 0.3;
+        this.enemySpawnChance.advanced = 0.3;
+        this.enemySpawnChance.elite = 0.3;
+        this.enemySpawnChance.turret = 0.1;
+        break;
+      case 7: // Verhältnis ausbalancieren
+        this.enemySpawnChance.standard = 0.25;
+        this.enemySpawnChance.advanced = 0.35;
+        this.enemySpawnChance.elite = 0.3;
+        this.enemySpawnChance.turret = 0.1;
+        break;
+      case 8: // Stärkere Gegner dominieren
+        this.enemySpawnChance.standard = 0.2;
+        this.enemySpawnChance.advanced = 0.35;
+        this.enemySpawnChance.elite = 0.35;
+        this.enemySpawnChance.turret = 0.1;
+        break;
+      case 9: // Fast nur noch fortgeschrittene Gegner
+        this.enemySpawnChance.standard = 0.15;
+        this.enemySpawnChance.advanced = 0.4;
+        this.enemySpawnChance.elite = 0.35;
+        this.enemySpawnChance.turret = 0.1;
+        break;
+      case 10: // Endstadium - Elite und Advanced dominieren
         this.enemySpawnChance.standard = 0.1;
-        this.enemySpawnChance.advanced = 0.0;
-        this.enemySpawnChance.elite = 0.0;
-        this.enemySpawnChance.turret = 0.9;
+        this.enemySpawnChance.advanced = 0.4;
+        this.enemySpawnChance.elite = 0.4;
+        this.enemySpawnChance.turret = 0.1;
+        break;
+      default: // Ab Stufe 11 - Maximale Schwierigkeit
+        this.enemySpawnChance.standard = 0.1;
+        this.enemySpawnChance.advanced = 0.4;
+        this.enemySpawnChance.elite = 0.4;
+        this.enemySpawnChance.turret = 0.1;
     }
     
     // Maximale Anzahl von Gegnern anpassen
@@ -553,19 +591,48 @@ export class NewEnemyManager {
    * Zerstört einen Gegner basierend auf dem Sprite
    */
   public destroyEnemy(enemySprite: Phaser.GameObjects.GameObject): void {
-    const instance = enemySprite.getData('instance') as BaseEnemy;
+    // Finde den passenden Gegner zur Sprite-Referenz
+    const index = this.enemies.findIndex(enemy => enemy.getSprite() === enemySprite);
     
-    if (instance) {
-      // Versuche, den Gegner im Array zu finden
-      const index = this.enemies.findIndex(enemy => enemy === instance);
+    if (index !== -1) {
+      const enemy = this.enemies[index];
+      const enemyType = enemy.constructor.name;
       
-      if (index !== -1) {
-        // Entferne den Gegner aus dem Array
-        this.enemies.splice(index, 1);
+      console.log(`[ENEMY_MANAGER] Zerstöre Gegner vom Typ ${enemyType}`);
+      
+      // Wenn es ein Boss war, setze bossActive zurück
+      if (enemyType === 'BossEnemy') {
+        this.bossActive = false;
+        console.log(`[ENEMY_MANAGER] Bossactive auf false gesetzt nach Boss-Zerstörung`);
+        
+        // Füge eine zusätzliche Verzögerung hinzu, bevor ein neuer Boss spawnen kann
+        console.log(`[ENEMY_MANAGER] Füge zusätzliche Cooldown-Zeit nach Boss-Zerstörung hinzu`);
+        
+        // Pausiere den Boss-Timer vorübergehend
+        if (this.bossSpawnTimer) {
+          this.bossSpawnTimer.paused = true;
+          
+          // Setze einen verzögerten Aufruf, um den Timer nach einer bestimmten Zeit wieder zu aktivieren
+          this.scene.time.delayedCall(Constants.SPAWN_RATE_BOSS, () => {
+            if (this.bossSpawnTimer) {
+              console.log(`[ENEMY_MANAGER] Boss-Cooldown abgelaufen, Spawning wieder aktiviert`);
+              this.bossSpawnTimer.paused = false;
+            }
+          });
+        }
       }
       
-      // Zerstöre den Gegner
-      instance.destroy();
+      // Wenn es ein Turret war, setze turretActive zurück
+      if (enemyType === 'TurretEnemy') {
+        this.turretActive = false;
+        console.log(`[ENEMY_MANAGER] TurretActive auf false gesetzt nach Turret-Zerstörung`);
+      }
+      
+      // Entferne den Gegner aus dem Array
+      this.enemies.splice(index, 1);
+      console.log(`[ENEMY_MANAGER] Gegner aus der Liste entfernt. Verbleibende Anzahl: ${this.enemies.length}`);
+    } else {
+      console.warn(`[ENEMY_MANAGER] destroyEnemy: Gegner nicht in der Liste gefunden.`);
     }
   }
   
@@ -681,10 +748,32 @@ export class NewEnemyManager {
     // Setze Sichtbarkeit basierend auf Debug-Modus
     const isVisible = this.currentDebugMode === DebugMode.LIGHT || this.currentDebugMode === DebugMode.FULL;
     
-    console.log(`[ENEMY_MANAGER] Setze Sichtbarkeit von ${enemyTextObjects.length} Debug-Texten auf ${isVisible}`);
+    console.log(`[ENEMY_MANAGER] Setze Sichtbarkeit von ${enemyTextObjects.length} Debug-Texten auf ${isVisible} (Modus: ${this.currentDebugMode})`);
     
+    // Forcieren wir die Sichtbarkeit direkt für alle Debug-Texte
     enemyTextObjects.forEach(text => {
       text.setVisible(isVisible);
+      
+      // Zusätzliche Maßnahme: Delayed Call für hartnäckige Fälle
+      this.scene.time.delayedCall(50, () => {
+        if (text && text.active) {
+          if (text.visible !== isVisible) {
+            console.log(`[ENEMY_MANAGER] Erzwinge Sichtbarkeit für Text "${text.text}" auf ${isVisible}`);
+            text.setVisible(isVisible);
+          }
+        }
+      });
+    });
+    
+    // Zusätzlich: Informiere alle Gegner-Instanzen aktiv
+    this.enemies.forEach(enemy => {
+      if (enemy && !enemy.isDestroyed) {
+        // Direkt die interne debugText-Eigenschaft der Gegner aktualisieren
+        const debugText = (enemy as any).debugText;
+        if (debugText && debugText.active) {
+          debugText.setVisible(isVisible);
+        }
+      }
     });
   }
 } 

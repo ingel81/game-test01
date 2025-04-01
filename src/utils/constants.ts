@@ -58,7 +58,7 @@ export class Constants {
   
   // Spawn-Raten (ms)
   public static readonly SPAWN_RATE_ENEMY: number = 2000;
-  public static readonly SPAWN_RATE_BOSS: number = 2000;
+  public static readonly SPAWN_RATE_BOSS: number = 8000;
   public static readonly SPAWN_RATE_ASTEROID: number = 5000;
   
   // Pickup-Werte
@@ -71,6 +71,7 @@ export class Constants {
   // Power-Pickup-Werte
   public static readonly POWER_PICKUP_LIFETIME: number = 10000; // 10 Sekunden
   public static readonly BOSS_POWER_DROP_CHANCE: number = 0.25; // 25% Chance bei Zerstörung eines Bosses
+  public static readonly ENEMY_POWER_DROP_CHANCE: number = 0.15; // 15% Chance bei Zerstörung eines normalen Gegners
   
   // Szenenkeys
   public static readonly SCENE_MAIN_MENU: string = 'MainMenuScene';

@@ -9,13 +9,14 @@ import { Constants } from '../../utils/constants';
 import { MovementPattern } from './components/movementComponent';
 import { ShootingPattern } from './components/weaponComponent';
 import { GameObject } from '../gameObject';
+import { BulletFactory } from '../../factories/BulletFactory';
 
 export class EliteEnemy extends BaseEnemy {
   // Statischer Klassenname, der im Build erhalten bleibt
   public static enemyType = 'EliteEnemy';
   
   // NEU: Definiere die erlaubten Elite-Bewegungsmuster
-  private static readonly ELITE_MOVEMENT_PATTERNS: MovementPattern[] = ['tracking', 'evasive', 'sinusoidal', 'random'];
+  private static readonly ELITE_MOVEMENT_PATTERNS: MovementPattern[] = ['tracking', 'evasive', 'sinusoidal'];
   
   // Zusätzliche Eigenschaften für EliteEnemy
   private specialAttackTimer: number = 0;
@@ -25,7 +26,7 @@ export class EliteEnemy extends BaseEnemy {
     // Konfiguriere den Elite-Gegner
     const config: EnemyConfig = {
       texture: Constants.ASSET_ENEMY02, // Verfügbare Textur
-      health: 350, // Deutlich mehr Gesundheit
+      health: 100, // Deutlich mehr Gesundheit
       speed: 180 + Math.random() * 50, // Sehr schnell
       scoreValue: 200, // Mehr Punkte
       fireRate: 600 + Math.random() * 300, // Sehr schnelle Feuerrate
@@ -119,6 +120,7 @@ export class EliteEnemy extends BaseEnemy {
         // Feuer in alle Richtungen
         const bulletCount = 12;
         const angleStep = 360 / bulletCount;
+        const bulletFactory = BulletFactory.getInstance(this.scene);
         
         for (let i = 0; i < bulletCount; i++) {
           const angle = i * angleStep;
@@ -128,29 +130,8 @@ export class EliteEnemy extends BaseEnemy {
           const x = this.sprite.x + Math.cos(radians) * 20;
           const y = this.sprite.y + Math.sin(radians) * 20;
           
-          // Erstelle Projektil im zentralen Bullet-Pool
-          const bullet = this.weaponComponent.getBullets().get(x, y) as Phaser.Physics.Arcade.Sprite;
-          
-          if (bullet) {
-            bullet.setActive(true);
-            bullet.setVisible(true);
-            
-            // Drehe das Sprite um (statt Rotation)
-            bullet.setFlipX(true);
-            
-            // Setze den Typ für Kollisionserkennung
-            bullet.setData('type', 'enemyBullet');
-            
-            // Setze Geschwindigkeit und Richtung
-            const speed = 200;
-            bullet.setVelocity(Math.cos(radians) * speed, Math.sin(radians) * speed);
-            
-            // Setze die Rotation des Projektils
-            bullet.setRotation(radians);
-            
-            // Registriere das Projektil
-            this.eventBus.emit('REGISTER_ENEMY_BULLET', bullet);
-          }
+          // Erstelle Projektil mit der Factory
+          bulletFactory.createEnemyBullet(x, y, radians);
         }
         
         // Sound-Effekt

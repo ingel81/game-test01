@@ -132,11 +132,19 @@ export class CollisionManager {
       
       // Überprüfe, ob Bullet steht und aktualisiere ggf. die Geschwindigkeit
       if (b.active && b.body && b.body.velocity.x === 0 && b.body.velocity.y === 0) {
-        b.setVelocity(-Constants.BULLET_SPEED, 0);
+        // Wenn die Rotation gesetzt ist, verwende sie, sonst gehe von einer horizontalen Bewegung aus
+        if (b.rotation !== 0) {
+          const speed = Constants.ENEMY_BULLET_SPEED;
+          const vx = Math.cos(b.rotation) * speed;
+          const vy = Math.sin(b.rotation) * speed;
+          b.setVelocity(vx, vy);
+        } else {
+          // Fallback für den Fall, dass keine Rotation gesetzt ist (wie zuvor)
+          b.setVelocity(-Constants.ENEMY_BULLET_SPEED, 0);
+        }
       }
       
       // Einzelne Kollisionserkennung für jedes Projektil
-      // Wichtig: Die Projektile verursachen auch dann Schaden, wenn der erzeugende Gegner bereits tot ist
       if (b.active) {
         this.scene.physics.overlap(
           b,

@@ -6,6 +6,7 @@
 import { Constants } from '../../../utils/constants';
 import { Player } from '../../player/player';
 import { EventBus } from '../../../utils/eventBus';
+import { BulletFactory } from '../../../factories/BulletFactory';
 
 export type ShootingPattern = 'single' | 'double' | 'burst' | 'spread' | 'random';
 
@@ -194,25 +195,14 @@ export class WeaponComponent {
    * Feuert ein einzelnes Projektil
    */
   private fireBullet(): void {
-    const bullet = this.bullets.get(this.sprite.x - 20, this.sprite.y) as Phaser.Physics.Arcade.Sprite;
+    // Hole die BulletFactory-Instanz
+    const bulletFactory = BulletFactory.getInstance(this.scene);
     
-    if (!bullet) return;
-    
-    bullet.setActive(true);
-    bullet.setVisible(true);
-    
-    // Drehe das Sprite um (statt Rotation)
-    bullet.setFlipX(true);
-    
-    // Setze den Typ für Kollisionserkennung
-    bullet.setData('type', 'enemyBullet');
-    
-    // Ermittle die Richtung zum Spieler, wenn auf Spieler zielen aktiviert ist
-    let velocityX = -this.bulletSpeed;
-    let velocityY = 0;
+    // Berechne Zielrichtung zum Spieler
+    let angle = Math.PI; // Standardwinkel: nach links
     
     if (this.targetPlayer) {
-      // Berechne den Winkel zum Spieler
+      // Berechne den Zielpunkt
       let targetX = this.player.getSprite().x;
       let targetY = this.player.getSprite().y;
       
@@ -224,26 +214,14 @@ export class WeaponComponent {
       }
       
       // Berechne den Winkel zwischen Gegner und Spieler
-      const angle = Phaser.Math.Angle.Between(
+      angle = Phaser.Math.Angle.Between(
         this.sprite.x, this.sprite.y,
         targetX, targetY
       );
-      
-      // Berechne Geschwindigkeiten basierend auf dem Winkel
-      velocityX = Math.cos(angle) * this.bulletSpeed;
-      velocityY = Math.sin(angle) * this.bulletSpeed;
     }
     
-    // Setze die Geschwindigkeit des Projektils
-    bullet.setVelocity(velocityX, velocityY);
-    
-    // Setze die Rotation des Projektils entsprechend der Bewegungsrichtung
-    if (this.targetPlayer) {
-      bullet.setRotation(Math.atan2(velocityY, velocityX));
-    }
-    
-    // Registriere das Projektil im zentralen EnemyManager, falls gewünscht
-    this.eventBus.emit('REGISTER_ENEMY_BULLET', bullet);
+    // Erstelle ein Bullet mit der Factory
+    bulletFactory.createEnemyBullet(this.sprite.x - 20, this.sprite.y, angle);
     
     // Sound-Effekt
     this.scene.sound.play(Constants.SOUND_ENEMY_SHOOT, {
@@ -255,36 +233,21 @@ export class WeaponComponent {
    * Feuert mehrere Projektile in einem Fächer
    */
   private fireSpread(): void {
+    // Hole die BulletFactory-Instanz
+    const bulletFactory = BulletFactory.getInstance(this.scene);
+    
     const angleStep = this.spreadAngle / (this.spreadCount - 1);
     const startAngle = -this.spreadAngle / 2;
     
     for (let i = 0; i < this.spreadCount; i++) {
-      const bullet = this.bullets.get(this.sprite.x - 20, this.sprite.y) as Phaser.Physics.Arcade.Sprite;
+      // Berechne den Winkel für dieses Projektil in der Fächerformation
+      const angleRad = Phaser.Math.DegToRad(startAngle + angleStep * i);
       
-      if (!bullet) continue;
+      // Umrechnung in absoluten Winkel (nach links + Fächerwinkel)
+      const absoluteAngle = Math.PI + angleRad;
       
-      bullet.setActive(true);
-      bullet.setVisible(true);
-      
-      // Drehe das Sprite um (statt Rotation)
-      bullet.setFlipX(true);
-      
-      // Setze den Typ für Kollisionserkennung
-      bullet.setData('type', 'enemyBullet');
-      
-      // Berechne den Winkel für dieses Projektil
-      const angle = Phaser.Math.DegToRad(startAngle + angleStep * i);
-      const dirX = -Math.cos(angle);
-      const dirY = Math.sin(angle);
-      
-      // Setze die Geschwindigkeit des Projektils
-      bullet.setVelocity(dirX * this.bulletSpeed, dirY * this.bulletSpeed);
-      
-      // Setze die Rotation des Projektils
-      bullet.setRotation(Math.atan2(dirY, dirX));
-      
-      // Registriere das Projektil im zentralen EnemyManager
-      this.eventBus.emit('REGISTER_ENEMY_BULLET', bullet);
+      // Erstelle ein Bullet mit der Factory
+      bulletFactory.createEnemyBullet(this.sprite.x - 20, this.sprite.y, absoluteAngle);
     }
     
     // Sound-Effekt

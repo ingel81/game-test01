@@ -81,7 +81,20 @@ export class BaseEnemy extends GameObject {
     this.debugToggleHandler = (mode: DebugMode) => {
       if (this.debugText && !this.isDestroyed) {
         // Setze Sichtbarkeit basierend auf Debug-Modus
-        this.debugText.setVisible(mode === DebugMode.LIGHT || mode === DebugMode.FULL);
+        const shouldBeVisible = mode === DebugMode.LIGHT || mode === DebugMode.FULL;
+        console.log(`[DEBUG-TOGGLE] Aktualisiere Debug-Text Sichtbarkeit für ${this.constructor.name}: ${shouldBeVisible}, Modus: ${mode}`);
+        this.debugText.setVisible(shouldBeVisible);
+        
+        // Prüfe, ob der Text wirklich aktualisiert wurde
+        if (this.debugText.visible !== shouldBeVisible) {
+          console.warn(`[DEBUG-TOGGLE] Sichtbarkeit konnte nicht auf ${shouldBeVisible} gesetzt werden, ist immer noch ${this.debugText.visible}`);
+          // Versuche Sichtbarkeit explizit zu erzwingen
+          this.scene.time.delayedCall(10, () => {
+            if (this.debugText && !this.isDestroyed) {
+              this.debugText.setVisible(shouldBeVisible);
+            }
+          });
+        }
       }
     };
     
@@ -171,14 +184,26 @@ export class BaseEnemy extends GameObject {
     this.debugText.setName(debugId);
     this.debugText.setData('enemyId', this.sprite.getData('instance'));
     
-    // Setze anfängliche Sichtbarkeit basierend auf aktuellem Debug-Modus
-    // Verwende das erste Szenen-Objekt, um den aktuellen Debug-Status zu erhalten
-    // Wir gehen davon aus, dass BaseScene.globalDebugMode korrekt ist
-    if (this.scene.game.scene.scenes.length > 0) {
-      const currentDebugMode = (this.scene.game.scene.scenes[0] as any).debugMode || DebugMode.OFF;
+    // Verbesserte Methode, um den aktuellen Debug-Modus zu erkennen
+    try {
+      // Methode 1: Direkt aus BaseScene.globalDebugMode (statischer Zugriff)
+      let currentDebugMode = (this.scene.constructor as any).globalDebugMode || DebugMode.OFF;
+      
+      // Methode 2: Aus der Szene selbst (wenn verfügbar)
+      if ((this.scene as any).debugMode !== undefined) {
+        currentDebugMode = (this.scene as any).debugMode;
+      }
+      
+      // Methode 3: Aus der ersten Szene (Fallback)
+      if (currentDebugMode === DebugMode.OFF && this.scene.game.scene.scenes.length > 0) {
+        currentDebugMode = (this.scene.game.scene.scenes[0] as any).debugMode || DebugMode.OFF;
+      }
+      
+      console.log(`[DEBUG-CREATE] Erkannter Debug-Modus für ${className}: ${currentDebugMode}`);
       this.debugText.setVisible(currentDebugMode === DebugMode.LIGHT || currentDebugMode === DebugMode.FULL);
-    } else {
-      // Standard: unsichtbar
+    } catch (error) {
+      console.error('[DEBUG-ERROR] Fehler beim Bestimmen des Debug-Modus:', error);
+      // Standard: unsichtbar bei Fehlern
       this.debugText.setVisible(false);
     }
     
@@ -296,6 +321,11 @@ export class BaseEnemy extends GameObject {
     if (Math.random() < Constants.ENEMY_DROP_CHANCE) {
       this.createEnergyPickup();
     }
+    
+    // Prüfe, ob ein Power-Pickup erstellt werden soll
+    if (Math.random() < Constants.ENEMY_POWER_DROP_CHANCE) {
+      this.createPowerPickup();
+    }
   }
 
   /**
@@ -303,6 +333,13 @@ export class BaseEnemy extends GameObject {
    */
   private createEnergyPickup(): void {
     this.eventBus.emit('CREATE_ENERGY_PICKUP', { x: this.sprite.x, y: this.sprite.y });
+  }
+  
+  /**
+   * Erstellt ein Power-Pickup an der aktuellen Position
+   */
+  private createPowerPickup(): void {
+    this.eventBus.emit('CREATE_POWER_PICKUP', { x: this.sprite.x, y: this.sprite.y });
   }
 
   /**

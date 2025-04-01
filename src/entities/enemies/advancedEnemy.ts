@@ -21,7 +21,7 @@ export class AdvancedEnemy extends BaseEnemy {
     // Konfiguriere den fortgeschrittenen Gegner
     const config: EnemyConfig = {
       texture: Constants.ASSET_ENEMY02, // Verwende verfügbare Textur
-      health: 200, // Mehr Gesundheit
+      health: 75, // Mehr Gesundheit
       speed: 150 + Math.random() * 50, // Schneller
       scoreValue: 100, // Mehr Punkte
       fireRate: 800 + Math.random() * 400, // Schnellere Feuerrate
@@ -45,7 +45,7 @@ export class AdvancedEnemy extends BaseEnemy {
         patternChangeInterval: 4000 + Math.random() * 1000,
         burstCount: 3,
         spreadCount: 3,
-        targetPlayer: true, // Auf Spieler zielen
+        targetPlayer: false, // Auf Spieler zielen
         predictiveAim: false // Anfangs noch keine Vorhersage
       },
       
@@ -75,7 +75,7 @@ export class AdvancedEnemy extends BaseEnemy {
    */
   private static getRandomAdvancedShootingPattern(): ShootingPattern {
     // Bevorzugt komplexere Schussmuster
-    const patterns: ShootingPattern[] = ['double', 'burst', 'spread', 'random'];
+    const patterns: ShootingPattern[] = ['double', 'burst'];
     return patterns[Math.floor(Math.random() * patterns.length)];
   }
   

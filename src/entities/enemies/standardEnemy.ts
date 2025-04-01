@@ -23,7 +23,7 @@ export class StandardEnemy extends BaseEnemy {
       health: 20,
       speed: 100 + Math.random() * 50, // Leichte Variation in der Geschwindigkeit
       scoreValue: 50,
-      fireRate: 1000 + Math.random() * 500, // Leichte Variation in der Feuerrate
+      fireRate: 400 + Math.random() * 500, // Leichte Variation in der Feuerrate
       
       // Bewegungseinstellungen
       movement: {
