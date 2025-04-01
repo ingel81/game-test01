@@ -8,13 +8,14 @@ import { StandardEnemy } from '../entities/enemies/standardEnemy';
 import { AdvancedEnemy } from '../entities/enemies/advancedEnemy';
 import { EliteEnemy } from '../entities/enemies/eliteEnemy';
 import { BossEnemy } from '../entities/enemies/newBossEnemy';
+import { TurretEnemy } from '../entities/enemies/turretEnemy';
 import { Constants } from '../utils/constants';
 import { Player } from '../entities/player/player';
 import { EventBus, EventType } from '../utils/eventBus';
 import { DebugMode } from '../scenes/baseScene';
 
 // Gegnertypen für die Erzeugung
-type EnemyType = 'standard' | 'advanced' | 'elite' | 'boss';
+type EnemyType = 'standard' | 'advanced' | 'elite' | 'boss' | 'turret';
 
 export class NewEnemyManager {
   private scene: Phaser.Scene;
@@ -32,10 +33,11 @@ export class NewEnemyManager {
   
   // Wahrscheinlichkeiten für das Spawn verschiedener Gegnertypen
   private enemySpawnChance: Record<EnemyType, number> = {
-    standard: 1.0,
+    standard: 0.1,
     advanced: 0.0,
     elite: 0.0,
-    boss: 0 // Boss wird über einen Timer gespawnt
+    boss: 0, // Boss wird über einen Timer gespawnt
+    turret: 0.9 // 90% Chance für Turrets
   };
 
   constructor(scene: Phaser.Scene, player: Player) {
@@ -109,12 +111,16 @@ export class NewEnemyManager {
     let cumulativeProbability = 0;
     
     console.log(`[ENEMY_MANAGER] Zufallswert für Spawn: ${randomValue.toFixed(4)}`);
-    console.log(`[ENEMY_MANAGER] Aktuelle Spawn-Wahrscheinlichkeiten: Standard=${this.enemySpawnChance.standard.toFixed(2)}, Advanced=${this.enemySpawnChance.advanced.toFixed(2)}, Elite=${this.enemySpawnChance.elite.toFixed(2)}`);
+    console.log(`[ENEMY_MANAGER] Aktuelle Spawn-Wahrscheinlichkeiten: Standard=${this.enemySpawnChance.standard.toFixed(2)}, Advanced=${this.enemySpawnChance.advanced.toFixed(2)}, Elite=${this.enemySpawnChance.elite.toFixed(2)}, Turret=${this.enemySpawnChance.turret.toFixed(2)}`);
     
-    for (const [type, probability] of Object.entries(this.enemySpawnChance)) {
-      cumulativeProbability += probability;
+    // Definiere die Reihenfolge der Typen explizit
+    const enemyTypes: EnemyType[] = ['standard', 'advanced', 'elite', 'turret', 'boss'];
+    
+    for (const type of enemyTypes) {
+      cumulativeProbability += this.enemySpawnChance[type];
+      console.log(`[ENEMY_MANAGER] Typ: ${type}, Wahrscheinlichkeit: ${this.enemySpawnChance[type].toFixed(2)}, Kumulativ: ${cumulativeProbability.toFixed(2)}`);
       if (randomValue < cumulativeProbability) {
-        enemyType = type as EnemyType;
+        enemyType = type;
         console.log(`[ENEMY_MANAGER] Gegnertyp '${enemyType}' ausgewählt bei kumulativer Wahrscheinlichkeit ${cumulativeProbability.toFixed(2)}`);
         break;
       }
@@ -157,6 +163,10 @@ export class NewEnemyManager {
         console.log(`[ENEMY_MANAGER] BossActive-Flag gesetzt auf ${this.bossActive}`);
         // Boss-Spawned-Event auslösen
         this.eventBus.emit(EventType.BOSS_SPAWNED, enemy);
+        break;
+      case 'turret':
+        enemy = new TurretEnemy(this.scene, x, y, this.player);
+        console.log(`[ENEMY_MANAGER] TurretEnemy erstellt mit ${enemy.getHealth()} HP`);
         break;
       default:
         enemy = new StandardEnemy(this.scene, x, y, this.player);
@@ -280,9 +290,9 @@ export class NewEnemyManager {
     
     // Zähle Debug-Texte in der Szene
     const allTexts = this.scene.children.list.filter(obj => obj.type === 'Text');
-    const debugTexts = allTexts.filter(text => (text as Phaser.GameObjects.Text).text && ['StandardEnemy', 'AdvancedEnemy', 'EliteEnemy', 'BossEnemy'].some(name => (text as Phaser.GameObjects.Text).text.includes(name)));
+    const debugTexts = allTexts.filter(text => (text as Phaser.GameObjects.Text).text && ['StandardEnemy', 'AdvancedEnemy', 'EliteEnemy', 'BossEnemy', 'TurretEnemy'].some(name => (text as Phaser.GameObjects.Text).text.includes(name)));
     
-    console.log(`[DEBUG-COUNT] Aktuelle Gegner: ${this.enemies.length}, Debug-Texte in der Szene: ${debugTexts.length}`);
+    //console.log(`[DEBUG-COUNT] Aktuelle Gegner: ${this.enemies.length}, Debug-Texte in der Szene: ${debugTexts.length}`);
     
     // Gegner aktualisieren und zerstörte Gegner entfernen
     for (let i = this.enemies.length - 1; i >= 0; i--) {
@@ -397,41 +407,47 @@ export class NewEnemyManager {
     // Basis-Spawn-Chance für jeden Gegnertyp
     switch (this.difficulty) {
       case 1:
-        this.enemySpawnChance.standard = 1.0;
+        this.enemySpawnChance.standard = 0.1;
         this.enemySpawnChance.advanced = 0.0;
         this.enemySpawnChance.elite = 0.0;
+        this.enemySpawnChance.turret = 0.9;
         break;
       case 2:
-        this.enemySpawnChance.standard = 0.7;
-        this.enemySpawnChance.advanced = 0.3;
+        this.enemySpawnChance.standard = 0.1;
+        this.enemySpawnChance.advanced = 0.0;
         this.enemySpawnChance.elite = 0.0;
+        this.enemySpawnChance.turret = 0.9;
         break;
       case 3:
-        this.enemySpawnChance.standard = 0.6;
-        this.enemySpawnChance.advanced = 0.3;
-        this.enemySpawnChance.elite = 0.1;
+        this.enemySpawnChance.standard = 0.1;
+        this.enemySpawnChance.advanced = 0.0;
+        this.enemySpawnChance.elite = 0.0;
+        this.enemySpawnChance.turret = 0.9;
         break;
       case 4:
-        this.enemySpawnChance.standard = 0.5;
-        this.enemySpawnChance.advanced = 0.3;
-        this.enemySpawnChance.elite = 0.2;
+        this.enemySpawnChance.standard = 0.1;
+        this.enemySpawnChance.advanced = 0.0;
+        this.enemySpawnChance.elite = 0.0;
+        this.enemySpawnChance.turret = 0.9;
         break;
       case 5:
-        this.enemySpawnChance.standard = 0.4;
-        this.enemySpawnChance.advanced = 0.4;
-        this.enemySpawnChance.elite = 0.2;
+        this.enemySpawnChance.standard = 0.1;
+        this.enemySpawnChance.advanced = 0.0;
+        this.enemySpawnChance.elite = 0.0;
+        this.enemySpawnChance.turret = 0.9;
         break;
       default:
         // Ab Stufe 6
-        this.enemySpawnChance.standard = 0.3;
-        this.enemySpawnChance.advanced = 0.4;
-        this.enemySpawnChance.elite = 0.3;
+        this.enemySpawnChance.standard = 0.1;
+        this.enemySpawnChance.advanced = 0.0;
+        this.enemySpawnChance.elite = 0.0;
+        this.enemySpawnChance.turret = 0.9;
     }
     
     // Maximale Anzahl von Gegnern anpassen
     this.maxEnemies = 15 + Math.min(10, this.difficulty * 2);
     
-    console.log(`[ENEMY_MANAGER] Neue Spawn-Raten: Standard=${this.enemySpawnChance.standard.toFixed(2)}, Advanced=${this.enemySpawnChance.advanced.toFixed(2)}, Elite=${this.enemySpawnChance.elite.toFixed(2)}`);
+    console.log(`[ENEMY_MANAGER] Neue Spawn-Raten: Standard=${this.enemySpawnChance.standard.toFixed(2)}, Advanced=${this.enemySpawnChance.advanced.toFixed(2)}, Elite=${this.enemySpawnChance.elite.toFixed(2)}, Turret=${this.enemySpawnChance.turret.toFixed(2)}`);
     console.log(`[ENEMY_MANAGER] Neue maximale Gegnerzahl: ${this.maxEnemies}`);
     
     // Timer-Intervall anpassen
@@ -517,7 +533,7 @@ export class NewEnemyManager {
     const allTextObjects = this.scene.children.list.filter(obj => {
       if (obj.type !== 'Text') return false;
       const text = obj as Phaser.GameObjects.Text;
-      return text.text && ['StandardEnemy', 'AdvancedEnemy', 'EliteEnemy', 'BossEnemy'].some(
+      return text.text && ['StandardEnemy', 'AdvancedEnemy', 'EliteEnemy', 'BossEnemy', 'TurretEnemy'].some(
         name => text.text.includes(name)
       );
     }) as Phaser.GameObjects.Text[];
@@ -609,7 +625,7 @@ export class NewEnemyManager {
       
       const text = obj as Phaser.GameObjects.Text;
       // Prüfe, ob der Text ein Gegner-Debug-Text ist
-      return text.text && ['StandardEnemy', 'AdvancedEnemy', 'EliteEnemy', 'BossEnemy'].some(
+      return text.text && ['StandardEnemy', 'AdvancedEnemy', 'EliteEnemy', 'BossEnemy', 'TurretEnemy'].some(
         name => text.text.includes(name)
       );
     }) as Phaser.GameObjects.Text[];
@@ -657,7 +673,7 @@ export class NewEnemyManager {
       
       const text = obj as Phaser.GameObjects.Text;
       // Prüfe, ob der Text ein Gegner-Debug-Text ist
-      return text.text && ['StandardEnemy', 'AdvancedEnemy', 'EliteEnemy', 'BossEnemy'].some(
+      return text.text && ['StandardEnemy', 'AdvancedEnemy', 'EliteEnemy', 'BossEnemy', 'TurretEnemy'].some(
         name => text.text.includes(name)
       );
     }) as Phaser.GameObjects.Text[];

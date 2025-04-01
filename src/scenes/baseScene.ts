@@ -44,10 +44,6 @@ export abstract class BaseScene extends Phaser.Scene {
     this.load.image('background', Constants.getAssetPath('background/bg-preview-big.png'));
     this.load.image('bg-planet', Constants.getAssetPath('background/layered/bg-planet.png'));
     
-    // Lade die Pickup-Assets
-    this.load.image(Constants.ASSET_ENERGY_DROP, Constants.getAssetPath('pickups/energy.png'));
-    this.load.image(Constants.ASSET_POWER_DROP, Constants.getAssetPath('pickups/power.png'));
-    
     // Lade alle Planeten
     for (let i = 1; i <= 16; i++) {
       this.load.image(`planet-${i}`, Constants.getAssetPath(`planets/planet-${i}.png`));

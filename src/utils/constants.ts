@@ -96,6 +96,9 @@ export class Constants {
   public static readonly ASSET_EXPLOSION_5: string = 'explosion5';
   public static readonly ASSET_ENERGY_DROP: string = 'energyDrop';
   public static readonly ASSET_POWER_DROP: string = 'powerDrop';
+  // Turret-Assets
+  public static readonly ASSET_TURRET_BASE: string = 'turret01_base';
+  public static readonly ASSET_TURRET_TOP: string = 'turret01_top';
   
   // Soundkeys
   public static readonly SOUND_SHOOT: string = 'shoot';
