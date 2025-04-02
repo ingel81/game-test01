@@ -1,13 +1,17 @@
 import { BaseScene } from './baseScene';
 import { Constants } from '../utils/constants';
 import { EventType } from '../utils/eventBus';
+import { MusicManager } from '../managers/musicManager';
 
 /**
  * Pause-Szene
  */
 export class PauseScene extends BaseScene {
+  private musicManager: MusicManager;
+
   constructor() {
     super(Constants.SCENE_PAUSE);
+    this.musicManager = MusicManager.getInstance();
   }
 
   /**
@@ -20,6 +24,9 @@ export class PauseScene extends BaseScene {
 
     const centerX = this.scale.width / 2;
     const centerY = this.scale.height / 2;
+
+    // Initialisiere den MusicManager
+    this.musicManager.init(this);
 
     // Pause-Text
     this.add.text(centerX, centerY - 100, 'Paused', {
@@ -35,6 +42,7 @@ export class PauseScene extends BaseScene {
 
     // Hauptmenü-Button
     this.createButton(centerX, centerY + 60, 'Main Menu', () => {
+      this.musicManager.stopCurrentMusic();
       this.scene.stop(Constants.SCENE_GAME);
       this.scene.start(Constants.SCENE_MAIN_MENU);
     });

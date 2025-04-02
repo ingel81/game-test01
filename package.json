@@ -2,6 +2,7 @@
   "name": "echoes-from-the-rift",
   "version": "1.0.0",
   "description": "A sidescrolling game in the style of R-Type",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "dev": "vite",

@@ -1,17 +1,18 @@
 import { BaseScene } from './baseScene';
 import { Constants } from '../utils/constants';
 import { EventType, EventBus } from '../utils/eventBus';
-import { SoundManager } from '../managers/soundManager';
+import { MusicManager } from '../managers/musicManager';
 
 /**
  * Game Over-Szene
  */
 export class GameOverScene extends BaseScene {
   private score: number = 0;
-  private soundManager!: SoundManager;
+  private musicManager: MusicManager;
 
   constructor() {
     super(Constants.SCENE_GAME_OVER);
+    this.musicManager = MusicManager.getInstance();
   }
 
   /**
@@ -30,8 +31,8 @@ export class GameOverScene extends BaseScene {
     const centerX = this.scale.width / 2;
     const centerY = this.scale.height / 2;
 
-    // Stelle sicher, dass keine Musik läuft
-    this.soundManager = new SoundManager(this);
+    // Initialisiere den MusicManager
+    this.musicManager.init(this);
 
     // Game Over-Text
     this.add.text(centerX, centerY - 100, 'Game Over', {

@@ -25,7 +25,7 @@ export default defineConfig({
     }
   },
   resolve: {
-    extensions: ['.ts', '.js']
+    extensions: ['.ts', '.js', '.mjs']
   },
   optimizeDeps: {
     include: ['phaser']

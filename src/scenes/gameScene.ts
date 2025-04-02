@@ -6,7 +6,7 @@ import { SpawnManager } from '../managers/spawnManager';
 import { CollisionManager } from '../managers/collisionManager';
 import { GameUI } from '../ui/gameUI';
 import { DifficultyManager } from '../managers/difficultyManager';
-import { SoundManager } from '../managers/soundManager';
+import { MusicManager } from '../managers/musicManager';
 import { NewEnemyManager } from '../managers/newEnemyManager';
 import { GlowPipeline } from '../pipelines/glowPipeline';
 
@@ -20,7 +20,7 @@ export class GameScene extends BaseScene {
   private collisionManager!: CollisionManager;
   private uiManager!: GameUI;
   private difficultyManager!: DifficultyManager;
-  private soundManager!: SoundManager;
+  private musicManager: MusicManager;
   private score: number = 0;
   private isPaused: boolean = false;
   private mouseMoveTimer: number = 0;
@@ -30,6 +30,7 @@ export class GameScene extends BaseScene {
 
   constructor() {
     super(Constants.SCENE_GAME);
+    this.musicManager = MusicManager.getInstance();
   }
 
   /**
@@ -72,63 +73,61 @@ export class GameScene extends BaseScene {
    * Erstellt die Spielszene
    */
   create(): void {
-    super.create();
-
     try {
-      // Debug-Ausgabe
-      console.log('GameScene: Initialisierung startet');
-      
-      // Setze alle Spielvariablen zurück
-      this.score = 0;
-      this.isPaused = false;
-      this.mouseMoveTimer = 0;
-      this.mouseCursorVisible = false;
-      
-      // Schwarzer Hintergrund für Weltraum-Feeling
-      this.cameras.main.setBackgroundColor('#000000');
-      
-      // Mauszeiger direkt beim Spielstart ausblenden
-      document.body.style.cursor = 'none';
-      this.mouseCursorVisible = false;
-      this.mouseMoveTimer = this.time.now;
-      
-      // Mauszeiger-Ausblendung konfigurieren
-      this.setupMouseHiding();
-      
-      // Kamera für flüssigeres Scrolling optimieren
-      this.cameras.main.setRoundPixels(true);
-      
-      // Erstelle die Glow-Pipeline
-      this.glowPipeline = new GlowPipeline(this.game);
-      if (this.game.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer) {
-        this.game.renderer.pipelines.add('Glow', this.glowPipeline);
-      }
-      
-      console.log('GameScene: Erstelle Explosion-Animation');
-      // Erstelle die Explosions-Animation
-      if (!this.anims.exists('explode')) {
-        this.anims.create({
-          key: 'explode',
-          frames: [
-            { key: Constants.ASSET_EXPLOSION_1 },
-            { key: Constants.ASSET_EXPLOSION_2 },
-            { key: Constants.ASSET_EXPLOSION_3 },
-            { key: Constants.ASSET_EXPLOSION_4 },
-            { key: Constants.ASSET_EXPLOSION_5 }
-          ],
-          frameRate: 10,
-          repeat: 0,
-          hideOnComplete: true
-        });
-      }
+      super.create();
 
-      console.log('GameScene: Erstelle Spieler');
+      // Initialisiere den MusicManager und starte die Gameplay-Musik
+      this.musicManager.init(this);
+      this.musicManager.playRandomGameplayTrack();
+
+            // Debug-Ausgabe
+            console.log('GameScene: Initialisierung startet');
+      
+            // Setze alle Spielvariablen zurück
+            this.score = 0;
+            this.isPaused = false;
+            this.mouseMoveTimer = 0;
+            this.mouseCursorVisible = false;
+            
+            // Schwarzer Hintergrund für Weltraum-Feeling
+            this.cameras.main.setBackgroundColor('#000000');
+            
+            // Mauszeiger direkt beim Spielstart ausblenden
+            document.body.style.cursor = 'none';
+            this.mouseCursorVisible = false;
+            this.mouseMoveTimer = this.time.now;
+            
+            // Mauszeiger-Ausblendung konfigurieren
+            this.setupMouseHiding();
+            
+            // Kamera für flüssigeres Scrolling optimieren
+            this.cameras.main.setRoundPixels(true);
+            
+            // Erstelle die Glow-Pipeline
+            this.glowPipeline = new GlowPipeline(this.game);
+            if (this.game.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer) {
+              this.game.renderer.pipelines.add('Glow', this.glowPipeline);
+            }
+            
+            console.log('GameScene: Erstelle Explosion-Animation');
+            // Erstelle die Explosions-Animation
+            if (!this.anims.exists('explode')) {
+              this.anims.create({
+                key: 'explode',
+                frames: [
+                  { key: Constants.ASSET_EXPLOSION_1 },
+                  { key: Constants.ASSET_EXPLOSION_2 },
+                  { key: Constants.ASSET_EXPLOSION_3 },
+                  { key: Constants.ASSET_EXPLOSION_4 },
+                  { key: Constants.ASSET_EXPLOSION_5 }
+                ],
+                frameRate: 10,
+                repeat: 0,
+                hideOnComplete: true
+              });
+            }
       // Erstelle den Spieler
       this.player = new Player(this, 100, this.scale.height / 2);
-      
-      // Stelle sicher, dass der Spieler im sichtbaren Bereich ist
-      const playerSprite = this.player.getSprite();
-      playerSprite.setDepth(10); // Setze den Spieler in den Vordergrund
       
       // Aktiviere die Glow-Pipeline für die Schüsse
       if (this.player instanceof Player) {
@@ -138,15 +137,10 @@ export class GameScene extends BaseScene {
       console.log('GameScene: Erstelle Manager');
       // Erstelle die Manager
       this.createManagers();
-      this.soundManager = new SoundManager(this);
       this.uiManager = new GameUI(this);
 
       // Verknüpfe die Manager
       this.collisionManager.setManagers(this.enemyManager, this.spawnManager);
-
-      console.log('GameScene: Starte Musik');
-      // Starte die Hintergrundmusik
-      this.soundManager.playBackgroundMusic();
 
       console.log('GameScene: Event-Listener registrieren');
       // Event-Listener
@@ -254,7 +248,6 @@ export class GameScene extends BaseScene {
     // Bei Pause immer den Cursor anzeigen
     this.showCursor();
     
-    this.soundManager.pauseBackgroundMusic();
     this.scene.launch(Constants.SCENE_PAUSE);
     this.scene.pause();
   }
@@ -271,7 +264,6 @@ export class GameScene extends BaseScene {
     this.hideCursor();
     this.mouseMoveTimer = this.time.now;
     
-    this.soundManager.resumeBackgroundMusic();
     this.scene.resume();
   }
 
@@ -295,7 +287,7 @@ export class GameScene extends BaseScene {
       this.input.keyboard.off('keydown-ESC');
       
       // Stoppe die Musik
-      this.soundManager.stopBackgroundMusic();
+      this.musicManager.stopCurrentMusic();
       
       // Bereinige Enemy Manager
       if (this.enemyManager) {
@@ -327,7 +319,7 @@ export class GameScene extends BaseScene {
       this.input.keyboard.off('keydown-ESC');
       
       // Stoppe die Musik
-      this.soundManager.stopBackgroundMusic();
+      this.musicManager.stopCurrentMusic();
       
       // Bereinige Enemy Manager
       if (this.enemyManager) {

@@ -1,16 +1,17 @@
 import { BaseScene } from './baseScene';
 import { Constants } from '../utils/constants';
 import { EventType } from '../utils/eventBus';
-import { SoundManager } from '../managers/soundManager';
+import { MusicManager } from '../managers/musicManager';
 
 /**
  * Hauptmenü-Szene
  */
 export class MainMenuScene extends BaseScene {
-  private soundManager!: SoundManager;
+  private musicManager: MusicManager;
 
   constructor() {
     super(Constants.SCENE_MAIN_MENU);
+    this.musicManager = MusicManager.getInstance();
   }
 
   /**
@@ -19,8 +20,11 @@ export class MainMenuScene extends BaseScene {
   preload(): void {
     super.preload();
     
-    // Lade die Sound-Assets
-    this.load.audio(Constants.SOUND_BACKGROUND, Constants.getAssetPath('music/01.mp3'));
+    // Lade die Musik-Assets
+    this.load.audio('title', 'music/title.mp3');
+    this.load.audio('00', 'music/00.mp3');
+    this.load.audio('01', 'music/01.mp3');
+    this.load.audio('02', 'music/02.mp3');
     
     // Lade das Titel-Logo
     this.load.image('logo', Constants.getAssetPath('logo/title4.png'));
@@ -38,14 +42,17 @@ export class MainMenuScene extends BaseScene {
     // Stelle sicher, dass der Cursor im Hauptmenü immer sichtbar ist
     document.body.style.cursor = 'default';
 
+    // Initialisiere den MusicManager
+    this.musicManager.init(this);
+    this.musicManager.playMenuMusic();
+
     // Füge das Logo anstelle des Texttitels ein
     const logo = this.add.image(centerX, centerY - 120, 'logo');
     
     // Skaliere das Logo um weitere 25% kleiner
-    // Wir verwenden ein responsives Scaling, um es auf verschiedenen Bildschirmgrößen gut aussehen zu lassen
-    const maxWidth = this.scale.width * 0.3; // Reduziert von 0.4 auf 0.3 (25% kleiner)
+    const maxWidth = this.scale.width * 0.3;
     const scaleRatio = maxWidth / logo.width;
-    logo.setScale(Math.min(scaleRatio, 0.375)); // Reduziert von 0.5 auf 0.375 (25% kleiner)
+    logo.setScale(Math.min(scaleRatio, 0.375));
     
     // Füge einen leichten Glow-Effekt hinzu
     this.tweens.add({
@@ -57,13 +64,13 @@ export class MainMenuScene extends BaseScene {
       ease: 'Sine.easeInOut'
     });
 
-    // Start-Button - nach unten verschoben
+    // Start-Button
     this.createButton(centerX, centerY + 150, 'Start Game', () => {
-      this.soundManager.stopBackgroundMusic();
+      this.musicManager.stopCurrentMusic();
       this.scene.start(Constants.SCENE_GAME);
     });
 
-    // Steuerungshinweise - nach unten verschoben
+    // Steuerungshinweise
     const controls = [
       'Controls:',
       'Arrow Keys / WASD - Move',
@@ -79,7 +86,7 @@ export class MainMenuScene extends BaseScene {
       }).setOrigin(0.5);
     });
 
-    // Touch-Steuerungshinweise - nach unten verschoben
+    // Touch-Steuerungshinweise
     if (this.sys.game.device.input.touch) {
       const touchControls = [
         'Touch Controls:',
@@ -95,23 +102,18 @@ export class MainMenuScene extends BaseScene {
       });
     }
     
-    // Versionsnummer am unteren Bildschirmrand
+    // Versionsnummer
     this.add.text(this.scale.width - 20, this.scale.height - 20, 'Version 1.0', {
       fontSize: '16px',
       color: '#00ffff',
       fontFamily: 'monospace'
     }).setOrigin(1, 1);
-
-    // Erstelle den SoundManager und starte die Hintergrundmusik
-    this.soundManager = new SoundManager(this);
-    this.soundManager.playBackgroundMusic();
   }
 
   /**
    * Aktualisiert die Menü-Szene
    */
   update(time: number, delta: number): void {
-    // Rufe die BaseScene-Update-Methode auf, um die Sterne zu aktualisieren
     super.update(time, delta);
   }
 } 
