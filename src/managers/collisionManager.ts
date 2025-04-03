@@ -4,6 +4,7 @@ import { NewEnemyManager } from './newEnemyManager';
 import { SpawnManager } from './spawnManager';
 import { Constants } from '../utils/constants';
 import { EventBus, EventType } from '../utils/eventBus';
+import { Helpers } from '../utils/helpers';
 
 /**
  * CollisionManager-Klasse
@@ -179,7 +180,7 @@ export class CollisionManager {
   /**
    * Behandelt die Kollision zwischen Spieler und Feinden
    */
-  private handlePlayerEnemyCollision(player: Phaser.GameObjects.GameObject, enemy: Phaser.GameObjects.GameObject): void {
+  private handlePlayerEnemyCollision(player: Physics.Arcade.Sprite, enemy: Physics.Arcade.Sprite): void {
     if (!this.enemyManager || !player || !enemy) return;
     if (!player.active || !enemy.active) return;
     
@@ -195,17 +196,15 @@ export class CollisionManager {
     this.eventBus.emit(EventType.ENEMY_DESTROYED);
     
     // Explosionseffekt an der Kollisionsstelle
-    const playerSprite = player as Phaser.Physics.Arcade.Sprite;
-    const enemySprite = enemy as Phaser.Physics.Arcade.Sprite;
-    const x = (playerSprite.x + enemySprite.x) / 2;
-    const y = (playerSprite.y + enemySprite.y) / 2;
+    const x = (player.x + enemy.x) / 2;
+    const y = (player.y + enemy.y) / 2;
     this.createExplosion(x, y);
   }
 
   /**
    * Behandelt die Kollision zwischen Spieler-Bullets und Feinden
    */
-  private handleBulletEnemyCollision(bullet: Phaser.GameObjects.GameObject, enemy: Phaser.GameObjects.GameObject): void {
+  private handleBulletEnemyCollision(bullet: Physics.Arcade.Sprite, enemy: Physics.Arcade.Sprite): void {
     if (!this.enemyManager || !bullet || !enemy) return;
     if (!bullet.active || !enemy.active) return;
     
@@ -216,7 +215,7 @@ export class CollisionManager {
     bullet.destroy();
     
     // Feind nimmt Schaden (anstatt direkt zu zerstören)
-    const enemyInstance = (enemy as Phaser.Physics.Arcade.Sprite).getData('instance');
+    const enemyInstance = enemy.getData('instance');
     if (enemyInstance && typeof enemyInstance.takeDamage === 'function') {
       // Der Rückgabewert von takeDamage ist true, wenn der Feind zerstört wurde
       const wasDestroyed = enemyInstance.takeDamage(damage);
@@ -227,12 +226,10 @@ export class CollisionManager {
         this.eventBus.emit(EventType.ENEMY_DESTROYED);
         
         // Explosionseffekt
-        const enemySprite = enemy as Phaser.Physics.Arcade.Sprite;
-        this.createExplosion(enemySprite.x, enemySprite.y);
+        this.createExplosion(enemy.x, enemy.y);
       } else {
         // Kleiner Treffereffekt, wenn der Feind nur Schaden nimmt
-        const enemySprite = enemy as Phaser.Physics.Arcade.Sprite;
-        this.createExplosion(enemySprite.x, enemySprite.y, 0.3);
+        this.createExplosion(enemy.x, enemy.y, 0.3);
       }
     } else {
       // Fallback für den Fall, dass der Feind keine takeDamage-Methode hat
@@ -240,15 +237,14 @@ export class CollisionManager {
       this.eventBus.emit(EventType.ENEMY_DESTROYED);
       
       // Explosionseffekt
-      const enemySprite = enemy as Phaser.Physics.Arcade.Sprite;
-      this.createExplosion(enemySprite.x, enemySprite.y);
+      this.createExplosion(enemy.x, enemy.y);
     }
   }
 
   /**
    * Behandelt die Kollision zwischen Feind-Bullets und Spieler
    */
-  private handleEnemyBulletPlayerCollision(bullet: Phaser.GameObjects.GameObject, player: Phaser.GameObjects.GameObject): void {
+  private handleEnemyBulletPlayerCollision(bullet: Physics.Arcade.Sprite, player: Physics.Arcade.Sprite): void {
     if (!bullet || !player) return;
     if (!bullet.active || !player.active) return;
     
@@ -261,75 +257,75 @@ export class CollisionManager {
     this.player.takeDamage(Constants.DAMAGE.ENEMY_BULLET);
     
     // Visuelles Feedback durch kleine Explosion
-    const bulletSprite = bullet as Phaser.Physics.Arcade.Sprite;
-    this.createExplosion(bulletSprite.x, bulletSprite.y, 0.5);
+    this.createExplosion(bullet.x, bullet.y, 0.5);
   }
   
   /**
    * Erzeugt eine Explosion an der angegebenen Position
    */
   private createExplosion(x: number, y: number, scale: number = 1.0): void {
-    // Hauptexplosion
-    const explosion = this.scene.add.sprite(x, y, Constants.ASSET_EXPLOSION_1);
-    explosion.setScale(scale);
-    explosion.play('explode');
-    explosion.once('animationcomplete', () => {
-      explosion.destroy();
-    });
-    
-    // Bei größeren Explosionen zusätzliche Explosionseffekte hinzufügen
-    if (scale >= 1.0) {
-      // Erstelle mehrere zusätzliche Explosionen für einen mächtigeren Effekt
-      const extraExplosionsCount = scale >= 2.0 ? 4 : 2;
+    try {
+      // Verwende die zentrale Helper-Funktion
+      Helpers.createExplosion(this.scene, x, y, scale);
       
-      for (let i = 0; i < extraExplosionsCount; i++) {
-        const offsetX = Phaser.Math.Between(-30 * scale, 30 * scale);
-        const offsetY = Phaser.Math.Between(-30 * scale, 30 * scale);
-        const extraScale = Phaser.Math.FloatBetween(0.5, 0.8) * scale;
+      // Bei größeren Explosionen zusätzliche Explosionseffekte hinzufügen
+      if (scale >= 1.0) {
+        // Erstelle mehrere zusätzliche Explosionen für einen mächtigeren Effekt
+        const extraExplosionsCount = scale >= 2.0 ? 4 : 2;
         
-        const extraExplosion = this.scene.add.sprite(
-          x + offsetX,
-          y + offsetY,
-          Constants.ASSET_EXPLOSION_1
-        );
-        extraExplosion.setScale(extraScale);
-        extraExplosion.play('explode');
-        extraExplosion.once('animationcomplete', () => {
-          extraExplosion.destroy();
-        });
-      }
-      
-      // Bildschirmflash bei großen Explosionen
-      if (scale >= 2.0) {
-        const flash = this.scene.add.graphics();
-        flash.fillStyle(0xff0000, 0.3);
-        flash.setScrollFactor(0);
-        flash.setDepth(1000);
-        flash.fillRect(0, 0, this.scene.scale.width, this.scene.scale.height);
+        for (let i = 0; i < extraExplosionsCount; i++) {
+          const offsetX = Phaser.Math.Between(-30 * scale, 30 * scale);
+          const offsetY = Phaser.Math.Between(-30 * scale, 30 * scale);
+          const extraScale = Phaser.Math.FloatBetween(0.5, 0.8) * scale;
+          
+          // Verwende die zentrale Helper-Funktion für zusätzliche Explosionen
+          Helpers.createExplosion(
+            this.scene, 
+            x + offsetX, 
+            y + offsetY, 
+            extraScale
+          );
+        }
         
-        this.scene.tweens.add({
-          targets: flash,
-          alpha: 0,
-          duration: 100,
-          ease: 'Power2',
-          onComplete: () => flash.destroy()
-        });
+        // Bildschirmflash bei großen Explosionen
+        if (scale >= 2.0) {
+          const flash = this.scene.add.graphics();
+          flash.fillStyle(0xff0000, 0.3);
+          flash.setScrollFactor(0);
+          flash.setDepth(1000);
+          flash.fillRect(0, 0, this.scene.scale.width, this.scene.scale.height);
+          
+          this.scene.tweens.add({
+            targets: flash,
+            alpha: 0,
+            duration: 100,
+            ease: 'Power2',
+            onComplete: () => flash.destroy()
+          });
+        }
       }
+    } catch (error) {
+      console.error('[COLLISION_MANAGER] Fehler beim Erstellen der Explosion:', error);
     }
-    
-    // Sound mit angepasster Lautstärke und Rate basierend auf Explosionsgrößee
-    this.scene.sound.play(Constants.SOUND_EXPLOSION, {
-      volume: 0.3 * Math.min(scale, 2.0),
-      rate: 1.0 / (scale * 0.5 + 0.5)  // Größere Explosionen haben tieferen Ton
-    });
   }
 
   /**
    * Behandelt die Kollision zwischen Spieler und Pickups (Energie und Power)
    */
-  private handlePlayerPickupCollision(player: Phaser.GameObjects.GameObject, pickup: Phaser.GameObjects.GameObject): void {
+  private handlePlayerPickupCollision(player: Physics.Arcade.Sprite, pickup: Physics.Arcade.Sprite): void {
     if (!player || !pickup || !this.spawnManager) return;
     if (!player.active || !pickup.active) return;
+    
+    // Prüfe, ob die Distanz zwischen Spieler und Pickup tatsächlich klein genug ist
+    // Dies verhindert falsche Kollisionen durch ungenaue Hitboxen
+    const distX = Math.abs(player.x - pickup.x);
+    const distY = Math.abs(player.y - pickup.y);
+    const distance = Math.sqrt(distX * distX + distY * distY);
+    
+    // Pickup erst einsammeln, wenn der Spieler wirklich nah genug ist (20 Pixel)
+    if (distance > 20) {
+      return;
+    }
     
     // Finde das entsprechende GameObject aus dem SpawnManager
     const allPickups = this.spawnManager.getAllPickups();
@@ -344,7 +340,7 @@ export class CollisionManager {
   /**
    * Behandelt die Kollision zwischen Spieler und Asteroiden
    */
-  private handlePlayerAsteroidCollision(player: Phaser.GameObjects.GameObject, asteroid: Phaser.GameObjects.GameObject): void {
+  private handlePlayerAsteroidCollision(player: Physics.Arcade.Sprite, asteroid: Physics.Arcade.Sprite): void {
     if (!this.spawnManager || !player || !asteroid) return;
     if (!player.active || !asteroid.active) return;
     
@@ -375,7 +371,7 @@ export class CollisionManager {
   /**
    * Behandelt die Kollision zwischen Spieler-Bullets und Asteroiden
    */
-  private handleBulletAsteroidCollision(bullet: Phaser.GameObjects.GameObject, asteroid: Phaser.GameObjects.GameObject): void {
+  private handleBulletAsteroidCollision(bullet: Physics.Arcade.Sprite, asteroid: Physics.Arcade.Sprite): void {
     if (!this.spawnManager || !bullet || !asteroid) return;
     if (!bullet.active || !asteroid.active) return;
     
@@ -390,18 +386,16 @@ export class CollisionManager {
     // Hinweis: Die Explosion wird automatisch in der Asteroid.onDestroy() Methode erstellt,
     // wenn der Asteroid zerstört wird. Wir brauchen hier keine zusätzliche Explosion.
     if (!handled) {
-      // Nur wenn der Asteroid nicht zerstört wurde, zeigen wir einen kleinen Treffer-Effekt
-      const asteroidSprite = asteroid as Phaser.Physics.Arcade.Sprite;
-      const size = asteroidSprite.getData('size') || 'large';
-      const scale = (size === 'large') ? 0.5 : 0.3;
-      
-      // Kleine Trefferexplosion
-      const hit = this.scene.add.sprite(asteroidSprite.x, asteroidSprite.y, Constants.ASSET_EXPLOSION_1);
-      hit.setScale(scale);
-      hit.play('explode');
-      hit.once('animationcomplete', () => {
-        hit.destroy();
-      });
+      try {
+        // Nur wenn der Asteroid nicht zerstört wurde, zeigen wir einen kleinen Treffer-Effekt
+        const size = asteroid.getData('size') || 'large';
+        const scale = (size === 'large') ? 0.5 : 0.3;
+        
+        // Kleine Trefferexplosion mit Helper-Funktion
+        Helpers.createExplosion(this.scene, asteroid.x, asteroid.y, scale);
+      } catch (error) {
+        console.error('[COLLISION_MANAGER] Fehler beim Erstellen des Treffer-Effekts:', error);
+      }
     }
   }
 } 

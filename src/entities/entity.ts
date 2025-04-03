@@ -7,7 +7,18 @@ export abstract class Entity {
   protected scene: Phaser.Scene;
 
   constructor(scene: Phaser.Scene, x: number, y: number, texture: string) {
+    if (!scene) {
+      console.error('Entity: Scene ist null oder undefined!');
+      throw new Error('Scene ist null oder undefined');
+    }
+    
     this.scene = scene;
+    
+    if (!texture) {
+      console.error('Entity: Texture ist null oder undefined!');
+      throw new Error('Texture ist null oder undefined');
+    }
+    
     this.sprite = scene.physics.add.sprite(x, y, texture);
   }
 

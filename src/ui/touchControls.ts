@@ -81,6 +81,15 @@ export class TouchControls {
   }
 
   /**
+   * Update-Methode, die jeden Frame aufgerufen wird
+   * Erlaubt kontinuierliche Überprüfungen und Aktualisierungen der Touch-Steuerung
+   */
+  public update(): void {
+    // Aktualisiere hier kontinuierliche Eingabeprüfungen, falls notwendig
+    // Derzeit keine Aktualisierungen erforderlich, da die Touch-Ereignisse über Event-Listener verwaltet werden
+  }
+
+  /**
    * Gibt zurück, ob gerade geschossen wird
    */
   public isPlayerShooting(): boolean {

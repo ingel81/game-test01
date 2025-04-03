@@ -32,6 +32,7 @@ export class NewEnemyManager {
   private difficulty: number = 1;
   private eventBus: EventBus;
   private isPaused: boolean = false;
+  private bossActive: boolean = false;
   private turretActive: boolean = false;
   private allEnemyBullets: Phaser.Physics.Arcade.Group;
   private currentDebugMode: DebugMode = DebugMode.OFF;
@@ -65,6 +66,7 @@ export class NewEnemyManager {
     this.eventBus.on(EventType.RESUME_GAME, this.resumeSpawning);
     this.eventBus.on(EventType.GAME_OVER, this.stopSpawning);
     this.eventBus.on('REGISTER_ENEMY_BULLET', this.registerEnemyBullet);
+    this.eventBus.on('BOSS_DESTROYED', this.onBossDestroyed);
     this.eventBus.on(EventType.DEBUG_TOGGLED, this.onDebugModeChanged);
   }
   
@@ -104,6 +106,12 @@ export class NewEnemyManager {
       return;
     }
     
+    // Wenn ein Boss aktiv ist, weniger normale Gegner spawnen
+    if (this.bossActive && Math.random() < 0.6) {
+      console.log(`[ENEMY_MANAGER] Spawn übersprungen, da Boss aktiv ist (60% Chance)`);
+      return;
+    }
+    
     // Bestimme den Gegnertyp basierend auf den Wahrscheinlichkeiten
     const randomValue = Math.random();
     let enemyType: string = 'standard';
@@ -139,7 +147,7 @@ export class NewEnemyManager {
    * Wird nur vom automatischen Spawning-System verwendet
    */
   private trySpawnBoss = (): void => {
-    if (this.isPaused || !this.autoSpawningEnabled) return;
+    if (this.isPaused || this.bossActive || !this.autoSpawningEnabled) return;
     
     // Spawne nur, wenn Schwierigkeit hoch genug ist
     if (this.difficulty < 2) {
@@ -180,7 +188,9 @@ export class NewEnemyManager {
         break;
       case EnemyType.BOSS:
         enemy = new BossEnemy(this.scene, x, y, this.player);
+        this.bossActive = true;
         console.log(`[ENEMY_MANAGER] *** BOSS SPAWNED *** mit ${enemy.getHealth()} HP`);
+        console.log(`[ENEMY_MANAGER] BossActive-Flag gesetzt auf ${this.bossActive}`);
         // Boss-Spawned-Event auslösen
         this.eventBus.emit(EventType.BOSS_SPAWNED, enemy);
         break;
@@ -244,7 +254,7 @@ export class NewEnemyManager {
       if (this.currentDebugMode === DebugMode.FULL) {
         console.log(`[ENEMY_MANAGER] Update: ${activeEnemies} Gegner, ${activeBullets} Feind-Projektile, Schwierigkeit ${this.difficulty}, 
                      Modus: ${this.autoSpawningEnabled ? 'Auto-Spawn' : 'Level-gesteuert'}, 
-                     Turret: ${this.turretActive}`);
+                     Boss: ${this.bossActive}, Turret: ${this.turretActive}`);
       }
     }
     
@@ -263,6 +273,19 @@ export class NewEnemyManager {
         console.log(`[ENEMY_MANAGER] Gegner außerhalb des Bildschirms bei (${enemy.getSprite().x}, ${enemy.getSprite().y}), wird entfernt.`);
         enemy.destroy();
         this.enemies.splice(i, 1);
+        continue;
+      }
+      
+      // Überprüfe, ob der Gegner ein Boss ist und außerhalb des sichtbaren Bereichs
+      if (enemy instanceof BossEnemy && 
+          (enemy.getSprite().x < -100 || 
+           enemy.getSprite().x > this.scene.scale.width + 100 || 
+           enemy.getSprite().y < -100 || 
+           enemy.getSprite().y > this.scene.scale.height + 100)) {
+        console.log(`[ENEMY_MANAGER] Boss außerhalb des Bildschirms bei (${enemy.getSprite().x}, ${enemy.getSprite().y}), wird entfernt.`);
+        enemy.destroy();
+        this.enemies.splice(i, 1);
+        this.bossActive = false;
         continue;
       }
       
@@ -402,6 +425,14 @@ export class NewEnemyManager {
   }
   
   /**
+   * Behandelt die Zerstörung eines Bosses
+   */
+  private onBossDestroyed = (): void => {
+    console.log('[ENEMY_MANAGER] Boss wurde zerstört, BossActive auf False gesetzt');
+    this.bossActive = false;
+  }
+  
+  /**
    * Zerstört alle aktiven Gegner
    */
   public destroyAllEnemies(): void {
@@ -417,6 +448,7 @@ export class NewEnemyManager {
     
     // Leere das Array
     this.enemies = [];
+    this.bossActive = false;
     this.turretActive = false;
   }
   
@@ -432,6 +464,28 @@ export class NewEnemyManager {
       const enemyType = enemy.constructor.name;
       
       console.log(`[ENEMY_MANAGER] Zerstöre Gegner vom Typ ${enemyType}`);
+      
+      // Wenn es ein Boss war, setze bossActive zurück
+      if (enemyType === 'BossEnemy') {
+        this.bossActive = false;
+        console.log(`[ENEMY_MANAGER] Bossactive auf false gesetzt nach Boss-Zerstörung`);
+        
+        // Füge eine zusätzliche Verzögerung hinzu, bevor ein neuer Boss spawnen kann
+        console.log(`[ENEMY_MANAGER] Füge zusätzliche Cooldown-Zeit nach Boss-Zerstörung hinzu`);
+        
+        // Pausiere den Boss-Timer vorübergehend
+        if (this.bossSpawnTimer) {
+          this.bossSpawnTimer.paused = true;
+          
+          // Setze einen verzögerten Aufruf, um den Timer nach einer bestimmten Zeit wieder zu aktivieren
+          this.scene.time.delayedCall(Constants.SPAWN_RATE_BOSS, () => {
+            if (this.bossSpawnTimer) {
+              console.log(`[ENEMY_MANAGER] Boss-Cooldown abgelaufen, Spawning wieder aktiviert`);
+              this.bossSpawnTimer.paused = false;
+            }
+          });
+        }
+      }
       
       // Wenn es ein Turret war, setze turretActive zurück
       if (enemyType === 'TurretEnemy') {
@@ -471,6 +525,7 @@ export class NewEnemyManager {
     this.eventBus.off(EventType.RESUME_GAME, this.resumeSpawning);
     this.eventBus.off(EventType.GAME_OVER, this.stopSpawning);
     this.eventBus.off('REGISTER_ENEMY_BULLET', this.registerEnemyBullet);
-    this.eventBus.off(EventType.DEBUG_TOGGLED, this.onDebugModeChanged);
+    this.eventBus.off('BOSS_DESTROYED', this.onBossDestroyed);
+    this.eventBus.off('DEBUG_TOGGLED', this.onDebugModeChanged);
   }
 } 

@@ -19,9 +19,11 @@ export class SpawnManager {
   private eventBus: EventBus;
   private isPaused: boolean = false;
   private lastUpdateTime: number = 0;
-  private maxAsteroids: number = 5; // Maximale Anzahl an Asteroiden von 10 auf 5 reduziert
+  private minAsteroids: number = 2; // Minimale Anzahl an Asteroiden
+  private maxAsteroids: number = 5; // Maximale Anzahl an Asteroiden
   private maxPickups: number = 3; // Maximale Anzahl an Pickups
   private maxPowerPickups: number = 1; // Maximale Anzahl an Power-Pickups
+  private asteroidSpawnRate: number = Constants.SPAWN_RATE_ASTEROID;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -46,7 +48,7 @@ export class SpawnManager {
   private startSpawnTimers(): void {
     // Timer für Asteroiden
     this.asteroidSpawnTimer = this.scene.time.addEvent({
-      delay: Constants.SPAWN_RATE_ASTEROID,
+      delay: this.asteroidSpawnRate,
       callback: this.spawnAsteroid,
       callbackScope: this,
       loop: true
@@ -54,11 +56,49 @@ export class SpawnManager {
 
     // Timer für Pickups (längere Verzögerung als Asteroiden)
     this.pickupSpawnTimer = this.scene.time.addEvent({
-      delay: Constants.SPAWN_RATE_ASTEROID * 3, // Dreimal seltener als Asteroiden
+      delay: this.asteroidSpawnRate * 3, // Dreimal seltener als Asteroiden
       callback: this.spawnPickup,
       callbackScope: this,
       loop: true
     });
+  }
+
+  /**
+   * Stoppt und startet den Asteroiden-Timer neu mit der angegebenen Rate
+   */
+  public setAsteroidSpawnRate(rate: number): void {
+    this.asteroidSpawnRate = rate;
+    
+    // Stoppe den aktuellen Timer
+    if (this.asteroidSpawnTimer) {
+      this.asteroidSpawnTimer.remove();
+    }
+    
+    // Starte einen neuen Timer mit der aktualisierten Rate
+    this.asteroidSpawnTimer = this.scene.time.addEvent({
+      delay: this.asteroidSpawnRate,
+      callback: this.spawnAsteroid,
+      callbackScope: this,
+      loop: true
+    });
+    
+    console.log(`[SPAWN_MANAGER] Asteroid-Spawn-Rate auf ${rate}ms gesetzt`);
+  }
+
+  /**
+   * Setzt die minimale Anzahl an Asteroiden
+   */
+  public setMinAsteroids(count: number): void {
+    this.minAsteroids = count;
+    console.log(`[SPAWN_MANAGER] Minimale Asteroidenanzahl auf ${count} gesetzt`);
+  }
+
+  /**
+   * Setzt die maximale Anzahl an Asteroiden
+   */
+  public setMaxAsteroids(count: number): void {
+    this.maxAsteroids = count;
+    console.log(`[SPAWN_MANAGER] Maximale Asteroidenanzahl auf ${count} gesetzt`);
   }
 
   /**
@@ -67,23 +107,62 @@ export class SpawnManager {
   private spawnAsteroid = (): void => {
     if (this.isPaused) return;
     
+    // Prüfe, ob minimale Anzahl erreicht ist
+    if (this.asteroids.length < this.minAsteroids) {
+      const asteroid = this.createAsteroid();
+      if (!asteroid) {
+        console.warn('[SPAWN_MANAGER] Asteroid konnte nicht erstellt werden.');
+      }
+      return;
+    }
+    
     // Begrenze die Anzahl der Asteroiden für bessere Performance
     if (this.asteroids.length >= this.maxAsteroids) return;
     
-    const x = this.scene.scale.width + 50;
-    const y = Phaser.Math.Between(100, this.scene.scale.height - 100);
+    // Zufällig entscheiden, ob ein Asteroid erstellt wird
+    if (Math.random() < 0.5) {
+      const asteroid = this.createAsteroid();
+      if (!asteroid) {
+        console.warn('[SPAWN_MANAGER] Asteroid konnte nicht erstellt werden.');
+      }
+    }
+  }
+
+  /**
+   * Erstellt einen neuen Asteroiden
+   */
+  private createAsteroid(data?: {x?: number, y?: number, size?: 'small' | 'large'}): Asteroid | null {
+    if (!this.scene) {
+      console.error('[SPAWN_MANAGER] Szene ist nicht verfügbar. Asteroid kann nicht erstellt werden.');
+      return null;
+    }
     
-    // Bevorzuge große Asteroiden statt kleine (Umgekehrt)
-    const size = Math.random() > 0.7 ? 'small' : 'large';
-    
-    const asteroid = new Asteroid(
-      this.scene, 
-      x, 
-      y, 
-      size
-    );
-    
-    this.asteroids.push(asteroid);
+    try {
+      const x = data?.x ?? this.scene.scale.width + 50;
+      const y = data?.y ?? Phaser.Math.Between(100, this.scene.scale.height - 100);
+      const size = data?.size ?? (Math.random() > 0.7 ? 'small' : 'large');
+      
+      const texture = size === 'large' ? Constants.ASSET_ASTEROID : Constants.ASSET_ASTEROID_SMALL;
+      
+      // Prüfe, ob die Textur verfügbar ist
+      if (!this.scene.textures.exists(texture)) {
+        console.error(`[SPAWN_MANAGER] Textur '${texture}' ist nicht verfügbar!`);
+        return null;
+      }
+      
+      const asteroid = new Asteroid(
+        this.scene, 
+        x, 
+        y, 
+        size
+      );
+      
+      this.asteroids.push(asteroid);
+      return asteroid;
+    } catch (error) {
+      console.error('[SPAWN_MANAGER] Fehler beim Erstellen eines Asteroiden:', error);
+      return null;
+    }
   }
 
   /**
@@ -95,11 +174,49 @@ export class SpawnManager {
     // Spawne seltener und begrenzt für bessere Performance
     if (Math.random() > Constants.ENERGY_PICKUP_SPAWN_CHANCE || this.pickups.length >= this.maxPickups) return;
     
-    const x = this.scene.scale.width + 50;
-    const y = Phaser.Math.Between(100, this.scene.scale.height - 100);
+    this.spawnEnergyPickup(this.scene.scale.width + 50, Phaser.Math.Between(100, this.scene.scale.height - 100));
+  }
+
+  /**
+   * Spawnt ein EnergyPickup an den angegebenen Koordinaten
+   */
+  public spawnEnergyPickup(x: number, y: number): EnergyPickup {
+    if (this.isPaused) {
+      console.log('[SPAWN_MANAGER] Spawning ist pausiert, kein Pickup erzeugt');
+      return null;
+    }
     
+    // Begrenze die Anzahl der Pickups für bessere Performance
+    if (this.pickups.length >= this.maxPickups) {
+      console.log('[SPAWN_MANAGER] Maximale Anzahl an Pickups erreicht:', this.pickups.length);
+      return null;
+    }
+    
+    console.log('[SPAWN_MANAGER] Erzeuge neues EnergyPickup');
     const pickup = new EnergyPickup(this.scene, x, y);
     this.pickups.push(pickup);
+    return pickup;
+  }
+
+  /**
+   * Spawnt ein PowerPickup an den angegebenen Koordinaten
+   */
+  public spawnPowerPickup(x: number, y: number): PowerPickup {
+    if (this.isPaused) {
+      console.log('[SPAWN_MANAGER] Spawning ist pausiert, kein Power-Pickup erzeugt');
+      return null;
+    }
+    
+    // Begrenze die Anzahl der Power-Pickups für bessere Performance
+    if (this.powerPickups.length >= this.maxPowerPickups) {
+      console.log('[SPAWN_MANAGER] Maximale Anzahl an Power-Pickups erreicht:', this.powerPickups.length);
+      return null;
+    }
+    
+    console.log('[SPAWN_MANAGER] Erzeuge neues PowerPickup');
+    const pickup = new PowerPickup(this.scene, x, y);
+    this.powerPickups.push(pickup);
+    return pickup;
   }
 
   /**
@@ -108,82 +225,44 @@ export class SpawnManager {
   private spawnSmallAsteroid = (data: {x: number, y: number}): void => {
     if (this.isPaused) return;
     
-    // Begrenze die Anzahl der Asteroiden für bessere Performance
-    if (this.asteroids.length >= this.maxAsteroids + 3) return;
-    
-    const asteroid = new Asteroid(
-      this.scene, 
-      data.x, 
-      data.y, 
-      'small'
-    );
-    
-    this.asteroids.push(asteroid);
-  }
-
-  /**
-   * Aktualisiert alle gespawnten Objekte
-   */
-  public update(time: number, delta: number): void {
-    if (this.isPaused) return;
-    
-    // Performance-Optimierung: Überspringe Frames bei Bedarf
-    const updateInterval = 1000 / 30; // Ziel: 30 Updates pro Sekunde
-    if (time - this.lastUpdateTime < updateInterval && this.lastUpdateTime > 0) {
-      return;
-    }
-    this.lastUpdateTime = time;
-    
-    // Aktualisiere Asteroiden
-    for (let i = this.asteroids.length - 1; i >= 0; i--) {
-      const asteroid = this.asteroids[i];
+    try {
+      // Sicherheitsüberprüfung für null/undefined Werte
+      if (!data || typeof data !== 'object') {
+        console.warn('[SPAWN_MANAGER] Ungültige Daten für kleinen Asteroiden:', data);
+        return;
+      }
       
-      if (asteroid.getSprite().active) {
-        asteroid.update(time, delta);
-        
-        // Entferne Asteroiden, die den Bildschirm verlassen haben
-        if (asteroid.getSprite().x < -100) {
-          asteroid.destroy();
-          this.asteroids.splice(i, 1);
-        }
-      } else {
-        // Entferne zerstörte Asteroiden aus dem Array
-        this.asteroids.splice(i, 1);
+      if (data.x === undefined || data.y === undefined || isNaN(data.x) || isNaN(data.y)) {
+        console.warn('[SPAWN_MANAGER] Ungültige Koordinaten für kleinen Asteroiden:', data);
+        return;
       }
-    }
-    
-    // Aktualisiere Pickups
-    for (let i = this.pickups.length - 1; i >= 0; i--) {
-      const pickup = this.pickups[i];
       
-      if (pickup.getSprite().active) {
-        pickup.update(time, delta);
-        
-        // Entferne Pickups, die den Bildschirm verlassen haben
-        if (pickup.getSprite().x < -50) {
-          pickup.destroy();
-          this.pickups.splice(i, 1);
-        }
-      } else {
-        // Entferne aufgesammelte Pickups aus dem Array
-        this.pickups.splice(i, 1);
+      // Begrenze die Anzahl der Asteroiden für bessere Performance
+      if (this.asteroids.length >= this.maxAsteroids + 3) return;
+      
+      // Verwende einen sicheren Bereich auf dem Bildschirm
+      const safeX = Math.max(50, Math.min(data.x, this.scene.scale.width - 50));
+      const safeY = Math.max(50, Math.min(data.y, this.scene.scale.height - 50));
+      
+      const asteroid = this.createAsteroid({
+        x: safeX,
+        y: safeY,
+        size: 'small'
+      });
+      
+      if (!asteroid) {
+        console.warn('[SPAWN_MANAGER] Kleiner Asteroid konnte nicht erstellt werden.');
       }
+    } catch (error) {
+      console.error('[SPAWN_MANAGER] Fehler beim Erstellen des kleinen Asteroiden:', error);
     }
-
-    // Aktualisiere alle Power-Pickups
-    this.powerPickups = this.powerPickups.filter(pickup => {
-      if (pickup.getSprite().active) {
-        pickup.update(time, delta);
-        return true;
-      }
-      return false;
-    });
   }
 
   /**
    * Reagiert auf Erhöhung des Schwierigkeitsgrads
    */
-  private onDifficultyIncrease = (newDifficulty: number): void => {
+  private onDifficultyIncrease = (data: any): void => {
+    const newDifficulty = typeof data === 'object' ? data.difficulty : data;
     this.difficulty = newDifficulty;
     
     // Erhöhe die maximale Anzahl der Asteroiden abhängig vom Schwierigkeitsgrad, aber weniger als vorher
@@ -191,12 +270,7 @@ export class SpawnManager {
     
     // Erhöhe die Spawn-Rate für Asteroiden
     const newAsteroidRate = Constants.SPAWN_RATE_ASTEROID * Math.pow(0.7, newDifficulty - 1);
-    this.asteroidSpawnTimer.reset({
-      delay: newAsteroidRate,
-      callback: this.spawnAsteroid,
-      callbackScope: this,
-      loop: true
-    });
+    this.setAsteroidSpawnRate(newAsteroidRate);
   }
 
   /**
@@ -227,6 +301,22 @@ export class SpawnManager {
   }
 
   /**
+   * Erstellt ein EnergyPickup an der angegebenen Position
+   */
+  private spawnEnergyPickupAtPosition = (data: {x: number, y: number}): void => {
+    console.log('SpawnManager: spawnEnergyPickupAtPosition aufgerufen mit Position:', data);
+    this.spawnEnergyPickup(data.x, data.y);
+  }
+
+  /**
+   * Erstellt ein PowerPickup an der angegebenen Position
+   */
+  private spawnPowerPickupAtPosition = (data: {x: number, y: number}): void => {
+    console.log('SpawnManager: spawnPowerPickupAtPosition aufgerufen mit Position:', data);
+    this.spawnPowerPickup(data.x, data.y);
+  }
+
+  /**
    * Zerstört alle Objekte
    */
   public destroyAllObjects(): void {
@@ -241,6 +331,12 @@ export class SpawnManager {
       pickup.destroy();
     }
     this.pickups = [];
+    
+    // Zerstöre alle Power-Pickups
+    this.powerPickups.forEach(pickup => {
+      pickup.destroy();
+    });
+    this.powerPickups = [];
   }
 
   /**
@@ -293,12 +389,6 @@ export class SpawnManager {
     
     this.destroyAllObjects();
     
-    // Zerstöre alle Power-Pickups
-    this.powerPickups.forEach(pickup => {
-      pickup.destroy();
-    });
-    this.powerPickups = [];
-    
     // Entferne Event-Listener
     this.eventBus.off(EventType.DIFFICULTY_CHANGED, this.onDifficultyIncrease);
     this.eventBus.off(EventType.PAUSE_GAME, this.pauseSpawning);
@@ -310,88 +400,112 @@ export class SpawnManager {
   }
 
   /**
-   * Zerstört einen bestimmten Asteroiden
+   * Fügt einem Asteroiden Schaden zu und zerstört ihn, wenn seine Gesundheit 0 erreicht
+   * @param asteroid Der Asteroid, dem Schaden zugefügt werden soll
+   * @returns True, wenn der Asteroid zerstört wurde, andernfalls false
    */
-  public destroyAsteroid(asteroidSprite: Phaser.GameObjects.GameObject): void {
-    if (!asteroidSprite || !asteroidSprite.active) return;
-    
-    const asteroidIndex = this.asteroids.findIndex(a => a.getSprite() === asteroidSprite);
-    if (asteroidIndex !== -1) {
-      const asteroid = this.asteroids[asteroidIndex];
-      
-      // Entferne zuerst aus dem Array, um doppelte Entfernung zu vermeiden
-      this.asteroids.splice(asteroidIndex, 1);
-      
-      // Dann zerstöre das Objekt (löst onDestroy aus)
-      asteroid.destroy();
+  public damageAsteroid(asteroid: Phaser.Physics.Arcade.Sprite): boolean {
+    if (!asteroid || !asteroid.active || !asteroid.data) {
+      console.warn('[SPAWN_MANAGER] Versuch, einem ungültigen Asteroiden Schaden zuzufügen');
+      return false;
     }
-  }
-
-  /**
-   * Fügt einem Asteroiden Schaden zu
-   * @returns true wenn der Asteroid zerstört wurde, false sonst
-   */
-  public damageAsteroid(asteroidSprite: Phaser.GameObjects.GameObject): boolean {
-    if (!asteroidSprite || !asteroidSprite.active) return false;
     
-    const asteroidIndex = this.asteroids.findIndex(a => a.getSprite() === asteroidSprite);
-    if (asteroidIndex !== -1) {
-      const asteroid = this.asteroids[asteroidIndex];
+    try {
+      // Hole die aktuelle Gesundheit und den Schaden aus dem Sprite-Data
+      let currentHealth = asteroid.data.get('health');
       
-      // Reduziere die Gesundheit des Asteroiden
-      const isDestroyed = asteroid.takeDamage(Constants.BULLET_DAMAGE);
+      // Wenn keine Gesundheit gesetzt ist, verwende Standardwert
+      if (currentHealth === undefined) {
+        const size = asteroid.data.get('size') || 'large';
+        currentHealth = size === 'large' ? Constants.ASTEROID_HEALTH : Constants.ASTEROID_HEALTH / 2;
+        asteroid.setData('health', currentHealth);
+      }
       
-      if (isDestroyed) {
-        // Bei Zerstörung aus dem Array entfernen
-        this.asteroids.splice(asteroidIndex, 1);
+      // Standard-Bullet-Schaden verwenden, wenn nicht anders angegeben
+      const bulletDamage = Constants.BULLET_DAMAGE;
+      
+      // Berechne neue Gesundheit
+      const newHealth = currentHealth - bulletDamage;
+      asteroid.setData('health', newHealth);
+      
+      // Wenn die Gesundheit unter 0 fällt, Asteroid zerstören
+      if (newHealth <= 0) {
+        console.log('[SPAWN_MANAGER] Asteroid hat keine Gesundheit mehr, wird zerstört');
+        
+        // Sicherstellen, dass asteroid.data vollständig initialisiert ist
+        if (!asteroid.data.get('type')) {
+          asteroid.setData('type', 'asteroid');
+        }
+        
+        // Wir verwenden hier ein Event anstatt direkten Aufruf, da die Asteroid-Instanz
+        // möglicherweise nicht direkt verfügbar ist (nur der Physics-Sprite)
+        this.eventBus.emit('DESTROY_ASTEROID', asteroid);
+        
+        // Als Backup direkt destroyAsteroid aufrufen, um sicherzustellen, dass der Asteroid entfernt wird
+        setTimeout(() => {
+          if (asteroid && asteroid.active) {
+            this.destroyAsteroid(asteroid);
+          }
+        }, 100);
+        
         return true;
       }
+      
+      return false;
+    } catch (error) {
+      console.error('[SPAWN_MANAGER] Fehler beim Beschädigen des Asteroiden:', error);
+      return false;
     }
-    
-    return false;
   }
 
   /**
-   * Erstellt ein EnergyPickup an der angegebenen Position
+   * Zerstört einen Asteroiden direkt
+   * @param asteroid Der zu zerstörende Asteroid
    */
-  private spawnEnergyPickupAtPosition = (data: {x: number, y: number}): void => {
-    console.log('SpawnManager: spawnEnergyPickupAtPosition aufgerufen mit Position:', data);
-    
-    if (this.isPaused) {
-      console.log('SpawnManager: Spawning ist pausiert, kein Pickup erzeugt');
+  public destroyAsteroid(asteroid: Phaser.Physics.Arcade.Sprite): void {
+    if (!asteroid || !asteroid.active) {
+      console.log('[SPAWN_MANAGER] Asteroid ist bereits inaktiv');
       return;
     }
     
-    // Begrenze die Anzahl der Pickups für bessere Performance
-    if (this.pickups.length >= this.maxPickups) {
-      console.log('SpawnManager: Maximale Anzahl an Pickups erreicht:', this.pickups.length);
-      return;
+    try {
+      // Finde den Asteroiden in unserem Array
+      const asteroidIndex = this.asteroids.findIndex(a => a.getSprite() === asteroid);
+      
+      if (asteroidIndex !== -1) {
+        console.log('[SPAWN_MANAGER] Asteroid in Array gefunden, zerstöre über Instanz');
+        // Zerstöre den Asteroiden direkt über seine Instanz
+        this.asteroids[asteroidIndex].destroy();
+        // Entferne ihn aus dem Array
+        this.asteroids.splice(asteroidIndex, 1);
+      } else {
+        console.log('[SPAWN_MANAGER] Asteroid nicht in Array gefunden, zerstöre über Event');
+        
+        // Sicherstellen, dass das sprite.data-Objekt existiert, bevor wir das Event auslösen
+        if (!asteroid.data) {
+          asteroid.setData('type', 'asteroid');
+        }
+        
+        // Löse das DESTROY_ASTEROID Event aus, um die Logik in der Asteroid-Klasse auszuführen
+        this.eventBus.emit('DESTROY_ASTEROID', asteroid);
+        
+        // Als Fallback das Sprite direkt zerstören, falls das Event nicht verarbeitet wird
+        setTimeout(() => {
+          if (asteroid && asteroid.active) {
+            console.log('[SPAWN_MANAGER] Fallback: Zerstöre Asteroid-Sprite direkt');
+            asteroid.destroy();
+          }
+        }, 100);
+      }
+      
+      console.log('[SPAWN_MANAGER] Asteroid wurde durch Kollision zerstört');
+    } catch (error) {
+      console.error('[SPAWN_MANAGER] Fehler beim Zerstören des Asteroiden:', error);
+      
+      // Letzer Versuch, das Sprite zu zerstören
+      if (asteroid && asteroid.active) {
+        asteroid.destroy();
+      }
     }
-    
-    console.log('SpawnManager: Erzeuge neues EnergyPickup');
-    const pickup = new EnergyPickup(this.scene, data.x, data.y);
-    this.pickups.push(pickup);
-  }
-
-  /**
-   * Erstellt ein PowerPickup an der angegebenen Position
-   */
-  private spawnPowerPickupAtPosition = (data: {x: number, y: number}): void => {
-    console.log('SpawnManager: spawnPowerPickupAtPosition aufgerufen mit Position:', data);
-    
-    if (this.isPaused) {
-      console.log('SpawnManager: Spawning ist pausiert, kein Power-Pickup erzeugt');
-      return;
-    }
-    
-    // Begrenze die Anzahl der Power-Pickups für bessere Performance
-    if (this.powerPickups.length >= this.maxPowerPickups) {
-      console.log('SpawnManager: Maximale Anzahl an Power-Pickups erreicht:', this.powerPickups.length);
-      return;
-    }
-    
-    console.log('SpawnManager: Erzeuge neues PowerPickup');
-    const pickup = new PowerPickup(this.scene, data.x, data.y);
-    this.powerPickups.push(pickup);
   }
 } 

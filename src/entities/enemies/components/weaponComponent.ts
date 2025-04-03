@@ -218,10 +218,34 @@ export class WeaponComponent {
         this.sprite.x, this.sprite.y,
         targetX, targetY
       );
+      
+      // Debug-Ausgabe für Schusswinkel
+      console.log(`[WEAPON] Feind schießt auf Spieler: Winkel=${(angle * 180 / Math.PI).toFixed(0)}° von (${this.sprite.x.toFixed(0)},${this.sprite.y.toFixed(0)}) auf (${targetX.toFixed(0)},${targetY.toFixed(0)})`);
+      
+      // Stelle sicher, dass der Winkel in Richtung Spieler zeigt (links)
+      if (angle > 0 && angle < Math.PI) {
+        // Winkel ist nach rechts oben/unten - korrigiere zu links oben/unten
+        angle = Math.PI - angle;
+        console.log(`[WEAPON] Winkel korrigiert zu: ${(angle * 180 / Math.PI).toFixed(0)}°`);
+      }
     }
     
-    // Erstelle ein Bullet mit der Factory
-    bulletFactory.createEnemyBullet(this.sprite.x - 20, this.sprite.y, angle);
+    // Erstelle ein Bullet mit der Factory und ERZWINGE einen Mindestgeschwindigkeit und nach links
+    const bulletX = this.sprite.x - 20; // 20 Pixel links vom Gegner
+    const bullet = bulletFactory.createEnemyBullet(bulletX, this.sprite.y, angle);
+    
+    // WICHTIG: Stelle sicher, dass das Projektil eine bedeutende Geschwindigkeit hat
+    if (bullet) {
+      const bulletSprite = bullet.getSprite();
+      if (bulletSprite && bulletSprite.body) {
+        // Wenn die Geschwindigkeit zu niedrig ist, setze eine Mindestgeschwindigkeit nach links
+        const velocity = bulletSprite.body.velocity;
+        if (Math.abs(velocity.x) < 50 && Math.abs(velocity.y) < 50) {
+          console.log(`[WEAPON] Korrigiere zu geringe Geschwindigkeit: (${velocity.x.toFixed(0)},${velocity.y.toFixed(0)})`);
+          bulletSprite.body.velocity.x = -this.bulletSpeed;  // Zwinge nach links
+        }
+      }
+    }
     
     // Sound-Effekt
     this.scene.sound.play(Constants.SOUND_ENEMY_SHOOT, {

@@ -2,6 +2,7 @@ import { GameObject } from '../gameObject';
 import { Constants } from '../../utils/constants';
 import { EventBus, EventType } from '../../utils/eventBus';
 import { Player } from '../player/player';
+import { Helpers } from '../../utils/helpers';
 
 /**
  * Asteroid-Klasse
@@ -40,6 +41,8 @@ export class Asteroid extends GameObject {
     // Setze Eigenschaften für Kollisionen
     this.sprite.setData('type', 'asteroid');
     this.sprite.setData('size', size);
+    this.sprite.setData('health', health);
+    this.sprite.setData('instance', this);
     
     // Optimierung für die Physik-Engine
     this.sprite.setDamping(true);
@@ -49,6 +52,9 @@ export class Asteroid extends GameObject {
     if (this.sprite.body && 'useDamping' in this.sprite.body) {
       (this.sprite.body as Phaser.Physics.Arcade.Body).useDamping = true;
     }
+    
+    // Event-Handler für das DESTROY_ASTEROID-Event registrieren
+    this.eventBus.on('DESTROY_ASTEROID', this.handleDestroyEvent);
   }
 
   /**
@@ -76,6 +82,32 @@ export class Asteroid extends GameObject {
   }
 
   /**
+   * Behandelt das DESTROY_ASTEROID-Event
+   */
+  private handleDestroyEvent = (asteroid: Phaser.GameObjects.GameObject): void => {
+    try {
+      // Prüfe, ob das Event für diesen Asteroid bestimmt ist
+      if (asteroid === this.sprite) {
+        console.log('[ASTEROID] Dieser Asteroid wurde zerstört über direkten Sprite-Vergleich');
+        this.destroy();
+        return;
+      }
+      
+      // Sicherheitsüberprüfung für data und data.values
+      if (asteroid && 
+          asteroid.data && 
+          asteroid.data.values && 
+          'instance' in asteroid.data.values && 
+          asteroid.data.values.instance === this) {
+        console.log('[ASTEROID] Dieser Asteroid wurde zerstört über Instance-Vergleich');
+        this.destroy();
+      }
+    } catch (error) {
+      console.error('[ASTEROID] Fehler beim Verarbeiten des DESTROY_ASTEROID-Events:', error);
+    }
+  }
+
+  /**
    * Wird aufgerufen, wenn der Asteroid zerstört wird
    */
   protected onDestroy(): void {
@@ -90,24 +122,15 @@ export class Asteroid extends GameObject {
       this.sprite.body.enable = false;
     }
     
-    // Erstelle eine Explosion
-    const explosion = this.scene.add.sprite(explosionX, explosionY, Constants.ASSET_EXPLOSION_1);
+    // Erstelle eine Explosion mit der zentralen Helper-Funktion
     const explosionScale = this.size === 'large' ? 2 : 1.2;
-    explosion.setScale(explosionScale);
-    
-    // Event-Handler für das Ende der Animation hinzufügen, um die Explosion zu entfernen
-    explosion.once('animationcomplete', () => {
-      explosion.destroy();
-    });
-    
-    // Animation abspielen
-    explosion.play('explode');
-
-    // Spiele einen Sound
-    this.scene.sound.play(Constants.SOUND_EXPLOSION, {
-      volume: 0.2,
-      detune: 300
-    });
+    Helpers.createExplosion(
+      this.scene, 
+      explosionX, 
+      explosionY, 
+      explosionScale,
+      { volume: 0.2, detune: 300 }
+    );
 
     // Vergebe Punkte
     this.eventBus.emit(EventType.ASTEROID_DESTROYED, this.scoreValue);
@@ -120,6 +143,9 @@ export class Asteroid extends GameObject {
     // Stelle sicher, dass das Sprite inaktiv ist, bevor es komplett entfernt wird
     this.sprite.setActive(false);
     this.sprite.setVisible(false);
+    
+    // Event-Listener entfernen
+    this.eventBus.off('DESTROY_ASTEROID', this.handleDestroyEvent);
   }
 
   /**
@@ -139,21 +165,29 @@ export class Asteroid extends GameObject {
    * Erstellt kleinere Asteroiden, wenn ein großer zerstört wird
    */
   private createSmallAsteroids(): void {
+    // Speichere die aktuellen Koordinaten, da das Sprite später nicht mehr verfügbar sein kann
+    const currentX = this.sprite.x;
+    const currentY = this.sprite.y;
+    
     // Reduziert von 2-3 auf nur 1-2 kleine Asteroiden
     const numAsteroids = 1 + Math.floor(Math.random() * 2);
     
-    for (let i = 0; i < numAsteroids; i++) {
-      const offsetX = (Math.random() - 0.5) * 40;
-      const offsetY = (Math.random() - 0.5) * 40;
-      
-      // 50% Chance, dass überhaupt ein kleiner Asteroid gespawnt wird
-      if (Math.random() < 0.5) {
-        // Erstelle kleinere Asteroiden über den EventBus, wird vom SpawnManager verarbeitet
-        this.eventBus.emit('CREATE_SMALL_ASTEROID', {
-          x: this.sprite.x + offsetX,
-          y: this.sprite.y + offsetY
-        });
+    try {
+      for (let i = 0; i < numAsteroids; i++) {
+        const offsetX = (Math.random() - 0.5) * 40;
+        const offsetY = (Math.random() - 0.5) * 40;
+        
+        // 50% Chance, dass überhaupt ein kleiner Asteroid gespawnt wird
+        if (Math.random() < 0.5) {
+          // Erstelle kleinere Asteroiden über den EventBus, wird vom SpawnManager verarbeitet
+          this.eventBus.emit('CREATE_SMALL_ASTEROID', {
+            x: currentX + offsetX,
+            y: currentY + offsetY
+          });
+        }
       }
+    } catch (error) {
+      console.error('[ASTEROID] Fehler beim Erstellen kleiner Asteroiden:', error);
     }
   }
 } 

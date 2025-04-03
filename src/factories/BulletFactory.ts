@@ -35,7 +35,19 @@ export class BulletFactory {
    * Erstellt ein Standard-Feindprojektil
    */
   public createEnemyBullet(x: number, y: number, angle: number): EnemyBullet {
-    return EnemyBullet.createBullet(this.scene, x, y, angle);
+    const bullet = EnemyBullet.createBullet(this.scene, x, y, angle);
+    
+    // Überprüfe, ob das Projektil korrekt erstellt wurde
+    const bulletSprite = bullet.getSprite();
+    if (bulletSprite && bulletSprite.body) {
+      // Sicherstellen, dass das Projektil eine tatsächliche Geschwindigkeit hat
+      if (Math.abs(bulletSprite.body.velocity.x) < 10 && Math.abs(bulletSprite.body.velocity.y) < 10) {
+        console.log(`[BULLET_FACTORY] Bullet hat zu geringe Geschwindigkeit, korrigiere zu Basis-Richtung (links)`);
+        bulletSprite.body.velocity.x = -300; // Erzwinge Bewegung nach links
+      }
+    }
+    
+    return bullet;
   }
   
   /**

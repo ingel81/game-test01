@@ -3,6 +3,7 @@ import { EventBus, EventType } from '../utils/eventBus';
 import { HealthBar } from './healthBar';
 import { TouchControls } from './touchControls';
 import { ScoreDisplay } from './scoreDisplay';
+import { Player } from '../entities/player/player';
 
 /**
  * GameUI-Klasse
@@ -10,6 +11,7 @@ import { ScoreDisplay } from './scoreDisplay';
  */
 export class GameUI {
   private scene: Phaser.Scene;
+  private player: Player;
   private healthBar: HealthBar;
   private scoreDisplay: ScoreDisplay;
   private touchControls: TouchControls | null = null;
@@ -19,8 +21,9 @@ export class GameUI {
   private isMobile: boolean;
   private toolbarHeight: number;
 
-  constructor(scene: Phaser.Scene) {
+  constructor(scene: Phaser.Scene, player: Player) {
     this.scene = scene;
+    this.player = player;
     this.eventBus = EventBus.getInstance();
     this.isMobile = this.scene.sys.game.device.input.touch;
     this.toolbarHeight = Constants.getToolbarHeight(this.isMobile);
@@ -66,6 +69,9 @@ export class GameUI {
       this.isMobile ? 16 : 20
     );
     
+    // Initialisiere die Gesundheitsanzeige mit der Spielergesundheit
+    this.updateHealth(this.player.getHealth());
+    
     // Erstelle Touch-Steuerung, wenn auf einem Touch-Gerät
     if (this.isMobile) {
       this.touchControls = new TouchControls(this.scene);
@@ -73,6 +79,18 @@ export class GameUI {
     
     // Registriere Event-Listener für Level-Änderungen
     this.eventBus.on(EventType.DIFFICULTY_CHANGED, this.onDifficultyChanged);
+    this.eventBus.on(EventType.PLAYER_DAMAGED, this.onPlayerDamaged);
+    this.eventBus.on(EventType.PLAYER_HEALED, this.onPlayerHealed);
+  }
+  
+  /**
+   * Update-Methode, die jeden Frame aufgerufen wird
+   */
+  public update(time: number, delta: number): void {
+    // Aktualisiere die Touch-Steuerung, wenn vorhanden
+    if (this.touchControls) {
+      this.touchControls.update();
+    }
   }
 
   /**
@@ -82,6 +100,20 @@ export class GameUI {
     const newDifficulty = typeof data === 'object' ? data.difficulty : data;
     // Aktualisiere die Level-Anzeige
     this.updateLevel(newDifficulty);
+  }
+  
+  /**
+   * Handler für Spielerschaden
+   */
+  private onPlayerDamaged = (health: number): void => {
+    this.updateHealth(health);
+  }
+  
+  /**
+   * Handler für Spielerheilung
+   */
+  private onPlayerHealed = (health: number): void => {
+    this.updateHealth(health);
   }
 
   /**
@@ -170,6 +202,8 @@ export class GameUI {
     this.toolbar.destroy();
     this.levelDisplay.destroy();
     this.eventBus.off(EventType.DIFFICULTY_CHANGED, this.onDifficultyChanged);
+    this.eventBus.off(EventType.PLAYER_DAMAGED, this.onPlayerDamaged);
+    this.eventBus.off(EventType.PLAYER_HEALED, this.onPlayerHealed);
     // HealthBar und ScoreDisplay haben keine destroy-Methode
     if (this.touchControls) {
       this.touchControls.destroy();

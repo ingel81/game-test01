@@ -11,6 +11,7 @@ import { ShootingPattern } from './components/weaponComponent';
 import { GameObject } from '../gameObject';
 import { EventBus, EventType } from '../../utils/eventBus';
 import { BulletFactory } from '../../factories/BulletFactory';
+import { Helpers } from '../../utils/helpers';
 
 // Definiere die verschiedenen Bossphasen
 type BossPhase = 'entry' | 'phase1' | 'phase2' | 'phase3' | 'rage' | 'retreat';
@@ -140,9 +141,9 @@ export class BossEnemy extends BaseEnemy {
     const healthPercent = this.health / this.maxHealth;
     const barWidth = this.healthBarWidth * healthPercent;
     
-    // Position der Anzeige - FIX: Direkter über dem Boss
+    // Position der Anzeige
     const barX = this.sprite.x - this.healthBarWidth / 2;
-    const barY = this.sprite.y - this.sprite.height / 2 - 5; // Vorher -15, jetzt näher am Boss (-5)
+    const barY = this.sprite.y - ((this.sprite.height / 2) * this.sprite.scale) - 20;
     
     // Zeichne den Hintergrund (grauer Balken)
     this.healthBar.fillStyle(0x666666, 0.8);
@@ -758,22 +759,22 @@ export class BossEnemy extends BaseEnemy {
     // Event auslösen, dass der Boss zerstört wurde
     this.eventBus.emit('BOSS_DESTROYED', this);
     
-    // Großen Explosionseffekt erstellen
+    // Großen Explosionseffekt erstellen (mehrere zeitversetzte Explosionen)
     for (let i = 0; i < 5; i++) {
       this.scene.time.delayedCall(i * 300, () => {
-        const explosion = this.scene.add.sprite(
-          this.sprite.x + Phaser.Math.Between(-50, 50),
-          this.sprite.y + Phaser.Math.Between(-50, 50),
-          Constants.ASSET_EXPLOSION_1
+        // Verwende die zentrale Helper-Funktion für Explosionen
+        Helpers.createExplosion(
+          this.scene,
+          this.sprite.x,
+          this.sprite.y,
+          1.5,
+          {
+            offsetX: Phaser.Math.Between(-50, 50),
+            offsetY: Phaser.Math.Between(-50, 50),
+            volume: 0.3,
+            detune: Phaser.Math.Between(-200, 200)
+          }
         );
-        explosion.setScale(1.5);
-        explosion.play('explode');
-        
-        // Sound für jede Explosion
-        this.scene.sound.play(Constants.SOUND_EXPLOSION, {
-          volume: 0.3,
-          detune: Phaser.Math.Between(-200, 200)
-        });
       });
     }
     

@@ -14,6 +14,9 @@ export class EnemyBullet extends Bullet {
     speed: number = Constants.ENEMY_BULLET_SPEED
   ) {
     super(scene, x, y, Constants.ASSET_ENEMY_BULLET, damage, speed, 'enemy', true);
+    
+    // Direkter Debug-Log bei Erstellung
+    console.log(`[ENEMY_BULLET] Erstellt an Position (${x}, ${y})`);
   }
   
   /**
@@ -30,6 +33,15 @@ export class EnemyBullet extends Bullet {
     // Setze Richtung und Geschwindigkeit
     bullet.setDirectionAndSpeed(angle);
     
+    // Doppelprüfung für Geschwindigkeit - bei Problemen erzwinge Bewegung nach links
+    const sprite = bullet.getSprite();
+    if (sprite && sprite.body) {
+      if (Math.abs(sprite.body.velocity.x) < 20 && Math.abs(sprite.body.velocity.y) < 20) {
+        console.log(`[ENEMY_BULLET] Erzwinge Richtung nach links`);
+        sprite.body.velocity.x = -Constants.ENEMY_BULLET_SPEED;
+      }
+    }
+    
     // Registriere das Projektil für Kollisionserkennung
     bullet.register();
     
@@ -40,7 +52,7 @@ export class EnemyBullet extends Bullet {
    * Registriere das Projektil für die Kollisionserkennung
    */
   public register(): void {
-    this.eventBus.emit('REGISTER_ENEMY_BULLET', this.sprite);
+    this.eventBus.emit('REGISTER_ENEMY_BULLET', this.getSprite());
   }
   
   /**
@@ -50,11 +62,12 @@ export class EnemyBullet extends Bullet {
     super.init();
     
     // Standardausrichtung: Schüsse nach links (Standard für Feinde)
-    if (this.sprite.body && this.sprite.body.velocity.x === 0 && this.sprite.body.velocity.y === 0) {
+    if (this.getSprite().body && this.getSprite().body.velocity.x === 0 && this.getSprite().body.velocity.y === 0) {
       this.setVelocityWithRotation(-this.speed, 0);
+      console.log(`[ENEMY_BULLET] Setze Standardrichtung nach links mit Geschwindigkeit ${this.speed}`);
     }
     
-    // Visuelles Feedback für Feindprojektile - auf weiß setzen
-    this.sprite.setTint(0xffffff);
+    // Originale Textur ohne Einfärbung verwenden
+    // Originale Größe beibehalten
   }
 } 

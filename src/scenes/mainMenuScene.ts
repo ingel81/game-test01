@@ -2,6 +2,7 @@ import { BaseScene } from './baseScene';
 import { Constants } from '../utils/constants';
 import { EventType } from '../utils/eventBus';
 import { MusicManager } from '../managers/musicManager';
+import { AssetLoader } from '../utils/assetLoader';
 
 /**
  * Hauptmenü-Szene
@@ -20,14 +21,12 @@ export class MainMenuScene extends BaseScene {
   preload(): void {
     super.preload();
     
-    // Lade die Musik-Assets
-    this.load.audio('title', 'music/title.mp3');
-    this.load.audio('00', 'music/00.mp3');
-    this.load.audio('01', 'music/01.mp3');
-    this.load.audio('02', 'music/02.mp3');
+    // Verwende den AssetLoader für menüspezifische Assets
+    const menuAssets = [
+      'MUSIC_TITLE', 'MUSIC_00', 'MUSIC_01', 'MUSIC_02', 'LOGO'
+    ];
     
-    // Lade das Titel-Logo
-    this.load.image('logo', Constants.getAssetPath('logo/title4.png'));
+    AssetLoader.loadAssets(this, menuAssets);
   }
 
   /**

@@ -1,0 +1,8 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+Wir entwickeln auf Windows, benutzte entsprechende Befehle für die powershell.
+Ein dev Server brauchst du niemals starten, der läuft parallel schon mit.

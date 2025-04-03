@@ -72,9 +72,29 @@ export class Bullet extends Entity {
    * Setze Richtung und Geschwindigkeit basierend auf Winkel
    */
   public setDirectionAndSpeed(angleRadians: number): void {
-    const velocityX = Math.cos(angleRadians) * this.speed;
-    const velocityY = Math.sin(angleRadians) * this.speed;
+    // Statt der Basisgeschwindigkeit einen minimalen Wert sicherstellen
+    const effectiveSpeed = Math.max(this.speed, 100);
+    
+    // Geschwindigkeitskomponenten berechnen
+    const velocityX = Math.cos(angleRadians) * effectiveSpeed;
+    const velocityY = Math.sin(angleRadians) * effectiveSpeed;
+    
+    // Geschwindigkeit setzen und Rotation aktualisieren
     this.setVelocityWithRotation(velocityX, velocityY);
+    
+    // Debug-Log für Projektilrichtung
+    console.log(`[BULLET] Projektil erstellt: Typ=${this.owner}, Winkel=${(angleRadians * 180 / Math.PI).toFixed(0)}°, Geschw.=(${velocityX.toFixed(0)},${velocityY.toFixed(0)})`);
+    
+    // Sicherstellen, dass es eine signifikante Geschwindigkeit hat
+    if (Math.abs(velocityX) < 20 && Math.abs(velocityY) < 20) {
+      console.warn(`[BULLET] Warnung: Projektil hat sehr niedrige Geschwindigkeit!`);
+      // Fallback für zu langsame Projektile - nach rechts für Spieler, nach links für Gegner
+      if (this.owner === 'player') {
+        this.setVelocityWithRotation(effectiveSpeed, 0);
+      } else {
+        this.setVelocityWithRotation(-effectiveSpeed, 0);
+      }
+    }
   }
   
   /**
@@ -133,5 +153,12 @@ export class Bullet extends Entity {
    */
   public getOwner(): 'player' | 'enemy' {
     return this.owner;
+  }
+  
+  /**
+   * Gibt das Sprite für externen Zugriff zurück
+   */
+  public getSprite(): Phaser.Physics.Arcade.Sprite {
+    return this.sprite;
   }
 } 

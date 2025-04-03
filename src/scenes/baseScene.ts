@@ -3,6 +3,7 @@ import { EventBus, EventType } from '../utils/eventBus';
 import { GameObjects } from 'phaser';
 import { PlanetsBackground } from '../ui/planetsBackground';
 import { FpsDisplay } from '../ui/fpsDisplay';
+import { AssetLoader } from '../utils/assetLoader';
 
 /**
  * Debug-Modus Enum
@@ -38,25 +39,18 @@ export abstract class BaseScene extends Phaser.Scene {
    * Lädt die grundlegenden Assets
    */
   preload(): void {
-    // Lade die UI-Assets - Verwende temporär einen farbigen Rechteck statt Button
+    // Verwende den AssetLoader für alle grundlegenden Assets
+    const baseAssets = [
+      'BACKGROUND', 'BG_PLANET', 
+      'SOUND_CLICK', 'SOUND_SHOOT', 'SOUND_ENEMY_SHOOT', 'SOUND_EXPLOSION', 'MUSIC_BACKGROUND'
+    ];
     
-    // Lade die Hintergrund-Assets
-    this.load.image('background', Constants.getAssetPath('background/bg-preview-big.png'));
-    this.load.image('bg-planet', Constants.getAssetPath('background/layered/bg-planet.png'));
-    
-    // Lade alle Planeten
+    // Lade auch alle Planeten-Assets
     for (let i = 1; i <= 16; i++) {
-      this.load.image(`planet-${i}`, Constants.getAssetPath(`planets/planet-${i}.png`));
+      baseAssets.push(`PLANET_${i}`);
     }
     
-    // Lade die Sound-Assets
-    this.load.audio('click', Constants.getAssetPath('sounds/laser1.wav'));
-    this.load.audio(Constants.SOUND_BACKGROUND, Constants.getAssetPath('music/01.mp3'));
-    
-    // Sound FX mit korrektem Pfad
-    this.load.audio(Constants.SOUND_SHOOT, Constants.getAssetPath('sounds/shot 1.wav'));
-    this.load.audio(Constants.SOUND_ENEMY_SHOOT, Constants.getAssetPath('sounds/shot 2.wav')); 
-    this.load.audio(Constants.SOUND_EXPLOSION, Constants.getAssetPath('sounds/explosion.wav'));
+    AssetLoader.loadAssets(this, baseAssets);
   }
 
   /**

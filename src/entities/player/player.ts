@@ -2,6 +2,7 @@ import { GameObject } from '../gameObject';
 import { Constants } from '../../utils/constants';
 import { EventBus, EventType } from '../../utils/eventBus';
 import { PlayerWeapon } from './playerWeapon';
+import { Helpers } from '../../utils/helpers';
 
 /**
  * Spielerklasse
@@ -388,15 +389,14 @@ export class Player extends GameObject {
     this.eventBus.off(EventType.POWER_PICKUP_COLLECTED, this.powerUpHandler);
     this.eventBus.off(EventType.PICKUP_COLLECTED, this.energyPickupHandler);
     
-    // Erstelle eine Explosion
-    const explosion = this.scene.add.sprite(this.sprite.x, this.sprite.y, Constants.ASSET_EXPLOSION_1);
-    explosion.setScale(3);
-    explosion.play('explode');
-
-    // Spiele einen Sound
-    this.scene.sound.play(Constants.SOUND_EXPLOSION, {
-      volume: 0.5
-    });
+    // Erstelle eine große Explosion mit der zentralen Helper-Funktion
+    Helpers.createExplosion(
+      this.scene, 
+      this.sprite.x, 
+      this.sprite.y, 
+      3.0,
+      { volume: 0.5 }
+    );
 
     // Teile der Spielwelt mit, dass der Spieler zerstört wurde
     this.eventBus.emit(EventType.PLAYER_DESTROYED);

@@ -1,136 +1,25 @@
-import { GameObject } from '../gameObject';
+import { BasePickup } from './basePickup';
 import { Constants } from '../../utils/constants';
-import { EventBus, EventType } from '../../utils/eventBus';
+import { EventType } from '../../utils/eventBus';
 
 /**
  * PowerPickup-Klasse
  * Ein Pickup, das die Laserwaffe des Spielers verbessert
  */
-export class PowerPickup extends GameObject {
-  private eventBus: EventBus;
-  private container: Phaser.GameObjects.Container;
-  private visualCircle: Phaser.GameObjects.Graphics;
-  private visualText: Phaser.GameObjects.Text;
-
+export class PowerPickup extends BasePickup {
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, 'particle', 1); // Transparentes Dummy-Sprite für Physik
+    // Blaue Farbe für Power-Pickups und 'P' für den Text
+    super(scene, x, y, 0x0066ff, 'P');
     
-    this.eventBus = EventBus.getInstance();
-    
-    // Verstecke das eigentliche Physik-Sprite
-    this.sprite.setVisible(false);
-    this.sprite.setScale(0.5); // Anpassen der Hitbox-Größe
-    
-    // Erstelle Container für visuelle Elemente
-    this.container = this.scene.add.container(x, y);
-    
-    // Erstelle den visuellen Kreis
-    this.visualCircle = this.scene.add.graphics();
-    this.visualCircle.fillStyle(0x0066ff, 0.8); // Blaue Farbe für das Power-Pickup
-    this.visualCircle.fillCircle(0, 0, 15);
-    this.container.add(this.visualCircle);
-    
-    // Füge Text hinzu
-    this.visualText = this.scene.add.text(0, 0, 'P', {
-      fontSize: '20px',
-      color: '#000000',
-      fontFamily: 'monospace',
-      stroke: '#ffffff',
-      strokeThickness: 4
-    }).setOrigin(0.5);
-    this.container.add(this.visualText);
-    
-    // Pulsierende Animation
-    this.scene.tweens.add({
-      targets: this.container,
-      scaleX: 1.2,
-      scaleY: 1.2,
-      duration: 500,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut'
-    });
-    
-    // Setze die Physik-Eigenschaften
-    this.sprite.body.immovable = true;
-    
-    // Initiiere horizontale Bewegung nach links (langsamer als Feinde)
-    this.sprite.setVelocityX(-100);
-    
-    // Timer zum Zerstören des Drops nach der konfigurierten Zeit
-    this.scene.time.delayedCall(Constants.POWER_PICKUP_LIFETIME, () => {
-      if (this.sprite.active) {
-        // Fade-out Animation
-        this.scene.tweens.add({
-          targets: this.container,
-          alpha: 0,
-          duration: 500,
-          ease: 'Power2',
-          onComplete: () => {
-            this.destroy();
-          }
-        });
-      }
-    });
-  }
-
-  /**
-   * Aktualisiert das Pickup
-   */
-  public update(time: number, delta: number): void {
-    // Synchronisiere Container mit der Physik-Position
-    if (this.container && this.sprite.active) {
-      this.container.setPosition(this.sprite.x, this.sprite.y);
-    }
-    
-    // Wenn das Pickup aus dem Bildschirm fliegt, zerstöre es
-    if (this.sprite.x < -50 || this.sprite.y < 0 || this.sprite.y > this.scene.scale.height) {
-      this.destroy();
-    }
+    // Überschreibe den Soundeffekt für Power-Pickups (etwas höherer Ton)
+    this.soundRate = 1.8;
   }
 
   /**
    * Wird aufgerufen, wenn das Pickup eingesammelt wird
    */
-  public collect(): void {
-    // Erstelle einen Aufsammel-Effekt
-    const collectEffect = this.scene.add.circle(this.sprite.x, this.sprite.y, 20, 0x0066ff, 0.5);
-    this.scene.tweens.add({
-      targets: collectEffect,
-      scaleX: 2,
-      scaleY: 2,
-      alpha: 0,
-      duration: 300,
-      ease: 'Power2',
-      onComplete: () => collectEffect.destroy()
-    });
-    
-    // Spiele einen Sound
-    this.scene.sound.play(Constants.SOUND_EXPLOSION, {
-      volume: 0.3,
-      rate: 1.8 // Höherer Ton für Power-Pickup
-    });
-
+  protected onCollect(): void {
     // Teile der Spielwelt mit, dass ein Power-Pickup eingesammelt wurde
     this.eventBus.emit(EventType.POWER_PICKUP_COLLECTED);
-
-    // Zerstöre das Pickup
-    this.destroy();
-  }
-
-  /**
-   * Wird aufgerufen, wenn das Pickup mit einem anderen Objekt kollidiert
-   */
-  protected onCollision(other: GameObject): void {
-    // Keine Kollisionslogik erforderlich
-  }
-
-  /**
-   * Wird aufgerufen, wenn das Pickup zerstört wird
-   */
-  protected onDestroy(): void {
-    if (this.container) {
-      this.container.destroy();
-    }
   }
 } 

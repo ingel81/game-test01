@@ -15,6 +15,7 @@ export class DifficultyManager {
   private difficultyFactor: number = 1.0;
   private levelUpText: Phaser.GameObjects.Text | null = null;
   private scene: Phaser.Scene;
+  private autoIncrease: boolean = false;
 
   constructor(scene: Phaser.Scene) {
     this.eventBus = EventBus.getInstance();
@@ -22,9 +23,25 @@ export class DifficultyManager {
   }
 
   /**
+   * Aktiviert die automatische Schwierigkeitssteigerung über Zeit
+   */
+  public enableAutoIncrease(): void {
+    this.autoIncrease = true;
+  }
+
+  /**
+   * Deaktiviert die automatische Schwierigkeitssteigerung über Zeit
+   */
+  public disableAutoIncrease(): void {
+    this.autoIncrease = false;
+  }
+
+  /**
    * Aktualisiert die Schwierigkeit
    */
   public update(time: number, delta: number = 0): void {
+    if (!this.autoIncrease) return;
+    
     // Sammle Zeiten zwischen Updates (in Millisekunden)
     this.timeElapsed += delta;
     
@@ -38,27 +55,46 @@ export class DifficultyManager {
   }
 
   /**
+   * Setzt die Schwierigkeit direkt auf den angegebenen Wert
+   */
+  public setDifficulty(newDifficulty: number): void {
+    if (newDifficulty < 1) {
+      console.warn(`[DIFFICULTY_MANAGER] Ungültiger Schwierigkeitsgrad: ${newDifficulty}, setze auf 1`);
+      newDifficulty = 1;
+    }
+    
+    if (newDifficulty > this.MAX_DIFFICULTY) {
+      console.warn(`[DIFFICULTY_MANAGER] Schwierigkeitsgrad ${newDifficulty} überschreitet Maximum von ${this.MAX_DIFFICULTY}, setze auf Maximum`);
+      newDifficulty = this.MAX_DIFFICULTY;
+    }
+    
+    const previousDifficulty = this.difficulty;
+    this.difficulty = newDifficulty;
+    console.log(`[DIFFICULTY_MANAGER] Schwierigkeitsgrad geändert von ${previousDifficulty} auf ${this.difficulty}`);
+    
+    // Berechne den Schwierigkeitsfaktor
+    this.difficultyFactor = 1.0 + 
+      (this.difficulty - 1) * 0.1 + 
+      Math.pow(this.difficulty - 1, 1.5) * 0.01;
+    
+    // Event auslösen für andere Komponenten mit Objekt-Parameter
+    this.eventBus.emit(EventType.DIFFICULTY_CHANGED, {
+      difficulty: this.difficulty,
+      factor: this.difficultyFactor
+    });
+    
+    // Zeige Level-Up-Nachricht an, wenn die Schwierigkeit erhöht wurde
+    if (newDifficulty > previousDifficulty) {
+      this.showLevelUpMessage();
+    }
+  }
+
+  /**
    * Erhöht die Schwierigkeit
    */
   private increaseDifficulty(): void {
     if (this.difficulty < this.MAX_DIFFICULTY) {
-      this.difficulty++;
-      console.log(`Difficulty increased to: ${this.difficulty}`);
-      
-      // Berechne den Schwierigkeitsfaktor, der exponentiell ansteigt
-      // Formel: 1.0 + (level-1) * 0.1 + (level-1)^1.5 * 0.01
-      this.difficultyFactor = 1.0 + 
-        (this.difficulty - 1) * 0.1 + 
-        Math.pow(this.difficulty - 1, 1.5) * 0.01;
-      
-      // Event auslösen für andere Komponenten mit Objekt-Parameter
-      this.eventBus.emit(EventType.DIFFICULTY_CHANGED, {
-        difficulty: this.difficulty,
-        factor: this.difficultyFactor
-      });
-      
-      // Zeige Level-Up-Nachricht an
-      this.showLevelUpMessage();
+      this.setDifficulty(this.difficulty + 1);
     }
   }
 
@@ -70,111 +106,81 @@ export class DifficultyManager {
   }
 
   /**
+   * Gibt den Schwierigkeitsfaktor zurück
+   */
+  public getDifficultyFactor(): number {
+    return this.difficultyFactor;
+  }
+
+  /**
    * Zeigt eine Level-Up-Nachricht an
    */
   private showLevelUpMessage(): void {
-    // Lösche vorhandenen Text, falls er noch existiert
+    // Entferne alte Nachricht, falls vorhanden
     if (this.levelUpText) {
       this.levelUpText.destroy();
+      this.levelUpText = null;
     }
     
     // Erstelle dramatische Level-Up-Nachricht
     this.levelUpText = this.scene.add.text(
-      this.scene.scale.width / 2, 
+      this.scene.scale.width / 2,
       this.scene.scale.height / 2,
       `LEVEL ${this.difficulty}`,
       {
         fontSize: '64px',
-        fontFamily: 'monospace',
-        color: '#ff0000',
+        fontFamily: 'Arial',
+        color: '#ffcc00',
         stroke: '#000000',
         strokeThickness: 6,
-        shadow: {
-          offsetX: 2,
-          offsetY: 2,
-          color: '#000',
-          blur: 5,
-          stroke: true,
-          fill: true
+        align: 'center',
+        padding: {
+          x: 20,
+          y: 10
         }
       }
-    ).setOrigin(0.5);
+    );
     
-    // Setze die Tiefe, damit die Nachricht über allen Objekten liegt
-    this.levelUpText.setDepth(1000);
+    this.levelUpText.setOrigin(0.5);
+    this.levelUpText.setDepth(1000); // Über allem anderen
     
-    // Kurze Beschreibung der Änderungen
-    let difficultyDescription = '';
-    if (this.difficulty === 2) {
-      difficultyDescription = 'Enemies are getting faster!';
-    } else if (this.difficulty === 3) {
-      difficultyDescription = 'Enemies are getting more aggressive!';
-    } else if (this.difficulty === 4) {
-      difficultyDescription = 'New movement patterns unlocked!';
-    } else if (this.difficulty === 5) {
-      difficultyDescription = 'Enemy AI improved!';
-    } else if (this.difficulty % 5 === 0) {
-      difficultyDescription = 'Boss wave!';
-    } else if (this.difficulty > 5 && this.difficulty < 10) {
-      difficultyDescription = 'Danger increases!';
-    } else if (this.difficulty >= 10 && this.difficulty < 15) {
-      difficultyDescription = 'Extreme difficulty!';
-    } else if (this.difficulty >= 15) {
-      difficultyDescription = 'Fight for survival!';
-    }
-    
-    // Füge die Beschreibung hinzu, wenn vorhanden
-    if (difficultyDescription) {
-      const subText = this.scene.add.text(
-        this.scene.scale.width / 2,
-        this.scene.scale.height / 2 + 70,
-        difficultyDescription,
-        {
-          fontSize: '32px',
-          fontFamily: 'monospace',
-          color: '#ffff00',
-          stroke: '#000000',
-          strokeThickness: 4
-        }
-      ).setOrigin(0.5);
-      
-      subText.setDepth(1000);
-      
-      // Animation für den Untertitel
-      this.scene.tweens.add({
-        targets: subText,
-        alpha: 0,
-        y: this.scene.scale.height / 2 + 120,
-        duration: 1500,
-        ease: 'Power2',
-        delay: 1500,
-        onComplete: () => subText.destroy()
-      });
-    }
-    
-    // Spiele Sound für Level-Up
-    this.scene.sound.play(Constants.SOUND_EXPLOSION, {
-      volume: 0.3,
-      rate: 1.5
-    });
-    
-    // Animation für den Text
+    // Skalierungs-Animation
     this.scene.tweens.add({
       targets: this.levelUpText,
-      alpha: 0,
-      scaleX: 1.5,
-      scaleY: 1.5,
-      duration: 2000,
-      ease: 'Power2',
-      onComplete: () => {
-        if (this.levelUpText) {
-          this.levelUpText.destroy();
-          this.levelUpText = null;
-        }
-      }
+      scaleX: 1.2,
+      scaleY: 1.2,
+      duration: 200,
+      yoyo: true,
+      repeat: 2,
+      ease: 'Sine.easeInOut'
     });
     
-    // Erzeuge einen Kamera-Shake für dramatischen Effekt
-    this.scene.cameras.main.shake(500, 0.005);
+    // Alpha-Animation
+    this.scene.tweens.add({
+      targets: this.levelUpText,
+      alpha: { from: 0, to: 1 },
+      duration: 300,
+      ease: 'Cubic.easeIn',
+      onComplete: () => {
+        // Nach Einblenden eine Weile anzeigen, dann ausblenden
+        this.scene.time.delayedCall(1000, () => {
+          if (this.levelUpText) {
+            this.scene.tweens.add({
+              targets: this.levelUpText,
+              alpha: 0,
+              y: this.levelUpText.y - 50,
+              duration: 500,
+              ease: 'Cubic.easeOut',
+              onComplete: () => {
+                if (this.levelUpText) {
+                  this.levelUpText.destroy();
+                  this.levelUpText = null;
+                }
+              }
+            });
+          }
+        });
+      }
+    });
   }
 } 

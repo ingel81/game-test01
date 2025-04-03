@@ -11,6 +11,7 @@ import { MovementComponent, MovementConfig, MovementPattern } from './components
 import { WeaponComponent, WeaponConfig, ShootingPattern } from './components/weaponComponent';
 import { VisualComponent, VisualConfig } from './components/visualComponent';
 import { DebugMode } from '../../scenes/baseScene';
+import { Helpers } from '../../utils/helpers';
 
 // Konfigurationsoptionen für Gegner
 export interface EnemyConfig {
@@ -165,10 +166,10 @@ export class BaseEnemy extends GameObject {
     
     console.log(`[DEBUG-CREATE] Erstelle Debug-Text für ${className} an Position (${this.sprite.x}, ${this.sprite.y})`);
     
-    // Erstelle den Text über dem Sprite
+    // Erstelle den Text über dem Sprite - näher am Sprite positionieren
     this.debugText = this.scene.add.text(
       this.sprite.x,
-      this.sprite.y - this.sprite.height/2 - 15,
+      this.sprite.y - this.sprite.height/2 - 5, // Von -15 auf -5 reduziert für nähere Positionierung
       className,
       {
         fontSize: '14px',
@@ -268,10 +269,10 @@ export class BaseEnemy extends GameObject {
       // Text aktualisieren
       this.debugText.setText(`${className} (${currentPattern})`);
       
-      // Position aktualisieren
+      // Position aktualisieren - näher am Sprite positionieren
       this.debugText.setPosition(
         this.sprite.x,
-        this.sprite.y - this.sprite.height/2 - 15
+        this.sprite.y - this.sprite.height/2 - 5 // Konsistent mit createDebugText
       );
     }
   }
@@ -305,14 +306,16 @@ export class BaseEnemy extends GameObject {
     // Spiele Todes-Animation ab
     this.visualComponent.playDeathAnimation();
     
-    // Erstelle eine Explosion
-    const explosion = this.scene.add.sprite(this.sprite.x, this.sprite.y, Constants.ASSET_EXPLOSION_1);
-    explosion.play('explode');
-
-    // Spiele einen Sound
-    this.scene.sound.play(Constants.SOUND_EXPLOSION, {
-      volume: 0.3
-    });
+    // Erstelle eine Explosion mit der zentralen Helper-Funktion
+    try {
+      // Prüfe, ob die Szene und das Sprite noch existieren
+      if (this.scene && this.sprite && this.sprite.active) {
+        // Verwende die zentrale Helper-Funktion für Explosionen
+        Helpers.createExplosion(this.scene, this.sprite.x, this.sprite.y, 1.0);
+      }
+    } catch (error) {
+      console.error('[ERROR] Fehler beim Erstellen der Explosion:', error);
+    }
 
     // Vergebe Punkte
     this.eventBus.emit(EventType.ENEMY_KILLED, this.scoreValue);

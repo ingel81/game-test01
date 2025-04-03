@@ -217,6 +217,12 @@ export class VisualComponent {
    * Spielt die Todes-Animation ab
    */
   public playDeathAnimation(): void {
+    // Sicherheitsprüfung: Ist das Sprite noch vorhanden und aktiv?
+    if (!this.sprite || !this.sprite.active) {
+      console.log('[VISUAL] Das Sprite ist bereits zerstört, Tod-Animation wird übersprungen');
+      return;
+    }
+
     // Entferne Glow- und Partikeleffekte
     if (this.glowSprite) {
       this.glowSprite.destroy();
@@ -228,36 +234,45 @@ export class VisualComponent {
       this.particleEmitter = null;
     }
     
-    // Spiele Todes-Animation, falls vorhanden und konfiguriert
-    if (this.useAnimations && this.sprite.anims.exists(this.deathAnimationKey)) {
-      this.sprite.play(this.deathAnimationKey);
-      
-      // Zerstöre das Sprite nach dem Ende der Animation
-      this.sprite.once('animationcomplete', () => {
-        this.destroy();
-      });
-    } else {
-      // FIX: Bevor wir den Tween starten, stellen wir sicher, dass die Tint zurückgesetzt wird
-      this.sprite.clearTint();
-      
-      // Schnellere Todes-Animation ohne lange Verzögerung
-      this.scene.tweens.add({
-        targets: this.sprite,
-        alpha: 0,
-        scaleX: 1.2, // Reduziert von 1.5 auf 1.2
-        scaleY: 1.2, // Reduziert von 1.5 auf 1.2
-        duration: 150, // Reduziert von 300 auf 150 (schnellere Animation)
-        ease: 'Quad.easeOut',
-        // FIX: Sofort das Sprite zerstören, nachdem der Tween abgeschlossen ist
-        onComplete: () => {
+    try {
+      // Spiele Todes-Animation, falls vorhanden und konfiguriert
+      if (this.useAnimations && this.sprite.anims && this.sprite.anims.exists && this.sprite.anims.exists(this.deathAnimationKey)) {
+        this.sprite.play(this.deathAnimationKey);
+        
+        // Zerstöre das Sprite nach dem Ende der Animation
+        this.sprite.once('animationcomplete', () => {
           if (this.sprite && this.sprite.active) {
             this.sprite.destroy();
           }
+        });
+      } else {
+        // FIX: Bevor wir den Tween starten, stellen wir sicher, dass die Tint zurückgesetzt wird
+        if (this.sprite && this.sprite.active) {
+          this.sprite.clearTint();
+          
+          // Schnellere Todes-Animation ohne lange Verzögerung
+          this.scene.tweens.add({
+            targets: this.sprite,
+            alpha: 0,
+            scaleX: 1.2, // Reduziert von 1.5 auf 1.2
+            scaleY: 1.2, // Reduziert von 1.5 auf 1.2
+            duration: 150, // Reduziert von 300 auf 150 (schnellere Animation)
+            ease: 'Quad.easeOut',
+            // FIX: Sofort das Sprite zerstören, nachdem der Tween abgeschlossen ist
+            onComplete: () => {
+              if (this.sprite && this.sprite.active) {
+                this.sprite.destroy();
+              }
+            }
+          });
         }
-      });
-      
-      // FIX: Wir verzichten auf den direkten Aufruf von destroy() hier, 
-      // da dies im onComplete-Handler des Tweens passiert
+      }
+    } catch (error) {
+      console.error('[VISUAL] Fehler in der Death-Animation:', error);
+      // Im Fehlerfall trotzdem versuchen, das Sprite zu zerstören
+      if (this.sprite && this.sprite.active) {
+        this.sprite.destroy();
+      }
     }
   }
 

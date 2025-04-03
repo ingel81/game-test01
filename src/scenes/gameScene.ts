@@ -1,4 +1,4 @@
-import { BaseScene } from './baseScene';
+import { BaseScene, DebugMode } from './baseScene';
 import { Constants } from '../utils/constants';
 import { EventType } from '../utils/eventBus';
 import { Player } from '../entities/player/player';
@@ -9,6 +9,8 @@ import { DifficultyManager } from '../managers/difficultyManager';
 import { MusicManager } from '../managers/musicManager';
 import { NewEnemyManager } from '../managers/newEnemyManager';
 import { GlowPipeline } from '../pipelines/glowPipeline';
+import { LevelManager } from '../managers/levelManager';
+import { AssetLoader } from '../utils/assetLoader';
 
 /**
  * Hauptspielszene
@@ -20,6 +22,7 @@ export class GameScene extends BaseScene {
   private collisionManager!: CollisionManager;
   private uiManager!: GameUI;
   private difficultyManager!: DifficultyManager;
+  private levelManager!: LevelManager;
   private musicManager: MusicManager;
   private score: number = 0;
   private isPaused: boolean = false;
@@ -34,39 +37,29 @@ export class GameScene extends BaseScene {
   }
 
   /**
-   * Lädt Assets für die Spielszene
+   * Ressourcen vorladen
    */
   preload(): void {
     super.preload();
 
-    // Lade die Spieler-Assets
-    this.load.image(Constants.ASSET_PLAYER, Constants.getAssetPath('player/sprites/player1.png'));
-    this.load.image(Constants.ASSET_PLAYER_UP, Constants.getAssetPath('player/sprites/player2.png'));
-    this.load.image(Constants.ASSET_PLAYER_DOWN, Constants.getAssetPath('player/sprites/player3.png'));
-    this.load.image(Constants.ASSET_BULLET, Constants.getAssetPath('shoot/shoot1.png'));
-    
-    // Lade die Feind-Assets
-    this.load.image(Constants.ASSET_ENEMY_BULLET, Constants.getAssetPath('shoot/shoot2.png'));
-    this.load.image(Constants.ASSET_ENEMY01, Constants.getAssetPath(`enemy/sprites/${Constants.ASSET_ENEMY01}.png`));
-    this.load.image(Constants.ASSET_ENEMY02, Constants.getAssetPath(`enemy/sprites/${Constants.ASSET_ENEMY02}.png`));
-    this.load.image(Constants.ASSET_BOSS01, Constants.getAssetPath(`enemy/sprites/${Constants.ASSET_BOSS01}.png`));
-    
-    // Lade die Turret-Assets
-    this.load.image(Constants.ASSET_TURRET_BASE, Constants.getAssetPath('enemy/sprites/turret01_base.png'));
-    this.load.image(Constants.ASSET_TURRET_TOP, Constants.getAssetPath('enemy/sprites/turret01_top.png'));
-    
-    // Lade die Umgebungs-Assets
-    this.load.image(Constants.ASSET_ASTEROID, Constants.getAssetPath('asteroids/asteroid.png'));
-    this.load.image(Constants.ASSET_ASTEROID_SMALL, Constants.getAssetPath('asteroids/asteroid-small.png'));
-    
-    // Lade die Explosions-Animation
-    this.load.image(Constants.ASSET_EXPLOSION_1, Constants.getAssetPath('explosion/sprites/explosion1.png'));
-    this.load.image(Constants.ASSET_EXPLOSION_2, Constants.getAssetPath('explosion/sprites/explosion2.png'));
-    this.load.image(Constants.ASSET_EXPLOSION_3, Constants.getAssetPath('explosion/sprites/explosion3.png'));
-    this.load.image(Constants.ASSET_EXPLOSION_4, Constants.getAssetPath('explosion/sprites/explosion4.png'));
-    this.load.image(Constants.ASSET_EXPLOSION_5, Constants.getAssetPath('explosion/sprites/explosion5.png'));
-    
-    // Sounds werden in BaseScene geladen
+    console.log('[GAME_SCENE] Lade alle Spielassets...');
+
+    // Verwende den AssetLoader für spielspezifische Assets
+    try {
+      const gameAssets = [
+        'PLAYER', 'PLAYER_UP', 'PLAYER_DOWN',
+        'BULLET', 'ENEMY_BULLET',
+        'ENEMY01', 'ENEMY02', 'BOSS01', 'TURRET_BASE', 'TURRET_TOP',
+        'ASTEROID', 'ASTEROID_SMALL',
+        'EXPLOSION_1', 'EXPLOSION_2', 'EXPLOSION_3', 'EXPLOSION_4', 'EXPLOSION_5'
+      ];
+      
+      AssetLoader.loadAssets(this, gameAssets);
+      
+      console.log('[GAME_SCENE] Alle Assets wurden geladen');
+    } catch (error) {
+      console.error('[GAME_SCENE] Fehler beim Laden der Assets:', error);
+    }
   }
 
   /**
@@ -78,162 +71,170 @@ export class GameScene extends BaseScene {
 
       // Initialisiere den MusicManager und starte die Gameplay-Musik
       this.musicManager.init(this);
-      this.musicManager.playRandomGameplayTrack();
-
-            // Debug-Ausgabe
-            console.log('GameScene: Initialisierung startet');
       
-            // Setze alle Spielvariablen zurück
-            this.score = 0;
-            this.isPaused = false;
-            this.mouseMoveTimer = 0;
-            this.mouseCursorVisible = false;
-            
-            // Schwarzer Hintergrund für Weltraum-Feeling
-            this.cameras.main.setBackgroundColor('#000000');
-            
-            // Mauszeiger direkt beim Spielstart ausblenden
-            document.body.style.cursor = 'none';
-            this.mouseCursorVisible = false;
-            this.mouseMoveTimer = this.time.now;
-            
-            // Mauszeiger-Ausblendung konfigurieren
-            this.setupMouseHiding();
-            
-            // Kamera für flüssigeres Scrolling optimieren
-            this.cameras.main.setRoundPixels(true);
-            
-            // Erstelle die Glow-Pipeline
-            this.glowPipeline = new GlowPipeline(this.game);
-            if (this.game.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer) {
-              this.game.renderer.pipelines.add('Glow', this.glowPipeline);
-            }
-            
-            console.log('GameScene: Erstelle Explosion-Animation');
-            // Erstelle die Explosions-Animation
-            if (!this.anims.exists('explode')) {
-              this.anims.create({
-                key: 'explode',
-                frames: [
-                  { key: Constants.ASSET_EXPLOSION_1 },
-                  { key: Constants.ASSET_EXPLOSION_2 },
-                  { key: Constants.ASSET_EXPLOSION_3 },
-                  { key: Constants.ASSET_EXPLOSION_4 },
-                  { key: Constants.ASSET_EXPLOSION_5 }
-                ],
-                frameRate: 10,
-                repeat: 0,
-                hideOnComplete: true
-              });
-            }
-      // Erstelle den Spieler
-      this.player = new Player(this, 100, this.scale.height / 2);
+      // Debug-Ausgabe
+      console.log('GameScene: Initialisierung startet');
       
-      // Aktiviere die Glow-Pipeline für die Schüsse
-      if (this.player instanceof Player) {
-        this.player.getWeapon().setBulletPipeline('Glow');
+      // Setze alle Spielvariablen zurück
+      this.score = 0;
+      this.isPaused = false;
+      this.mouseMoveTimer = 0;
+      this.mouseCursorVisible = false;
+      
+      // Schwarzer Hintergrund für Weltraum-Feeling
+      this.cameras.main.setBackgroundColor('#000000');
+      
+      // Mauszeiger direkt beim Spielstart ausblenden
+      document.body.style.cursor = 'none';
+      this.mouseCursorVisible = false;
+      this.mouseMoveTimer = this.time.now;
+      
+      // Mauszeiger-Ausblendung konfigurieren
+      this.setupMouseHiding();
+      
+      // Kamera für flüssigeres Scrolling optimieren
+      this.cameras.main.setRoundPixels(true);
+      
+      // Erstelle die Glow-Pipeline
+      this.glowPipeline = new GlowPipeline(this.game);
+      if (this.game.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer) {
+        this.game.renderer.pipelines.add('Glow', this.glowPipeline);
       }
       
-      console.log('GameScene: Erstelle Manager');
-      // Erstelle die Manager
-      this.createManagers();
-      this.uiManager = new GameUI(this);
+      // Die Explosions-Animation wird jetzt automatisch vom AssetLoader erstellt
+      
+      console.log('GameScene: Erstelle Spieler');
+      // Erstelle den Spieler
+      this.player = new Player(this, this.scale.width * 0.2, this.scale.height * 0.5);
+      
+      // Erstelle den DifficultyManager
+      console.log('GameScene: Erstelle DifficultyManager');
+      this.difficultyManager = new DifficultyManager(this);
+      
+      // Erstelle den EnemyManager
+      console.log('GameScene: Erstelle EnemyManager');
+      this.enemyManager = new NewEnemyManager(this, this.player);
+      this.registry.set('enemyManager', this.enemyManager);
 
-      // Verknüpfe die Manager
+      // Erstelle den SpawnManager
+      console.log('GameScene: Erstelle SpawnManager');
+      this.spawnManager = new SpawnManager(this);
+      
+      // Erstelle den CollisionManager und setze die Manager
+      console.log('GameScene: Erstelle CollisionManager');
+      this.collisionManager = new CollisionManager(this, this.player);
       this.collisionManager.setManagers(this.enemyManager, this.spawnManager);
-
-      console.log('GameScene: Event-Listener registrieren');
-      // Event-Listener
+      
+      // Erstelle die Game-UI
+      console.log('GameScene: Erstelle Game-UI');
+      this.uiManager = new GameUI(this, this.player);
+      
+      // Erstelle den LevelManager und starte das erste Level
+      console.log('GameScene: Erstelle LevelManager');
+      this.levelManager = new LevelManager(this, this.enemyManager, this.spawnManager, this.difficultyManager);
+      
+      // Event-Listener hinzufügen
+      console.log('GameScene: Registriere Event-Listener');
+      this.events.on('shutdown', this.cleanup, this);
+      this.events.on('destroy', this.cleanup, this);
+      
+      // Event-Listen für Score-Updates
+      this.eventBus.on(EventType.SCORE_CHANGED, this.updateScore);
+      
+      // Event-Listeners für Pause
       this.eventBus.on(EventType.PAUSE_GAME, this.pauseGame);
       this.eventBus.on(EventType.RESUME_GAME, this.resumeGame);
-      this.eventBus.on(EventType.GAME_OVER, this.gameOver);
-      this.eventBus.on(EventType.ENEMY_DESTROYED, this.onEnemyDestroyed);
       
-      // ESC-Taste zum Pausieren des Spiels
-      this.input.keyboard.on('keydown-ESC', () => {
-        this.eventBus.emit(EventType.PAUSE_GAME);
-      });
+      // Event-Listener für Game Over
+      this.eventBus.on(EventType.PLAYER_DESTROYED, this.endGame);
       
-      // Neue Event-Listener für Spieler-Gesundheit
-      this.eventBus.on(EventType.PLAYER_DAMAGED, this.onPlayerDamaged);
-      this.eventBus.on(EventType.PLAYER_HEALED, this.onPlayerHealed);
+      // Tastendruck-Listener für ESC-Taste
+      this.input.keyboard?.on('keydown-ESC', this.togglePause, this);
       
-      // Initiale Aktualisierung der Gesundheitsanzeige
-      this.uiManager.updateHealth(this.player.getHealth());
+      // Starte das erste Level
+      console.log('GameScene: Starte erstes Level');
+      this.levelManager.startLevel(0);
       
-      // Optimiere die Performance
-      this.physics.world.setFPS(60);
-      this.physics.world.fixedStep = true;
-
       console.log('GameScene: Initialisierung abgeschlossen');
     } catch (error) {
-      console.error('Fehler beim Erstellen der Spielszene:', error);
-      this.scene.start(Constants.SCENE_MAIN_MENU);
+      console.error('Fehler beim Erstellen der GameScene:', error);
     }
+  }
+
+  /**
+   * Update-Methode, wird jeden Frame aufgerufen
+   */
+  update(time: number, delta: number): void {
+    if (this.isPaused) return;
+    
+    super.update(time, delta);
+    
+    // Update Player
+    this.player.update(time, delta);
+    
+    // Update EnemyManager
+    this.enemyManager.update(time, delta);
+    
+    // Update CollisionManager
+    this.collisionManager.update(time, delta);
+    
+    // Update UI
+    this.uiManager.update(time, delta);
+    
+    // Update DifficultyManager
+    this.difficultyManager.update(time, delta);
+    
+    // Prüfe Mausbewegungen für Cursor-Ausblendung
+    this.updateMouseHiding(time);
+  }
+
+  /**
+   * Aktualisiert den Score
+   */
+  private updateScore = (points: number): void => {
+    this.score += points;
+    this.uiManager.updateScore(this.score);
   }
 
   /**
    * Konfiguriert die Mauszeiger-Ausblendung
    */
   private setupMouseHiding(): void {
-    // Event-Listener für Mausbewegung hinzufügen
     this.input.on('pointermove', () => {
-      // Timer zurücksetzen bei Mausbewegung
-      this.mouseMoveTimer = this.time.now;
-      
-      // Cursor kurz anzeigen, wenn sich die Maus bewegt
       if (!this.mouseCursorVisible) {
-        this.showCursor();
-        
-        // Nach Verzögerung wieder ausblenden
-        this.time.delayedCall(this.mouseHideDelay, () => {
-          if (!this.isPaused && this.scene.isActive()) {
-            this.hideCursor();
-          }
-        });
+        document.body.style.cursor = 'default';
+        this.mouseCursorVisible = true;
       }
+      this.mouseMoveTimer = this.time.now;
     });
   }
-  
+
   /**
-   * Zeigt den Mauszeiger an
+   * Aktualisiert die Mauszeiger-Ausblendung
    */
-  private showCursor(): void {
-    if (!this.mouseCursorVisible) {
-      document.body.style.cursor = 'default';
-      this.mouseCursorVisible = true;
-    }
-  }
-  
-  /**
-   * Blendet den Mauszeiger aus
-   */
-  private hideCursor(): void {
-    if (this.mouseCursorVisible) {
+  private updateMouseHiding(time: number): void {
+    if (this.mouseCursorVisible && time - this.mouseMoveTimer > this.mouseHideDelay) {
       document.body.style.cursor = 'none';
       this.mouseCursorVisible = false;
     }
   }
 
   /**
-   * Aktualisiert die Spielszene
+   * Blendet den Mauszeiger aus
    */
-  update(time: number, delta: number): void {
-    if (this.isPaused) return;
+  private hideCursor(): void {
+    document.body.style.cursor = 'none';
+    this.mouseCursorVisible = false;
+  }
 
-    // Rufe zuerst die BaseScene-Update-Methode auf, um die Sterne zu aktualisieren
-    super.update(time, delta);
-
-    try {
-      // Aktualisiere die Spielobjekte
-      this.player.update(time, delta);
-      this.spawnManager.update(time, delta);
-      this.enemyManager.update(time, delta);
-      this.collisionManager.update(time, delta);
-      this.difficultyManager.update(time, delta);
-    } catch (error) {
-      console.error('Fehler beim Aktualisieren der Spielszene:', error);
-      this.gameOver();
+  /**
+   * Wechselt zwischen Pause und Spielmodus
+   */
+  private togglePause(): void {
+    if (this.isPaused) {
+      this.eventBus.emit(EventType.RESUME_GAME);
+    } else {
+      this.eventBus.emit(EventType.PAUSE_GAME);
     }
   }
 
@@ -246,10 +247,12 @@ export class GameScene extends BaseScene {
     this.isPaused = true;
     
     // Bei Pause immer den Cursor anzeigen
-    this.showCursor();
+    document.body.style.cursor = 'default';
+    this.mouseCursorVisible = true;
     
-    this.scene.launch(Constants.SCENE_PAUSE);
+    // Zeige Pause-Menü an
     this.scene.pause();
+    this.scene.launch(Constants.SCENE_PAUSE, { score: this.score });
   }
 
   /**
@@ -270,113 +273,34 @@ export class GameScene extends BaseScene {
   /**
    * Beendet das Spiel
    */
-  private gameOver = (): void => {
-    try {
-      // Stelle sicher, dass der Cursor wieder sichtbar ist
-      document.body.style.cursor = 'default';
-      
-      // Entferne Event-Listener
-      this.eventBus.off(EventType.PAUSE_GAME, this.pauseGame);
-      this.eventBus.off(EventType.RESUME_GAME, this.resumeGame);
-      this.eventBus.off(EventType.GAME_OVER, this.gameOver);
-      this.eventBus.off(EventType.PLAYER_DAMAGED, this.onPlayerDamaged);
-      this.eventBus.off(EventType.PLAYER_HEALED, this.onPlayerHealed);
-      this.eventBus.off(EventType.ENEMY_DESTROYED, this.onEnemyDestroyed);
-      
-      // Entferne Tastatur-Listener
-      this.input.keyboard.off('keydown-ESC');
-      
-      // Stoppe die Musik
-      this.musicManager.stopCurrentMusic();
-      
-      // Bereinige Enemy Manager
-      if (this.enemyManager) {
-        this.enemyManager.destroy();
-      }
-      
-      // Starte Game Over Szene
-      this.scene.start(Constants.SCENE_GAME_OVER, { score: this.score });
-    } catch (error) {
-      console.error('Fehler beim Beenden des Spiels:', error);
-      this.scene.start(Constants.SCENE_MAIN_MENU);
+  private endGame = (): void => {
+    this.scene.start(Constants.SCENE_GAME_OVER, { score: this.score });
+  }
+
+  /**
+   * Bereinigt alle Ressourcen
+   */
+  private cleanup(): void {
+    console.log('GameScene: Cleanup');
+    
+    // Entferne alle Event-Listener
+    this.eventBus.off(EventType.SCORE_CHANGED, this.updateScore);
+    this.eventBus.off(EventType.PAUSE_GAME, this.pauseGame);
+    this.eventBus.off(EventType.RESUME_GAME, this.resumeGame);
+    this.eventBus.off(EventType.PLAYER_DESTROYED, this.endGame);
+    
+    this.input.keyboard?.off('keydown-ESC', this.togglePause, this);
+    
+    // Zerstöre alle Manager und UI
+    if (this.levelManager) this.levelManager.destroy();
+    if (this.spawnManager) this.spawnManager.destroy();
+    if (this.enemyManager) this.enemyManager.destroy();
+    if (this.player) this.player.destroy();
+    if (this.uiManager) this.uiManager.destroy();
+    
+    // Pipeline entfernen
+    if (this.glowPipeline && this.game.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer) {
+      this.game.renderer.pipelines.remove('Glow');
     }
-  }
-
-  /**
-   * Wird aufgerufen, wenn die Szene zerstört wird
-   */
-  destroy(): void {
-    try {
-      // Entferne Event-Listener
-      this.eventBus.off(EventType.PAUSE_GAME, this.pauseGame);
-      this.eventBus.off(EventType.RESUME_GAME, this.resumeGame);
-      this.eventBus.off(EventType.GAME_OVER, this.gameOver);
-      this.eventBus.off(EventType.PLAYER_DAMAGED, this.onPlayerDamaged);
-      this.eventBus.off(EventType.PLAYER_HEALED, this.onPlayerHealed);
-      this.eventBus.off(EventType.ENEMY_DESTROYED, this.onEnemyDestroyed);
-      
-      // Entferne Tastatur-Listener
-      this.input.keyboard.off('keydown-ESC');
-      
-      // Stoppe die Musik
-      this.musicManager.stopCurrentMusic();
-      
-      // Bereinige Enemy Manager
-      if (this.enemyManager) {
-        this.enemyManager.destroy();
-      }
-    } catch (error) {
-      console.error('Fehler beim Zerstören der Spielszene:', error);
-    }
-  }
-
-  /**
-   * Wird aufgerufen, wenn der Spieler Schaden nimmt
-   */
-  private onPlayerDamaged = (health: number): void => {
-    // Aktualisiere die Gesundheitsanzeige
-    this.uiManager.updateHealth(health);
-    
-    // Prüfe, ob der Spieler tot ist
-    if (health <= 0) {
-      this.gameOver();
-    }
-  }
-
-  /**
-   * Wird aufgerufen, wenn der Spieler geheilt wird
-   */
-  private onPlayerHealed = (health: number): void => {
-    // Aktualisiere die Gesundheitsanzeige
-    this.uiManager.updateHealth(health);
-  }
-
-  /**
-   * Wird aufgerufen, wenn ein Feind zerstört wird
-   */
-  private onEnemyDestroyed = (scoreValue: number = 10): void => {
-    // Aktualisiere den Punktestand
-    this.score += scoreValue;
-    this.uiManager.updateScore(this.score);
-  }
-
-  /**
-   * Erstellt die Manager
-   */
-  private createManagers(): void {
-    // Erstelle den Enemy Manager
-    this.enemyManager = new NewEnemyManager(this, this.player);
-    
-    // Füge den Enemy Manager zur Registry hinzu, damit andere Klassen ihn finden können
-    this.registry.set('enemyManager', this.enemyManager);
-    
-    // Erstelle den Spawn Manager
-    this.spawnManager = new SpawnManager(this);
-    
-    // Erstelle den Collision Manager
-    this.collisionManager = new CollisionManager(this, this.player);
-    
-    // Erstelle den Difficulty Manager
-    this.difficultyManager = new DifficultyManager(this);
   }
 } 

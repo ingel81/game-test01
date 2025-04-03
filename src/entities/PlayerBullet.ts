@@ -18,6 +18,9 @@ export class PlayerBullet extends Bullet {
   ) {
     super(scene, x, y, Constants.ASSET_BULLET, damage, speed, 'player', false);
     this.powerLevel = powerLevel;
+    
+    // Direkter Debug-Log bei Erstellung
+    console.log(`[PLAYER_BULLET] Erstellt an Position (${x}, ${y})`);
   }
   
   /**
@@ -45,16 +48,13 @@ export class PlayerBullet extends Bullet {
     super.init();
     
     // Standardausrichtung: Schüsse nach rechts (Standard für Spieler)
-    if (this.sprite.body && this.sprite.body.velocity.x === 0 && this.sprite.body.velocity.y === 0) {
+    if (this.getSprite().body && this.getSprite().body.velocity.x === 0 && this.getSprite().body.velocity.y === 0) {
       this.setVelocityWithRotation(this.speed, 0);
     }
     
-    // Skaliere das Projektil
-    this.sprite.setScale(1.5);
+    // Skaliere das Projektil - originale Größe
+    this.getSprite().setScale(1.0);
     
-    // Tint basierend auf Power-Level
-    const tintColor = this.powerLevel === 1 ? 0xff8888 : 
-                      (this.powerLevel === 2 ? 0xff5555 : 0xff0000);
-    this.sprite.setTint(tintColor);
+    // Keine Farbänderung, um Original-Textur zu behalten
   }
 } 

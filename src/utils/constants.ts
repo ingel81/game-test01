@@ -63,6 +63,7 @@ export class Constants {
   
   // Pickup-Werte
   public static readonly ENERGY_HEAL_AMOUNT: number = 20;
+  public static readonly PICKUP_LIFETIME: number = 10000; // 10 Sekunden (allgemeine Lebensdauer für Pickups)
   public static readonly ENERGY_PICKUP_LIFETIME: number = 10000; // 10 Sekunden
   public static readonly ENERGY_PICKUP_SPAWN_CHANCE: number = 0.3; // 30% Chance bei regulärem Spawn
   public static readonly ENEMY_DROP_CHANCE: number = 0.1; // 10% Chance bei Zerstörung eines normalen Feindes 
@@ -120,23 +121,36 @@ export class Constants {
   public static readonly DIFFICULTY_NORMAL = 'normal';
   public static readonly DIFFICULTY_HARD = 'hard';
   
+  // Asset-Pfade optimieren (öffentliche Variable für Debug & Texturpfade)
+  public static readonly DEBUG_ASSET_PATHS: boolean = true; // Debug für Asset-Pfade aktivieren
+  
   /**
    * Gibt den richtigen Asset-Pfad abhängig vom Modus (Entwicklung oder Produktion) zurück
    * @param path Der relative Pfad zum Asset
    * @returns Der vollständige Pfad zum Asset
    */
   public static getAssetPath(path: string): string {
+    if (this.DEBUG_ASSET_PATHS) {
+      console.log(`[ASSETS] Asset angefordert: ${path}`);
+    }
+    
     // Mit 'publicDir: assets' sind alle Assets direkt im Root-Verzeichnis verfügbar
     // So entfernen wir ein eventuelles "/assets/" Präfix
     if (path.startsWith('/assets/')) {
-      return path.substring('/assets/'.length);
+      const cleanPath = path.substring('/assets/'.length);
+      if (this.DEBUG_ASSET_PATHS) console.log(`[ASSETS] Bereinigter Pfad: ${cleanPath}`);
+      return cleanPath;
     }
     
     // Wenn der Pfad mit einem Slash beginnt, entferne ihn
     if (path.startsWith('/')) {
-      return path.substring(1);
+      const cleanPath = path.substring(1);
+      if (this.DEBUG_ASSET_PATHS) console.log(`[ASSETS] Bereinigter Pfad: ${cleanPath}`);
+      return cleanPath;
     }
     
+    // Rückfallmethode: Wenn der Pfad nicht vorhanden ist, versuche einen alternativen
+    if (this.DEBUG_ASSET_PATHS) console.log(`[ASSETS] Originalpfad beibehalten: ${path}`);
     return path;
   }
 } 
