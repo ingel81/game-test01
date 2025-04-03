@@ -141,6 +141,19 @@ export class GameScene extends BaseScene {
       // Event-Listen für Score-Updates
       this.eventBus.on(EventType.SCORE_CHANGED, this.updateScore);
       
+      // Event-Listener für zerstörte Feinde und Asteroiden hinzufügen
+      this.eventBus.on(EventType.ENEMY_DESTROYED, (data) => {
+        if (data && data.enemy && data.enemy.scoreValue) {
+          this.updateScore(data.enemy.scoreValue);
+        } else if (data && typeof data.score === 'number') {
+          this.updateScore(data.score);
+        }
+      });
+      
+      this.eventBus.on(EventType.ASTEROID_DESTROYED, (points) => {
+        this.updateScore(points);
+      });
+      
       // Event-Listeners für Pause
       this.eventBus.on(EventType.PAUSE_GAME, this.pauseGame);
       this.eventBus.on(EventType.RESUME_GAME, this.resumeGame);
@@ -288,6 +301,11 @@ export class GameScene extends BaseScene {
     this.eventBus.off(EventType.PAUSE_GAME, this.pauseGame);
     this.eventBus.off(EventType.RESUME_GAME, this.resumeGame);
     this.eventBus.off(EventType.PLAYER_DESTROYED, this.endGame);
+    
+    // Entferne spezifische Event-Listener (wir können keine Referenz auf die Lambdas haben,
+    // also entfernen wir alle Listener für diese Events)
+    this.eventBus.removeAllListeners(EventType.ENEMY_DESTROYED);
+    this.eventBus.removeAllListeners(EventType.ASTEROID_DESTROYED);
     
     this.input.keyboard?.off('keydown-ESC', this.togglePause, this);
     

@@ -11,6 +11,7 @@ import { MusicManager } from './musicManager';
 import { SpawnManager } from './spawnManager';
 import { NewEnemyManager } from './newEnemyManager';
 import { DifficultyManager } from './difficultyManager';
+import { BaseEnemy } from '../entities/enemies/baseEnemy';
 
 export class LevelManager {
   private scene: GameScene;
@@ -33,6 +34,7 @@ export class LevelManager {
   private levelIntroShown: boolean = false;
   private pendingWaves: Wave[] = [];
   private currentWaveIndex: number = 0;
+  private levelEndTriggerWaves: Map<number, boolean> = new Map(); // Speichert die Wellen-Indices, die Level-End-Trigger sind
   
   constructor(scene: GameScene, enemyManager: NewEnemyManager, spawnManager: SpawnManager, difficultyManager: DifficultyManager) {
     this.scene = scene;
@@ -47,6 +49,7 @@ export class LevelManager {
     this.eventBus.on(EventType.RESUME_GAME, this.resumeLevel);
     this.eventBus.on(EventType.GAME_OVER, this.stopLevel);
     this.eventBus.on(EventType.BOSS_DESTROYED, this.onBossDestroyed);
+    this.eventBus.on(EventType.ENEMY_DESTROYED, this.onEnemyDestroyed);
   }
   
   /**
@@ -127,7 +130,11 @@ export class LevelManager {
       this.startLevel(nextLevelIndex);
     } else {
       console.log('[LEVEL_MANAGER] Keine weiteren Level verfügbar. Spiel abgeschlossen!');
-      // Hier könnte ein Spiel-Ende-Event oder ähnliches ausgelöst werden
+      // Emittiere das GAME_FINISHED-Event mit dem finalen Score
+      this.eventBus.emit(EventType.GAME_FINISHED, { score: this.scene.registry.get('score') || 0 });
+      
+      // Starte die FinishedScene
+      this.scene.scene.start(Constants.SCENE_FINISHED, { score: this.scene.registry.get('score') || 0 });
     }
   }
   
@@ -233,6 +240,18 @@ export class LevelManager {
   private spawnWave(wave: Wave): void {
     console.log(`[LEVEL_MANAGER] Spawne Welle: ${wave.count}x ${wave.enemyType}`);
     
+    // Wenn diese Welle ein Level-End-Trigger ist, merken wir uns das
+    if (wave.isLevelEndTrigger) {
+      console.log(`[LEVEL_MANAGER] Welle ${this.currentWaveIndex} wurde als Level-End-Trigger markiert`);
+      this.levelEndTriggerWaves.set(this.currentWaveIndex, true);
+      
+      // Gib die aktuelle Map aus, um zu überprüfen, ob die Trigger richtig gesetzt werden
+      console.log('[LEVEL_MANAGER] Aktueller Stand der Level-End-Trigger-Wellen:');
+      this.levelEndTriggerWaves.forEach((value, key) => {
+        console.log(`Welle ${key}: ${value}`);
+      });
+    }
+    
     // Formation und Position basierend auf Formationstyp berechnen
     const screenWidth = this.scene.scale.width;
     const screenHeight = this.scene.scale.height;
@@ -297,7 +316,18 @@ export class LevelManager {
             speedMultiplier: wave.speedMultiplier
           };
           
-          this.enemyManager.spawnEnemyOfType(wave.enemyType, x, y, options);
+          // Gegner-Instanz erstellen und speichern
+          const enemy = this.enemyManager.spawnEnemyOfType(wave.enemyType, x, y, options);
+          
+          // Wenn der Gegner Teil einer Level-End-Trigger-Welle ist, markieren wir ihn
+          if (wave.isLevelEndTrigger) {
+            const sprite = enemy.getSprite();
+            sprite.setData('isLevelEndTrigger', true);
+            
+            // Überprüfe, ob die Markierung erfolgreich war
+            const markedValue = sprite.getData('isLevelEndTrigger');
+            console.log(`[LEVEL_MANAGER] Gegner wurde als Level-End-Trigger markiert: ${markedValue}`);
+          }
         },
         [],
         this
@@ -345,6 +375,9 @@ export class LevelManager {
       const timer = this.scene.time.delayedCall(
         pickup.time,
         () => {
+          // Wenn das Level bereits beendet ist, keine weiteren Pickups spawnen
+          if (this.levelCompleted) return;
+          
           console.log(`[LEVEL_MANAGER] Zeitgesteuerter Pickup: ${pickup.count}x ${pickup.type}`);
           
           for (let i = 0; i < pickup.count; i++) {
@@ -372,21 +405,8 @@ export class LevelManager {
       
       this.timedPickupTimers.push(timer);
     });
-  }
-  
-  /**
-   * Handler für Boss-Zerstörung
-   */
-  private onBossDestroyed = (): void => {
-    console.log('[LEVEL_MANAGER] Boss wurde zerstört');
-    
-    if (this.levelCompleted) return;
-    
-    // Level abschließen, wenn alle Wellen vorbei sind und der Boss besiegt wurde
-    if (this.pendingWaves.length === 0) {
-      this.onLevelComplete();
-    }
-  }
+  }  
+
   
   /**
    * Handler für Level-Abschluss
@@ -417,12 +437,24 @@ export class LevelManager {
    * Zeigt die Level-Intro-Nachricht an
    */
   private showLevelIntro(text: string, callback: () => void): void {
+    // Hintergrund-Rechteck erstellen
+    const backgroundHeight = 100;
+    const background = this.scene.add.rectangle(
+      this.scene.scale.width / 2,
+      this.scene.scale.height - backgroundHeight / 2 - 20, // 20px vom unteren Rand
+      this.scene.scale.width - 40, // 20px Rand auf jeder Seite
+      backgroundHeight,
+      0x000000,
+      0.7 // 70% Deckkraft
+    );
+    background.setDepth(999);
+    
     const introText = this.scene.add.text(
       this.scene.scale.width / 2,
-      this.scene.scale.height / 2,
+      this.scene.scale.height - backgroundHeight / 2 - 20,
       text,
       {
-        fontSize: '32px',
+        fontSize: '24px',
         fontFamily: 'Arial',
         color: '#ffffff',
         align: 'center',
@@ -436,22 +468,26 @@ export class LevelManager {
     
     // Text-Animation
     introText.setAlpha(0);
+    background.setAlpha(0);
+    
+    // Einblend-Animation für Text und Hintergrund
     this.scene.tweens.add({
-      targets: introText,
+      targets: [introText, background],
       alpha: 1,
       duration: 1000,
       ease: 'Linear',
       onComplete: () => {
         this.scene.time.delayedCall(
-          2000,
+          3000, // Länger anzeigen (3 Sekunden)
           () => {
             this.scene.tweens.add({
-              targets: introText,
+              targets: [introText, background],
               alpha: 0,
               duration: 1000,
               ease: 'Linear',
               onComplete: () => {
                 introText.destroy();
+                background.destroy();
                 callback();
               }
             });
@@ -467,12 +503,24 @@ export class LevelManager {
    * Zeigt die Level-Outro-Nachricht an
    */
   private showLevelOutro(text: string, callback: () => void): void {
+    // Hintergrund-Rechteck erstellen
+    const backgroundHeight = 100;
+    const background = this.scene.add.rectangle(
+      this.scene.scale.width / 2,
+      this.scene.scale.height - backgroundHeight / 2 - 20, // 20px vom unteren Rand
+      this.scene.scale.width - 40, // 20px Rand auf jeder Seite
+      backgroundHeight,
+      0x000000,
+      0.7 // 70% Deckkraft
+    );
+    background.setDepth(999);
+    
     const outroText = this.scene.add.text(
       this.scene.scale.width / 2,
-      this.scene.scale.height / 2,
+      this.scene.scale.height - backgroundHeight / 2 - 20,
       text,
       {
-        fontSize: '32px',
+        fontSize: '24px',
         fontFamily: 'Arial',
         color: '#ffffff',
         align: 'center',
@@ -486,22 +534,26 @@ export class LevelManager {
     
     // Text-Animation
     outroText.setAlpha(0);
+    background.setAlpha(0);
+    
+    // Einblend-Animation für Text und Hintergrund
     this.scene.tweens.add({
-      targets: outroText,
+      targets: [outroText, background],
       alpha: 1,
       duration: 1000,
       ease: 'Linear',
       onComplete: () => {
         this.scene.time.delayedCall(
-          2000,
+          3000, // Länger anzeigen (3 Sekunden)
           () => {
             this.scene.tweens.add({
-              targets: outroText,
+              targets: [outroText, background],
               alpha: 0,
               duration: 1000,
               ease: 'Linear',
               onComplete: () => {
                 outroText.destroy();
+                background.destroy();
                 callback();
               }
             });
@@ -549,6 +601,7 @@ export class LevelManager {
     this.levelIntroShown = false;
     this.pendingWaves = [];
     this.currentWaveIndex = 0;
+    this.levelEndTriggerWaves.clear();
   }
   
   /**
@@ -562,5 +615,75 @@ export class LevelManager {
     this.eventBus.off(EventType.PAUSE_GAME, this.pauseLevel);
     this.eventBus.off(EventType.RESUME_GAME, this.resumeLevel);
     this.eventBus.off(EventType.GAME_OVER, this.stopLevel);
+    this.eventBus.off(EventType.BOSS_DESTROYED, this.onBossDestroyed);
+    this.eventBus.off(EventType.ENEMY_DESTROYED, this.onEnemyDestroyed);
+  }
+  
+  /**
+   * Handler für zerstörte Gegner
+   * Überprüft, ob alle Gegner in Level-End-Trigger-Wellen zerstört wurden
+   */
+  private onEnemyDestroyed = (data: any): void => {
+    // Wenn der Level bereits abgeschlossen ist, nichts tun
+    if (this.levelCompleted) return;
+    
+    console.log('[LEVEL_MANAGER] onEnemyDestroyed wurde aufgerufen');
+    
+    // Versuche, das Sprite aus den Daten zu extrahieren
+    const sprite = data?.sprite || data?.enemy?.getSprite?.();
+    let isDestroyedEnemyTrigger = false;
+    
+    if (sprite && sprite.getData) {
+      // Prüfe, ob der zerstörte Gegner ein Level-End-Trigger war
+      isDestroyedEnemyTrigger = sprite.getData('isLevelEndTrigger') === true;
+      
+      if (isDestroyedEnemyTrigger) {
+        console.log('[LEVEL_MANAGER] Ein Level-End-Trigger-Gegner wurde zerstört');
+      }
+    }
+    
+    // Prüfe alle verbleibenden Gegner
+    const allRemainingEnemies = this.enemyManager.getAllEnemies();
+    console.log(`[LEVEL_MANAGER] Verbleibende Gegner: ${allRemainingEnemies.length - 1}`);
+    
+    // Finde Level-End-Trigger-Gegner
+    const triggerEnemies = allRemainingEnemies.filter((enemy: BaseEnemy) => {
+      const enemySprite = enemy.getSprite();
+      return enemySprite && enemySprite.getData && enemySprite.getData('isLevelEndTrigger') === true;
+    });
+    
+    // Korrektur: Zeige korrekte Anzahl der verbleibenden Trigger-Gegner an
+    const remainingTriggerEnemies = isDestroyedEnemyTrigger ? triggerEnemies.length - 1 : triggerEnemies.length;
+    console.log(`[LEVEL_MANAGER] Verbleibende Level-End-Trigger-Gegner: ${remainingTriggerEnemies}`);
+    
+    // CRITICAL CHECK: Prüfe, ob wir Trigger-Gegner hatten (Map sollte nicht leer sein)
+    // und ob alle Trigger-Gegner zerstört wurden
+    const allTriggersDestroyed = 
+        (remainingTriggerEnemies === 0) && 
+        this.levelEndTriggerWaves.size > 0;
+    
+    // Debug-Ausgabe für die Bedingungselemente
+    console.log(`[LEVEL_MANAGER] Level-End Bedingung: allTriggersDestroyed=${allTriggersDestroyed}, pendingWaves=${this.pendingWaves.length}, levelEndTriggerWaves.size=${this.levelEndTriggerWaves.size}`);
+        
+    if (allTriggersDestroyed && this.pendingWaves.length === 0) {
+      
+      console.log('[LEVEL_MANAGER] Alle Level-End-Trigger-Gegner wurden zerstört. Beende Level.');
+      
+      // Timer sofort stoppen und entfernen
+      if (this.levelTimer) {
+        console.log('[LEVEL_MANAGER] Stoppe Level-Timer');
+        this.levelTimer.remove();
+        this.levelTimer = null;
+      }
+      
+      // WICHTIG: Verzögerung einbauen, um Race-Conditions zu vermeiden
+      this.scene.time.delayedCall(
+        100, // Kleine Verzögerung
+        () => {
+          // Level sofort abschließen
+          this.onLevelComplete();
+        }
+      );
+    }
   }
 } 

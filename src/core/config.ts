@@ -3,6 +3,7 @@ import { GameScene } from '../scenes/gameScene';
 import { MainMenuScene } from '../scenes/mainMenuScene';
 import { GameOverScene } from '../scenes/gameOverScene';
 import { PauseScene } from '../scenes/pauseScene';
+import { FinishedScene } from '../scenes/finishedScene';
 
 /**
  * Spielkonfiguration
@@ -28,7 +29,8 @@ export class GameConfig {
         MainMenuScene,
         GameScene,
         GameOverScene,
-        PauseScene
+        PauseScene,
+        FinishedScene
       ],
       scale: {
         mode: Phaser.Scale.FIT,

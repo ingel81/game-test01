@@ -79,6 +79,7 @@ export class Constants {
   public static readonly SCENE_GAME: string = 'GameScene';
   public static readonly SCENE_GAME_OVER: string = 'GameOverScene';
   public static readonly SCENE_PAUSE: string = 'PauseScene';
+  public static readonly SCENE_FINISHED: string = 'FinishedScene';
   
   // Assettags
   public static readonly ASSET_PLAYER: string = 'player';

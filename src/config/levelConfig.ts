@@ -45,6 +45,7 @@ export interface Wave {
   delay?: number;             // Verzögerung vor dieser Welle (ms)
   healthMultiplier?: number;  // Multiplikator für Gegner-Gesundheit
   speedMultiplier?: number;   // Multiplikator für Gegner-Geschwindigkeit
+  isLevelEndTrigger?: boolean;// Ob diese Welle als Level-Ende-Auslöser dient
 }
 
 /**
@@ -68,16 +69,6 @@ export interface TimedPickup {
   count: number;              // Anzahl der Pickups
 }
 
-/**
- * Bosseinstellungen für Level
- */
-export interface BossSettings {
-  enabled: boolean;           // Ob ein Boss in diesem Level erscheint
-  time?: number;              // Zeit nach Levelstart (ms), optional wenn timeToSpawn verwendet wird
-  healthMultiplier?: number;  // Multiplikator für Boss-Gesundheit
-  speedMultiplier?: number;   // Multiplikator für Boss-Geschwindigkeit
-  timeToSpawn?: number;       // Zeit nach Wellen-Ende (ms), optional wenn time verwendet wird
-}
 
 /**
  * Levelkonfiguration
@@ -100,7 +91,6 @@ export interface LevelConfig {
   waves: Wave[];                  // Gegnerwellen
   timedSpawns?: TimedSpawn[];     // Zeitbasierte Gegner-Spawns
   timedPickups?: TimedPickup[];   // Zeitbasierte Pickup-Spawns
-  boss?: BossSettings;            // Boss-Einstellungen
 }
 
 /**
@@ -108,15 +98,15 @@ export interface LevelConfig {
  */
 export const Level1: LevelConfig = {
   id: 'level-1',
-  name: 'Die ersten Begegnungen',
-  description: 'Die ersten Feinde erscheinen. Sei vorsichtig und teste deine Waffen.',
+  name: 'First Encounters',
+  description: 'The first enemies appear. Be careful and test your weapons.',
   difficulty: 1,
-  duration: 40000, // 2 Minuten
+  duration: 30000,
   minAsteroids: 2,
   maxAsteroids: 5,
   asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID,
-  introText: 'Die ersten feindlichen Schiffe wurden gesichtet. Eliminiere sie, um unseren Sektor zu schützen.',
-  outroText: 'Gut gemacht! Die erste Welle wurde abgewehrt.',
+  introText: 'Enemy ships have been spotted in this sector. Eliminate them to protect our territory.',
+  outroText: 'Well done! The first wave has been repelled.',
   
   waves: [
     /*
@@ -142,7 +132,8 @@ export const Level1: LevelConfig = {
       enemyType: EnemyType.BOSS,
       count: 10,
       formation: FormationType.V_FORMATION,
-      delay: 0
+      delay: 0,
+      isLevelEndTrigger: true
     }
   ],
   
@@ -157,13 +148,7 @@ export const Level1: LevelConfig = {
       type: PickupType.POWER,
       count: 1
     }
-  ],
-  
-  boss: {
-    enabled: true,    
-    timeToSpawn: 5000, // 10 Sekunden nach Ende der letzten Welle,
-    //time: 1 // 10 Sekunden nach Ende der letzten Welle
-  }
+  ]
 };
 
 /**

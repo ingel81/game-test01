@@ -58,6 +58,23 @@ export class MusicManager {
         });
     }
 
+    // Spezifischen Track abspielen
+    public playTrack(trackKey: string): void {
+        this.stopCurrentMusic();
+        
+        this.currentMusic = this.scene.sound.add(trackKey, {
+            loop: false,
+            volume: this.volume
+        }) as Phaser.Sound.HTML5AudioSound;
+        
+        this.currentMusic.play();
+        
+        // Event-Listener für das Ende des Tracks
+        this.currentMusic.once('complete', () => {
+            this.playRandomGameplayTrack();
+        });
+    }
+
     public stopCurrentMusic(): void {
         if (this.currentMusic) {
             this.currentMusic.stop();

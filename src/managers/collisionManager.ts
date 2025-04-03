@@ -189,11 +189,17 @@ export class CollisionManager {
     // Spieler nimmt Schaden
     this.player.takeDamage(Constants.DAMAGE.ENEMY_COLLISION);
     
+    // Hole Enemy-Instanz für Ereignisemittierung
+    const enemyInstance = enemy.getData('instance');
+    
     // Feind wird zerstört
     this.enemyManager.destroyEnemy(enemy);
     
     // Emit event für Punktzahl und UI-Updates
-    this.eventBus.emit(EventType.ENEMY_DESTROYED);
+    this.eventBus.emit(EventType.ENEMY_DESTROYED, { 
+      enemy: enemyInstance, 
+      sprite: enemy 
+    });
     
     // Explosionseffekt an der Kollisionsstelle
     const x = (player.x + enemy.x) / 2;
@@ -223,7 +229,10 @@ export class CollisionManager {
       // Nur ein Event auslösen, wenn der Feind zerstört wurde
       if (wasDestroyed) {
         // Emit event für Punktzahl
-        this.eventBus.emit(EventType.ENEMY_DESTROYED);
+        this.eventBus.emit(EventType.ENEMY_DESTROYED, {
+          enemy: enemyInstance,
+          sprite: enemy
+        });
         
         // Explosionseffekt
         this.createExplosion(enemy.x, enemy.y);
@@ -234,7 +243,9 @@ export class CollisionManager {
     } else {
       // Fallback für den Fall, dass der Feind keine takeDamage-Methode hat
       this.enemyManager.destroyEnemy(enemy);
-      this.eventBus.emit(EventType.ENEMY_DESTROYED);
+      this.eventBus.emit(EventType.ENEMY_DESTROYED, {
+        sprite: enemy
+      });
       
       // Explosionseffekt
       this.createExplosion(enemy.x, enemy.y);

@@ -4,14 +4,14 @@ import { EventType, EventBus } from '../utils/eventBus';
 import { MusicManager } from '../managers/musicManager';
 
 /**
- * Game Over-Szene
+ * Spiel-Abschluss-Szene
  */
-export class GameOverScene extends BaseScene {
+export class FinishedScene extends BaseScene {
   private score: number = 0;
   private musicManager: MusicManager;
 
   constructor() {
-    super(Constants.SCENE_GAME_OVER);
+    super(Constants.SCENE_FINISHED);
     this.musicManager = MusicManager.getInstance();
   }
 
@@ -23,7 +23,7 @@ export class GameOverScene extends BaseScene {
   }
 
   /**
-   * Erstellt die Game Over-Szene
+   * Erstellt die Finished-Szene
    */
   create(): void {
     super.create();
@@ -37,20 +37,26 @@ export class GameOverScene extends BaseScene {
     // Stelle sicher, dass der Cursor sichtbar ist
     document.body.style.cursor = 'default';
 
-    // Game Over-Text
-    this.add.text(centerX, centerY - 100, 'Game Over', {
+    // Erfolgs-Text
+    this.add.text(centerX, centerY - 100, 'Spiel abgeschlossen!', {
       fontSize: '64px',
-      color: '#ff0000'
+      color: '#00ff00'
     }).setOrigin(0.5);
 
     // Punktestand
-    this.add.text(centerX, centerY, `Score: ${this.score}`, {
+    this.add.text(centerX, centerY, `Dein Score: ${this.score}`, {
       fontSize: '32px',
       color: '#ffffff'
     }).setOrigin(0.5);
 
+    // Gratulations-Text
+    this.add.text(centerX, centerY + 50, 'Herzlichen Glückwunsch!', {
+      fontSize: '28px',
+      color: '#ffff00'
+    }).setOrigin(0.5);
+
     // Neustart-Button
-    this.createButton(centerX, centerY + 100, 'Restart', () => {
+    this.createButton(centerX, centerY + 120, 'Erneut spielen', () => {
       // Vollständiger Reset vor dem Neustart
       // Zurücksetzen des EventBus
       EventBus.resetInstance();
@@ -59,7 +65,7 @@ export class GameOverScene extends BaseScene {
       this.sound.stopAll();
       
       // Stoppe alle aktiven Szenen
-      this.scene.stop(Constants.SCENE_GAME_OVER);
+      this.scene.stop(Constants.SCENE_FINISHED);
       
       // Kleine Pause für Ressourcenfreigabe
       setTimeout(() => {
@@ -69,7 +75,7 @@ export class GameOverScene extends BaseScene {
     });
 
     // Hauptmenü-Button
-    this.createButton(centerX, centerY + 160, 'Main Menu', () => {
+    this.createButton(centerX, centerY + 180, 'Hauptmenü', () => {
       // Zurücksetzen des EventBus
       EventBus.resetInstance();
       
@@ -82,7 +88,7 @@ export class GameOverScene extends BaseScene {
   }
 
   /**
-   * Aktualisiert die Game Over-Szene
+   * Aktualisiert die Finished-Szene
    */
   update(time: number, delta: number): void {
     // Rufe die BaseScene-Update-Methode auf, um die Sterne zu aktualisieren

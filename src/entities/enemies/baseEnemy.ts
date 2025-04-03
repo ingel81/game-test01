@@ -319,6 +319,10 @@ export class BaseEnemy extends GameObject {
 
     // Vergebe Punkte
     this.eventBus.emit(EventType.ENEMY_KILLED, this.scoreValue);
+    
+    // Informiere das System über die Zerstörung des Gegners
+    // Übergebe sowohl den Gegner selbst als auch sein Sprite für die Level-End-Trigger-Überprüfung
+    this.eventBus.emit(EventType.ENEMY_DESTROYED, { enemy: this, sprite: this.sprite });
 
     // Prüfe, ob ein Energie-Pickup erstellt werden soll
     if (Math.random() < Constants.ENEMY_DROP_CHANCE) {

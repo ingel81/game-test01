@@ -4,5 +4,12 @@ globs:
 alwaysApply: true
 ---
 
+Mach niemals mehr als das, worum du gebeten wirst.
+
+Erfinde nicht eigenmächtig irgendwelche Funktionalität, die nicht gefordert war.
+Verwendet DRY-Prinzipien, Objektorientierung und separation of Concerns.
+
+Betrachte grundsätzlich alles als funktionierenden Code, der nicht ohne weiteres angefasst werden sollte.
+
 Wir entwickeln auf Windows, benutzte entsprechende Befehle für die powershell.
 Ein dev Server brauchst du niemals starten, der läuft parallel schon mit.
