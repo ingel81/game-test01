@@ -96,8 +96,8 @@ export abstract class BaseScene extends Phaser.Scene {
    */
   protected createButton(x: number, y: number, text: string, onClick: () => void): void {
     // Erstelle einen Rechteck-Button statt Bild
-    const buttonWidth = 200;
-    const buttonHeight = 50;
+    const buttonWidth = 220;
+    const buttonHeight = 60;
     const button = this.add.rectangle(x, y, buttonWidth, buttonHeight, 0x333333, 0.8)
       .setInteractive()
       .on('pointerdown', () => {
@@ -109,7 +109,9 @@ export abstract class BaseScene extends Phaser.Scene {
 
     this.add.text(x, y, text, {
       color: '#ffffff',
-      fontSize: '24px'
+      fontSize: '20px',
+      fontFamily: 'Arial, sans-serif',
+      align: 'center'
     }).setOrigin(0.5);
   }
 
@@ -150,12 +152,12 @@ export abstract class BaseScene extends Phaser.Scene {
    */
   protected createTextButton(x: number, y: number, text: string, callback: () => void): Phaser.GameObjects.Text {
     const button = this.add.text(x, y, text, {
-      fontFamily: 'monospace',
-      fontSize: '26px',
-      color: '#00ffff',
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '22px',
+      color: '#cccccc',
       align: 'center',
       stroke: '#000000',
-      strokeThickness: 4,
+      strokeThickness: 3,
       padding: {
         left: 20,
         right: 20,
@@ -169,10 +171,10 @@ export abstract class BaseScene extends Phaser.Scene {
         button.setStyle({ color: '#ffffff' });
       })
       .on('pointerout', () => {
-        button.setStyle({ color: '#00ffff' });
+        button.setStyle({ color: '#cccccc' });
       })
       .on('pointerdown', () => {
-        button.setStyle({ color: '#0088ff' });
+        button.setStyle({ color: '#aaaaaa' });
       })
       .on('pointerup', () => {
         button.setStyle({ color: '#ffffff' });
@@ -187,7 +189,7 @@ export abstract class BaseScene extends Phaser.Scene {
    */
   protected createFuturisticFrame(x: number, y: number, width: number, height: number): Phaser.GameObjects.Graphics {
     const graphics = this.add.graphics();
-    graphics.lineStyle(2, 0x00ffff, 0.8);
+    graphics.lineStyle(2, 0x888888, 0.8);
     graphics.strokeRect(x, y, width, height);
 
     return graphics;

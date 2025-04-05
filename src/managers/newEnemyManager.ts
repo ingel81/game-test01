@@ -439,6 +439,10 @@ export class NewEnemyManager {
         console.log(`[ENEMY_MANAGER] TurretActive auf false gesetzt nach Turret-Zerstörung`);
       }
       
+      // BUGFIX: Zuerst die destroy-Methode des Gegners aufrufen, um die visuellen Effekte zu starten
+      enemy.destroy();
+      console.log(`[ENEMY_MANAGER] Enemy.destroy() wurde aufgerufen für ${enemyType}`);
+      
       // Entferne den Gegner aus dem Array
       this.enemies.splice(index, 1);
       console.log(`[ENEMY_MANAGER] Gegner aus der Liste entfernt. Verbleibende Anzahl: ${this.enemies.length}`);

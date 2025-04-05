@@ -150,6 +150,13 @@ export class GameUI {
   }
   
   /**
+   * Gibt den aktuellen Score zurück
+   */
+  public getScore(): number {
+    return this.scoreDisplay.getScore();
+  }
+  
+  /**
    * Aktualisiert die Level-Anzeige
    */
   public updateLevel(level: number): void {

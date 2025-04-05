@@ -120,25 +120,25 @@ export const Level1: LevelConfig = {
       enemyType: EnemyType.ADVANCED,
       count: 3,
       formation: FormationType.SINGLE,
-      delay: 100000
+      delay: 1000
     },
     {
       enemyType: EnemyType.ELITE,
       count: 3,
       formation: FormationType.SINGLE,
-      delay: 100000
+      delay: 1000
     },
     {
       enemyType: EnemyType.TURRET,
       count: 3,
       formation: FormationType.SINGLE,
-      delay: 100000
+      delay: 1000
     },
     {
       enemyType: EnemyType.BOSS,
       count: 3,
       formation: FormationType.SINGLE,
-      delay: 100000,
+      delay: 1000,
       isLevelEndTrigger: true
     },    
     /*

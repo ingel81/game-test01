@@ -4,7 +4,7 @@ import { EventType, EventBus } from '../utils/eventBus';
 import { MusicManager } from '../managers/musicManager';
 
 /**
- * Spiel-Abschluss-Szene
+ * Game Finished Scene
  */
 export class FinishedScene extends BaseScene {
   private score: number = 0;
@@ -16,14 +16,14 @@ export class FinishedScene extends BaseScene {
   }
 
   /**
-   * Initialisiert die Szene
+   * Initialize the scene
    */
   init(data: { score: number }): void {
     this.score = data.score;
   }
 
   /**
-   * Erstellt die Finished-Szene
+   * Create the Finished scene
    */
   create(): void {
     super.create();
@@ -31,67 +31,70 @@ export class FinishedScene extends BaseScene {
     const centerX = this.scale.width / 2;
     const centerY = this.scale.height / 2;
 
-    // Initialisiere den MusicManager
+    // Initialize the MusicManager
     this.musicManager.init(this);
     
-    // Stelle sicher, dass der Cursor sichtbar ist
+    // Make sure cursor is visible
     document.body.style.cursor = 'default';
 
-    // Erfolgs-Text
-    this.add.text(centerX, centerY - 100, 'Spiel abgeschlossen!', {
-      fontSize: '64px',
-      color: '#00ff00'
+    // Game completed text
+    this.add.text(centerX, centerY - 100, 'Game Completed!', {
+      fontSize: '48px',
+      color: '#cccccc',
+      fontFamily: 'Arial, sans-serif'
     }).setOrigin(0.5);
 
-    // Punktestand
-    this.add.text(centerX, centerY, `Dein Score: ${this.score}`, {
+    // Score display
+    this.add.text(centerX, centerY, `Your Score: ${this.score}`, {
       fontSize: '32px',
-      color: '#ffffff'
+      color: '#ffffff',
+      fontFamily: 'Arial, sans-serif'
     }).setOrigin(0.5);
 
-    // Gratulations-Text
-    this.add.text(centerX, centerY + 50, 'Herzlichen Glückwunsch!', {
+    // Congratulations text
+    this.add.text(centerX, centerY + 50, 'Congratulations!', {
       fontSize: '28px',
-      color: '#ffff00'
+      color: '#dddddd',
+      fontFamily: 'Arial, sans-serif'
     }).setOrigin(0.5);
 
-    // Neustart-Button
-    this.createButton(centerX, centerY + 120, 'Erneut spielen', () => {
-      // Vollständiger Reset vor dem Neustart
-      // Zurücksetzen des EventBus
+    // Play Again button
+    this.createButton(centerX, centerY + 120, 'Play Again', () => {
+      // Complete reset before restart
+      // Reset EventBus
       EventBus.resetInstance();
       
-      // Stoppe alle Sounds
+      // Stop all sounds
       this.sound.stopAll();
       
-      // Stoppe alle aktiven Szenen
+      // Stop all active scenes
       this.scene.stop(Constants.SCENE_FINISHED);
       
-      // Kleine Pause für Ressourcenfreigabe
+      // Small pause for resource cleanup
       setTimeout(() => {
-        // Starte die Spielszene neu
+        // Restart the game scene
         this.scene.start(Constants.SCENE_GAME);
       }, 50);
     });
 
-    // Hauptmenü-Button
-    this.createButton(centerX, centerY + 180, 'Hauptmenü', () => {
-      // Zurücksetzen des EventBus
+    // Main Menu button
+    this.createButton(centerX, centerY + 180, 'Main Menu', () => {
+      // Reset EventBus
       EventBus.resetInstance();
       
-      // Stoppe alle Sounds
+      // Stop all sounds
       this.sound.stopAll();
       
-      // Starte direkt das Hauptmenü
+      // Start the main menu directly
       this.scene.start(Constants.SCENE_MAIN_MENU);
     });
   }
 
   /**
-   * Aktualisiert die Finished-Szene
+   * Update the Finished scene
    */
   update(time: number, delta: number): void {
-    // Rufe die BaseScene-Update-Methode auf, um die Sterne zu aktualisieren
+    // Call the BaseScene update method to update stars
     super.update(time, delta);
   }
 } 

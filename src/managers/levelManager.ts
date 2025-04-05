@@ -129,11 +129,14 @@ export class LevelManager {
       this.startLevel(nextLevelIndex);
     } else {
       console.log('[LEVEL_MANAGER] Keine weiteren Level verfügbar. Spiel abgeschlossen!');
+      // Hole den aktuellen Score
+      const currentScore = this.getPlayerScore();
+      
       // Emittiere das GAME_FINISHED-Event mit dem finalen Score
-      this.eventBus.emit(EventType.GAME_FINISHED, { score: this.scene.registry.get('score') || 0 });
+      this.eventBus.emit(EventType.GAME_FINISHED, { score: currentScore });
       
       // Starte die FinishedScene
-      this.scene.scene.start(Constants.SCENE_FINISHED, { score: this.scene.registry.get('score') || 0 });
+      this.scene.scene.start(Constants.SCENE_FINISHED, { score: currentScore });
     }
   }
   
@@ -683,5 +686,22 @@ export class LevelManager {
         }
       );
     }
+  }
+  
+  /**
+   * Gibt den aktuellen Spieler-Score zurück
+   * Verwendet die UI-Komponente, um den Score abzurufen
+   */
+  private getPlayerScore(): number {
+    // Versuche den Score aus dem UI Manager zu bekommen
+    if (this.scene.registry.get('uiManager')) {
+      const uiManager = this.scene.registry.get('uiManager');
+      if (uiManager && uiManager.getScore) {
+        return uiManager.getScore();
+      }
+    }
+    
+    // Fallback: Verwende den Registry-Wert
+    return this.scene.registry.get('score') || 0;
   }
 } 

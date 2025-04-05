@@ -130,6 +130,8 @@ export class GameScene extends BaseScene {
       // Erstelle die Game-UI
       console.log('GameScene: Erstelle Game-UI');
       this.uiManager = new GameUI(this, this.player);
+      // UI-Manager in der Registry registrieren, damit andere Klassen darauf zugreifen können
+      this.registry.set('uiManager', this.uiManager);
       
       // Erstelle den LevelManager und starte das erste Level
       console.log('GameScene: Erstelle LevelManager');
