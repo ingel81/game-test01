@@ -44,6 +44,16 @@ export class BulletFactory {
       if (Math.abs(bulletSprite.body.velocity.x) < 10 && Math.abs(bulletSprite.body.velocity.y) < 10) {
         console.log(`[BULLET_FACTORY] Bullet hat zu geringe Geschwindigkeit, korrigiere zu Basis-Richtung (links)`);
         bulletSprite.body.velocity.x = -300; // Erzwinge Bewegung nach links
+        
+        // Setze die Rotation entsprechend (nach links = Math.PI)
+        bulletSprite.setRotation(Math.PI);
+      } else {
+        // Ansonsten sicherstellen, dass die Rotation der Bewegungsrichtung entspricht
+        const vx = bulletSprite.body.velocity.x;
+        const vy = bulletSprite.body.velocity.y;
+        if (Math.abs(vx) > 1 || Math.abs(vy) > 1) {
+          bulletSprite.setRotation(Math.atan2(vy, vx));
+        }
       }
     }
     

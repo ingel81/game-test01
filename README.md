@@ -125,11 +125,106 @@ Das Spiel implementiert ein flexibles Projektilsystem:
 #### Bullet (src/entities/Bullet.ts)
 Basisklasse für alle Projektile im Spiel.
 
+**Haupteigenschaften:**
+- `damage`: Schadenswert des Projektils
+- `owner`: Besitzer des Projektils ('player' oder 'enemy')
+- `speed`: Grundgeschwindigkeit des Projektils
+- `shouldFlipX`: Flag für horizontale Spiegelung der Textur
+
+**Wichtige Methoden:**
+- `setVelocityWithRotation(x, y)`: Setzt Geschwindigkeit und aktualisiert die Rotation entsprechend
+- `setDirectionAndSpeed(angleRadians)`: Setzt Richtung und Geschwindigkeit basierend auf einem Winkel
+- `updateRotation()`: Aktualisiert die Rotation des Projektils basierend auf seiner Flugrichtung
+- `update(time, delta)`: Aktualisiert den Zustand des Projektils, überprüft Grenzen und passt die Rotation an
+
+```typescript
+// Die updateRotation-Methode sorgt dafür, dass die Ausrichtung der Flugrichtung entspricht
+protected updateRotation(): void {
+  if (this.sprite && this.sprite.body) {
+    const vx = this.sprite.body.velocity.x;
+    const vy = this.sprite.body.velocity.y;
+    
+    // Nur rotieren, wenn es eine signifikante Geschwindigkeit gibt
+    if (Math.abs(vx) > 1 || Math.abs(vy) > 1) {
+      // Berechne den Winkel aus den Geschwindigkeitskomponenten
+      const angle = Math.atan2(vy, vx);
+      
+      // Setze die Rotation des Sprites auf diesen Winkel
+      this.sprite.setRotation(angle);
+    }
+  }
+}
+```
+
 #### PlayerBullet (src/entities/PlayerBullet.ts)
 Spezialisierte Projektilklasse für Spieler-Schüsse.
 
+**Besonderheiten:**
+- Standardrichtung nach rechts (0°)
+- Zusätzliche `powerLevel`-Eigenschaft für Upgrade-System
+- Originaltextur ohne Farbänderung
+
 #### EnemyBullet (src/entities/EnemyBullet.ts)
 Spezialisierte Projektilklasse für Gegner-Schüsse.
+
+**Besonderheiten:**
+- Standardrichtung nach links (180°)
+- Registrierung für spezielle Kollisionserkennung
+- Optimierung für Fallback, falls Geschwindigkeit zu niedrig ist
+- Rotation wird immer der Flugrichtung des Projektils angepasst
+
+#### BulletFactory (src/factories/BulletFactory.ts)
+Factory-Klasse für das Erzeugen verschiedener Projektiltypen mit optimierten Einstellungen.
+
+**Hauptmethoden:**
+- `createPlayerBullet(x, y, angle, powerLevel)`: Erstellt ein Spieler-Projektil
+- `createEnemyBullet(x, y, angle)`: Erstellt ein Gegner-Projektil
+- `createTurretBullet(x, y, angle)`: Erstellt ein Projektil für Geschütztürme
+- `create360Bullets(x, y, count)`: Erstellt mehrere Projektile in einer 360-Grad-Formation
+
+```typescript
+// Beispiel aus der BulletFactory für die Sicherstellung der korrekten Rotation
+public createEnemyBullet(x: number, y: number, angle: number): EnemyBullet {
+  const bullet = EnemyBullet.createBullet(this.scene, x, y, angle);
+  
+  // Überprüfe, ob das Projektil korrekt erstellt wurde
+  const bulletSprite = bullet.getSprite();
+  if (bulletSprite && bulletSprite.body) {
+    // Sicherstellen, dass das Projektil eine tatsächliche Geschwindigkeit hat
+    if (Math.abs(bulletSprite.body.velocity.x) < 10 && Math.abs(bulletSprite.body.velocity.y) < 10) {
+      console.log(`[BULLET_FACTORY] Bullet hat zu geringe Geschwindigkeit, korrigiere zu Basis-Richtung (links)`);
+      bulletSprite.body.velocity.x = -300; // Erzwinge Bewegung nach links
+      
+      // Setze die Rotation entsprechend (nach links = Math.PI)
+      bulletSprite.setRotation(Math.PI);
+    } else {
+      // Ansonsten sicherstellen, dass die Rotation der Bewegungsrichtung entspricht
+      const vx = bulletSprite.body.velocity.x;
+      const vy = bulletSprite.body.velocity.y;
+      if (Math.abs(vx) > 1 || Math.abs(vy) > 1) {
+        bulletSprite.setRotation(Math.atan2(vy, vx));
+      }
+    }
+  }
+  
+  return bullet;
+}
+```
+
+#### WeaponComponent (src/entities/enemies/components/weaponComponent.ts)
+Wiederverwendbare Waffenkomponente für Gegner, die verschiedene Schussmuster implementiert.
+
+**Schussmuster:**
+- `single`: Einzelne Schüsse direkt auf den Spieler
+- `double`: Zwei Schüsse mit leichtem Versatz
+- `triple`: Drei Schüsse in einem Fächer
+- `spread`: Fächerförmige Schüsse mit konfigurierbarem Winkel
+- `burst`: Schnelle Abfolge von Einzelschüssen
+
+**Besonderheiten:**
+- Unterstützt prädiktives Zielen auf den Spieler
+- Konfigurierbare Feuerrate und Muster
+- Automatische Berechnung der Schusswinkel
 
 ### 3.4 Gegner-System
 
@@ -478,6 +573,64 @@ export class GlowPipeline extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline
 
 Die Shader-Dateien befinden sich nun im `/src/shaders/`-Verzeichnis als separate `.glsl`-Dateien.
 
+### 3.10 Rotationen und Animationen
+
+Das Spiel verwendet verschiedene Rotations- und Animationstechniken:
+
+#### Objektrotation
+
+**Projektilrotation:**
+- Alle Projektile rotieren automatisch in Richtung ihrer Bewegung
+- Die `updateRotation()`-Methode in der `Bullet`-Klasse berechnet den Winkel aus der Geschwindigkeit
+- Die Rotation wird sowohl bei der Erstellung als auch kontinuierlich während der Bewegung aktualisiert
+
+```typescript
+// Berechnung der Rotation basierend auf Geschwindigkeit
+protected updateRotation(): void {
+  if (this.sprite && this.sprite.body) {
+    const vx = this.sprite.body.velocity.x;
+    const vy = this.sprite.body.velocity.y;
+    
+    // Nur rotieren, wenn es eine signifikante Geschwindigkeit gibt
+    if (Math.abs(vx) > 1 || Math.abs(vy) > 1) {
+      this.sprite.setRotation(Math.atan2(vy, vx));
+    }
+  }
+}
+```
+
+**Umgebungsobjekte:**
+- Asteroiden rotieren kontinuierlich mit zufälliger Geschwindigkeit
+- Planeten im Hintergrund haben subtile Rotationseffekte
+
+#### Sprite-Animationen
+
+**Explosionen:**
+- Frame-basierte Explosion-Animation mit `AssetLoader`
+- Auto-Destroy nach Abschluss der Animation
+
+**Spieler-Animationen:**
+- Verschiedene Status-Animationen für den Spieler (Idle, Move)
+- Neigungseffekte basierend auf der Bewegungsrichtung
+
+**UI-Animationen:**
+- Pulsierende Level-Anzeigen
+- Einblend-/Ausblendeffekte bei Texten und UI-Elementen
+
+#### Erweiterte Animationseffekte
+
+**Boss-Phasen:**
+- Visuelle Animationen zur Signalisierung von Phasenwechseln
+- Pulsieren-Effekt während bestimmter Angriffsphasen
+
+**Pickup-Effekte:**
+- Pulsierende Animation für Powerups
+- Fade-out beim Einsammeln
+
+**Geschütztürme:**
+- Realistische Rotation des Geschützturms zum Spieler hin
+- Berechnung des Schusswinkels basierend auf der Turmrotation
+
 ## 4. Level-System
 
 ### 4.1 Level-Konfiguration
@@ -636,10 +789,11 @@ MusicManager.getInstance().playTrack('music-key');
 
 ## 7. Performance-Optimierung
 
-- **Objekt-Pools**: Für häufig erzeugte und zerstörte Objekte wie Projektile
-- **Textur-Atlas**: Kombinieren von Sprites in Textur-Atlanten
+- **Objekt-Pools**: Für häufig erzeugte und zerstörte Objekte wie Projektile werden Objekt-Pools verwendet
+- **Textur-Atlas**: Kombinieren von Sprites in Textur-Atlanten reduziert Draw-Calls
 - **Effiziente Physik**: Beschränkung der Physikberechnungen auf aktive Objekte
 - **Lazy Loading**: Laden von Assets nur in den Szenen, in denen sie benötigt werden
+- **Automatische Bereinigung**: Projektile und andere Objekte werden außerhalb des sichtbaren Bereichs automatisch deaktiviert
 
 ## 8. Technologien und Abhängigkeiten
 
@@ -664,3 +818,22 @@ npm run build
 ```bash
 npm run preview
 ```
+
+## 10. Bekannte Probleme und Lösungen
+
+### 10.1 Projektilrotation
+Bei Projektilen von Gegnern kann es vorkommen, dass die Rotation nicht korrekt mit der Flugrichtung übereinstimmt. Dies wurde behoben, indem die `updateRotation()`-Methode in der `Bullet`-Klasse verbessert wurde, um die Rotation kontinuierlich zu aktualisieren.
+
+### 10.2 Leistungseinbrüche bei vielen Objekten
+Bei einer hohen Anzahl von Objekten auf dem Bildschirm kann es zu Leistungseinbrüchen kommen. Um dies zu minimieren, werden Objekt-Pools für Projektile verwendet, und inaktive Objekte werden außerhalb des sichtbaren Bereichs automatisch entfernt.
+
+### 10.3 Mobile Steuerung
+Die Touch-Steuerung auf mobilen Geräten kann manchmal ungenau sein. Die aktuelle Implementierung wurde optimiert, um die Empfindlichkeit anzupassen und ein besseres Spielerlebnis zu bieten.
+
+## 11. Erweiterungen und zukünftige Funktionen
+
+- Zusätzliche Gegnertypen mit komplexeren Verhaltensweisen
+- Erweiterte Waffensysteme und Powerups
+- Multiplayer-Unterstützung
+- Weitere Shader-Effekte für visuelle Verbesserungen
+- Verbessertes Partikelsystem für Explosionen und Triebwerkseffekte

@@ -107,7 +107,14 @@ export class Bullet extends Entity {
       
       // Nur rotieren, wenn es eine signifikante Geschwindigkeit gibt
       if (Math.abs(vx) > 1 || Math.abs(vy) > 1) {
-        this.sprite.setRotation(Math.atan2(vy, vx));
+        // Berechne den Winkel aus den Geschwindigkeitskomponenten
+        const angle = Math.atan2(vy, vx);
+        
+        // Setze die Rotation des Sprites auf diesen Winkel
+        this.sprite.setRotation(angle);
+        
+        // Debug-Ausgabe für die Rotation (nur für detaillierte Fehlersuche)
+        // console.log(`[BULLET] Rotation: ${(angle * 180 / Math.PI).toFixed(0)}°, vx=${vx.toFixed(0)}, vy=${vy.toFixed(0)}`);
       }
     }
   }
@@ -119,7 +126,7 @@ export class Bullet extends Entity {
     // Überprüfe, ob das Projektil aktiv und im Spielbereich ist
     if (!this.sprite || !this.sprite.active) return;
     
-    // Auto-Update der Rotation
+    // Auto-Update der Rotation - immer die Rotation an die aktuelle Flugrichtung anpassen
     this.updateRotation();
     
     // Überprüfe, ob das Projektil außerhalb des Bildschirms ist und zerstöre es
