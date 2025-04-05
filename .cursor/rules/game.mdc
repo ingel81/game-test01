@@ -3,6 +3,11 @@ description:
 globs: 
 alwaysApply: true
 ---
+---
+description: Basic rules
+globs: 
+alwaysApply: true
+---
 
 # Your rule content
 
@@ -10,4 +15,4 @@ Mache keine grundsätzlichen Änderungen außer du wirst darum gebeten.
 Behalte die Struktur bei.
 Mache nur worum du gebeten wirst.
 Ändere nichts am grundlegenden Setup wie Versionen von Bibliotheken, Typescript configs, etc
-Baue keine neuen Features ein, wenn nicht grundsätzlich explizit darum gebten wurde, auch nicht triviales.
+Baue grundsätzlich keine neuen Features ein, wenn nicht explizit darum gebeten wurde, auch nichts triviales.

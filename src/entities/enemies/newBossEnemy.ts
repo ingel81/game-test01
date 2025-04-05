@@ -747,7 +747,6 @@ export class BossEnemy extends BaseEnemy {
    * Wird aufgerufen, wenn der Boss zerstört wird
    */
   private onBossDestroyed(): void {
-    console.log(`[BOSS] Boss wird zerstört mit ${this.health} HP`);
     
     // Entferne sofort die Gesundheitsanzeige
     if (this.healthBar) {

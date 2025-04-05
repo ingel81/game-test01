@@ -101,21 +101,22 @@ export const Level1: LevelConfig = {
   name: 'First Encounters',
   description: 'The first enemies appear. Be careful and test your weapons.',
   difficulty: 1,
-  duration: 30000,
-  minAsteroids: 2,
-  maxAsteroids: 5,
+  duration: 60000,
+  minAsteroids: 20,
+  maxAsteroids: 50,
   asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID,
   introText: 'Enemy ships have been spotted in this sector. Eliminate them to protect our territory.',
   outroText: 'Well done! The first wave has been repelled.',
   
   waves: [
-    /*
+    
     {
       enemyType: EnemyType.STANDARD,
       count: 3,
       formation: FormationType.LINE,
       delay: 5000
     },
+    /*
     {
       enemyType: EnemyType.ADVANCED,
       count: 2,

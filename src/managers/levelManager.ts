@@ -48,7 +48,6 @@ export class LevelManager {
     this.eventBus.on(EventType.PAUSE_GAME, this.pauseLevel);
     this.eventBus.on(EventType.RESUME_GAME, this.resumeLevel);
     this.eventBus.on(EventType.GAME_OVER, this.stopLevel);
-    this.eventBus.on(EventType.BOSS_DESTROYED, this.onBossDestroyed);
     this.eventBus.on(EventType.ENEMY_DESTROYED, this.onEnemyDestroyed);
   }
   
@@ -615,7 +614,6 @@ export class LevelManager {
     this.eventBus.off(EventType.PAUSE_GAME, this.pauseLevel);
     this.eventBus.off(EventType.RESUME_GAME, this.resumeLevel);
     this.eventBus.off(EventType.GAME_OVER, this.stopLevel);
-    this.eventBus.off(EventType.BOSS_DESTROYED, this.onBossDestroyed);
     this.eventBus.off(EventType.ENEMY_DESTROYED, this.onEnemyDestroyed);
   }
   
