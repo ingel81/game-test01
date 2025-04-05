@@ -4,7 +4,8 @@
  */
 
 import { EventBus, EventType } from '../utils/eventBus';
-import { LevelConfig, Wave, TimedSpawn, TimedPickup, EnemyType, PickupType, Levels } from '../config/levelConfig';
+import { LevelConfig, Wave, TimedSpawn, TimedPickup, EnemyType, PickupType, FormationType } from '../config/levelConfig';
+import { GameLevels } from '../config/gameLevels';
 import { Constants } from '../utils/constants';
 import { GameScene } from '../scenes/gameScene';
 import { MusicManager } from './musicManager';
@@ -56,17 +57,21 @@ export class LevelManager {
    */
   public startLevel(levelIndex: number): void {
     console.log(`[LEVEL_MANAGER] Starte Level ${levelIndex}`);
+    console.log(`[LEVEL_MANAGER] GameLevels verfügbar: ${GameLevels.length}`);
+    console.log(`[LEVEL_MANAGER] GameLevels[0] ist: ${GameLevels[0]?.name || 'undefined'}`);
     this.reset();
     
     // Prüfe, ob Level existiert
-    if (levelIndex < 0 || levelIndex >= Levels.length) {
+    if (levelIndex < 0 || levelIndex >= GameLevels.length) {
       console.error(`[LEVEL_MANAGER] Level ${levelIndex} existiert nicht!`);
       return;
     }
     
     // Setze aktuelle Level-Daten
     this.currentLevelIndex = levelIndex;
-    this.currentLevel = Levels[levelIndex];
+    this.currentLevel = GameLevels[levelIndex];
+    console.log(`[LEVEL_MANAGER] Level gesetzt auf: ${this.currentLevel?.name || 'undefined'}`);
+    console.log(`[LEVEL_MANAGER] Level hat ${this.currentLevel?.waves?.length || 0} Wellen`);
     
     // Setze Schwierigkeit auf Level-Schwierigkeit
     this.difficultyManager.setDifficulty(this.currentLevel.difficulty);
@@ -96,7 +101,20 @@ export class LevelManager {
     
     // Level-spezifische Musik starten
     if (this.currentLevel.music) {
-      this.musicManager.playTrack(this.currentLevel.music);
+      try {
+        console.log(`[LEVEL_MANAGER] Versuche Musik zu spielen: ${this.currentLevel.music}`);
+        // Prüfe, ob die Musik im Cache existiert
+        if (this.scene.cache.audio.exists(this.currentLevel.music)) {
+          this.musicManager.playTrack(this.currentLevel.music);
+        } else {
+          console.log(`[LEVEL_MANAGER] Musik '${this.currentLevel.music}' nicht gefunden, spiele zufällige Musik`);
+          this.musicManager.playRandomGameplayTrack();
+        }
+      } catch (error) {
+        console.error(`[LEVEL_MANAGER] Fehler beim Abspielen der Musik: ${error}`);
+        // Fallback: Zufällige Musik
+        this.musicManager.playRandomGameplayTrack();
+      }
     } else {
       this.musicManager.playRandomGameplayTrack();
     }
@@ -125,7 +143,7 @@ export class LevelManager {
   public startNextLevel(): void {
     const nextLevelIndex = this.currentLevelIndex + 1;
     
-    if (nextLevelIndex < Levels.length) {
+    if (nextLevelIndex < GameLevels.length) {
       this.startLevel(nextLevelIndex);
     } else {
       console.log('[LEVEL_MANAGER] Keine weiteren Level verfügbar. Spiel abgeschlossen!');
@@ -201,6 +219,8 @@ export class LevelManager {
    * Startet die nächste Welle
    */
   private startNextWave(): void {
+    console.log(`[LEVEL_MANAGER] startNextWave aufgerufen, verbleibende Wellen: ${this.pendingWaves.length}`);
+    
     if (this.pendingWaves.length === 0) {
       console.log('[LEVEL_MANAGER] Alle Wellen abgeschlossen. Warte auf Levelende oder Boss.');
       return;
@@ -214,16 +234,21 @@ export class LevelManager {
     
     // Verzögerung für die Welle, falls angegeben
     const delay = nextWave.delay || 0;
+    console.log(`[LEVEL_MANAGER] Welle wird in ${delay}ms gestartet`);
     
     // Timer für die Welle erstellen
     const waveTimer = this.scene.time.delayedCall(
       delay,
       () => {
+        console.log(`[LEVEL_MANAGER] Wave Timer fired after ${delay}ms delay`);
         this.spawnWave(nextWave);
         // Nächste Welle starten nach einer kleinen Pause
         const nextWaveTimer = this.scene.time.delayedCall(
           2000, // 2 Sekunden Pause zwischen Wellen
-          this.startNextWave,
+          () => {
+            console.log(`[LEVEL_MANAGER] Next Wave Timer fired after 2000ms delay`);
+            this.startNextWave();
+          },
           [],
           this
         );
@@ -241,6 +266,12 @@ export class LevelManager {
    */
   private spawnWave(wave: Wave): void {
     console.log(`[LEVEL_MANAGER] Spawne Welle: ${wave.count}x ${wave.enemyType}`);
+    console.log(`[LEVEL_MANAGER] Formation: ${wave.formation}, Delay: ${wave.delay || 'undefined'}`);
+    console.log(`[LEVEL_MANAGER] Health Multiplier: ${wave.healthMultiplier || 1}, Speed Multiplier: ${wave.speedMultiplier || 1}`);
+    
+    // Check EnemyType values
+    console.log(`[LEVEL_MANAGER] EnemyType value: ${wave.enemyType}, type: ${typeof wave.enemyType}`);
+    console.log(`[LEVEL_MANAGER] EnemyType.STANDARD value: ${EnemyType.STANDARD}, type: ${typeof EnemyType.STANDARD}`);
     
     // Wenn diese Welle ein Level-End-Trigger ist, merken wir uns das
     if (wave.isLevelEndTrigger) {
@@ -268,13 +299,13 @@ export class LevelManager {
       let spawnDelay = 0;
       
       switch (wave.formation) {
-        case 'line':
+        case FormationType.LINE:
           // Gleichmäßig verteilt horizontal
           y = 150 + (screenHeight - 300) * (i / (wave.count - 1 || 1));
           spawnDelay = i * 300; // 300ms Abstand zwischen Spawns
           break;
         
-        case 'vFormation':
+        case FormationType.V_FORMATION:
           // V-Formation
           const center = wave.count / 2;
           const distance = Math.abs(i - center);
@@ -283,7 +314,7 @@ export class LevelManager {
           spawnDelay = distance * 200;
           break;
         
-        case 'square':
+        case FormationType.SQUARE:
           // Quadratische Formation
           const side = Math.ceil(Math.sqrt(wave.count));
           const row = Math.floor(i / side);
@@ -293,14 +324,14 @@ export class LevelManager {
           spawnDelay = (row * side + col) * 150;
           break;
         
-        case 'random':
+        case FormationType.RANDOM:
           // Zufällige Positionen
           y = Phaser.Math.Between(150, screenHeight - 150);
           x = baseX + Phaser.Math.Between(-50, 50);
           spawnDelay = Phaser.Math.Between(0, 1000);
           break;
         
-        case 'single':
+        case FormationType.SINGLE:
         default:
           // Einzelner Gegner oder Standard
           y = 150 + (screenHeight - 300) * (i / (wave.count - 1 || 1));
@@ -318,8 +349,12 @@ export class LevelManager {
             speedMultiplier: wave.speedMultiplier
           };
           
+          // Konvertiere den enemyType explizit zu einem String für den NewEnemyManager
+          const enemyTypeStr = String(wave.enemyType);
+          console.log(`[LEVEL_MANAGER] Spawne Gegner vom Typ ${enemyTypeStr} an Position (${x}, ${y})`);
+          
           // Gegner-Instanz erstellen und speichern
-          const enemy = this.enemyManager.spawnEnemyOfType(wave.enemyType, x, y, options);
+          const enemy = this.enemyManager.spawnEnemyOfType(enemyTypeStr, x, y, options);
           
           // Wenn der Gegner Teil einer Level-End-Trigger-Welle ist, markieren wir ihn
           if (wave.isLevelEndTrigger) {
@@ -703,5 +738,89 @@ export class LevelManager {
     
     // Fallback: Verwende den Registry-Wert
     return this.scene.registry.get('score') || 0;
+  }
+  
+  /**
+   * Startet ein Test-Level direkt, ohne auf die GameLevels zu warten
+   */
+  public startTestLevel(): void {
+    console.log(`[LEVEL_MANAGER] Starte Test-Level`);
+    this.reset();
+    
+    // Erstelle ein einfaches Testlevel
+    const testLevel: LevelConfig = {
+      id: 'test-level',
+      name: 'Test Level',
+      description: 'Ein einfaches Testlevel',
+      difficulty: 1,
+      duration: 60000, // 1 Minute
+      minAsteroids: 5,
+      maxAsteroids: 10,
+      asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID,
+      introText: 'Test Level gestartet',
+      outroText: 'Test Level beendet',
+      
+      waves: [
+        {
+          enemyType: EnemyType.STANDARD,
+          count: 3,
+          formation: FormationType.LINE,
+          delay: 2000
+        },
+        {
+          enemyType: EnemyType.ADVANCED,
+          count: 2,
+          formation: FormationType.SINGLE,
+          delay: 10000
+        },
+        {
+          enemyType: EnemyType.STANDARD,
+          count: 5,
+          formation: FormationType.V_FORMATION,
+          delay: 15000,
+          isLevelEndTrigger: true
+        }
+      ]
+    };
+    
+    // Setze aktuelle Level-Daten
+    this.currentLevelIndex = 0;
+    this.currentLevel = testLevel;
+    console.log(`[LEVEL_MANAGER] Test-Level gesetzt: ${this.currentLevel.name}`);
+    console.log(`[LEVEL_MANAGER] Test-Level hat ${this.currentLevel.waves.length} Wellen`);
+    
+    // Setze Schwierigkeit auf Level-Schwierigkeit
+    this.difficultyManager.setDifficulty(this.currentLevel.difficulty);
+    
+    // Konfiguriere SpawnManager mit Level-Einstellungen
+    if (this.currentLevel.minAsteroids !== undefined) {
+      this.spawnManager.setMinAsteroids(this.currentLevel.minAsteroids);
+    }
+    
+    if (this.currentLevel.maxAsteroids !== undefined) {
+      this.spawnManager.setMaxAsteroids(this.currentLevel.maxAsteroids);
+    }
+    
+    if (this.currentLevel.asteroidSpawnRate !== undefined) {
+      this.spawnManager.setAsteroidSpawnRate(this.currentLevel.asteroidSpawnRate);
+    }
+    
+    // Level-Intro anzeigen, falls vorhanden
+    if (this.currentLevel.introText && !this.levelIntroShown) {
+      this.showLevelIntro(this.currentLevel.introText, () => {
+        this.startLevelTimer();
+        this.levelIntroShown = true;
+      });
+    } else {
+      this.startLevelTimer();
+    }
+    
+    // Wellen vorbereiten
+    this.pendingWaves = [...this.currentLevel.waves];
+    console.log(`[LEVEL_MANAGER] Test-Level Wellen vorbereitet: ${this.pendingWaves.length}`);
+    this.startNextWave();
+    
+    this.levelStartTime = this.scene.time.now;
+    console.log(`[LEVEL_MANAGER] Test-Level gestartet: ${this.currentLevel.name}`);
   }
 } 

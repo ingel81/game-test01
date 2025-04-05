@@ -96,7 +96,7 @@ export interface LevelConfig {
 /**
  * Standard-Level-1-Konfiguration
  */
-export const Level1: LevelConfig = {
+export const debugLevel: LevelConfig = {
   id: 'level-1',
   name: 'First Encounters',
   description: 'The first enemies appear. Be careful and test your weapons.',
@@ -175,6 +175,8 @@ export const Level1: LevelConfig = {
  * Alle verfügbaren Level
  */
 export const Levels: LevelConfig[] = [
-  Level1
+  //debugLevel
   // Hier können später weitere Level hinzugefügt werden
 ]; 
+
+// Die Level werden in gameManager.ts oder einem anderen geeigneten Ort importiert und eingesetzt 

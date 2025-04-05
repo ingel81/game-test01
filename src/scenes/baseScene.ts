@@ -227,7 +227,7 @@ export abstract class BaseScene extends Phaser.Scene {
         const speed = starCircle.getData('speed');
         
         // Bewege den Stern horizontal nach links
-        starCircle.x -= speed * (delta / 1000) * 5;
+        starCircle.x -= speed * (delta / 1000) * 7;
         
         // Wenn der Stern den linken Rand verlässt, setze ihn rechts wieder ein
         if (starCircle.x < -10) {

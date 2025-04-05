@@ -170,6 +170,8 @@ export class GameScene extends BaseScene {
       
       // Starte das erste Level
       console.log('GameScene: Starte erstes Level');
+      
+      // Starte das erste reguläre Level
       this.levelManager.startLevel(0);
       
       console.log('GameScene: Initialisierung abgeschlossen');

@@ -162,35 +162,38 @@ export class NewEnemyManager {
     
     console.log(`[ENEMY_MANAGER] Spawne neuen Gegner vom Typ '${type}' an Position (${x}, ${y})`);
     console.log(`[ENEMY_MANAGER] Aktuelle Schwierigkeit: ${this.difficulty}`);
+    console.log(`[ENEMY_MANAGER] EnemyType Enum Check - STANDARD = ${EnemyType.STANDARD}, Gleichheit: ${type === EnemyType.STANDARD}`);
+    console.log(`[ENEMY_MANAGER] EnemyType direkt als String: ${type}`);
     
     const spawnStartTime = performance.now();
     
     switch (type) {
-      case EnemyType.STANDARD:
+      case 'standard':
         enemy = new StandardEnemy(this.scene, x, y, this.player);
         console.log(`[ENEMY_MANAGER] StandardEnemy erstellt mit ${enemy.getHealth()} HP`);
         break;
-      case EnemyType.ADVANCED:
+      case 'advanced':
         enemy = new AdvancedEnemy(this.scene, x, y, this.player);
         console.log(`[ENEMY_MANAGER] AdvancedEnemy erstellt mit ${enemy.getHealth()} HP`);
         break;
-      case EnemyType.ELITE:
+      case 'elite':
         enemy = new EliteEnemy(this.scene, x, y, this.player);
         console.log(`[ENEMY_MANAGER] EliteEnemy erstellt mit ${enemy.getHealth()} HP`);
         break;
-      case EnemyType.BOSS:
+      case 'boss':
         enemy = new BossEnemy(this.scene, x, y, this.player);
         console.log(`[ENEMY_MANAGER] *** BOSS SPAWNED *** mit ${enemy.getHealth()} HP`);
         // Boss-Spawned-Event auslösen
         this.eventBus.emit(EventType.BOSS_SPAWNED, enemy);
         break;
-      case EnemyType.TURRET:
+      case 'turret':
         enemy = new TurretEnemy(this.scene, x, y, this.player);
         this.turretActive = true;
         console.log(`[ENEMY_MANAGER] TurretEnemy erstellt mit ${enemy.getHealth()} HP`);
         console.log(`[ENEMY_MANAGER] TurretActive-Flag gesetzt auf ${this.turretActive}`);
         break;
       default:
+        console.warn(`[ENEMY_MANAGER] Unbekannter Gegnertyp '${type}', erstelle StandardEnemy`);
         enemy = new StandardEnemy(this.scene, x, y, this.player);
         console.log(`[ENEMY_MANAGER] Fallback: StandardEnemy erstellt mit ${enemy.getHealth()} HP`);
     }
