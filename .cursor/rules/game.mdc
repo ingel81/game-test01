@@ -11,8 +11,10 @@ alwaysApply: true
 
 # Your rule content
 
-Mache keine grundsätzlichen Änderungen außer du wirst darum gebeten.
-Behalte die Struktur bei.
-Mache nur worum du gebeten wirst.
+Falls Informationen zur grundsätzlichen Struktur des Projekts benötigt werden einfach in die readme.md schauen.
+Nach Implementierung neuer Dinge oder Änderungen von Dingen muss stets die readme.md aktualisiert werden.
+
+Mache keine grundsätzlichen Änderungen außer du wirst darum gebeten. Behalte die Ordnerstruktur bei.
+Mache nur worum du gebeten wirst. Baue grundsätzlich keine neuen Features ein, wenn nicht explizit darum gebeten wurde, auch nichts triviales.
+
 Ändere nichts am grundlegenden Setup wie Versionen von Bibliotheken, Typescript configs, etc
-Baue grundsätzlich keine neuen Features ein, wenn nicht explizit darum gebeten wurde, auch nichts triviales.
