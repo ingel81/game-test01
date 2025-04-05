@@ -25,17 +25,18 @@ export abstract class GameObject extends Entity {
     // Stelle sicher, dass der Schaden nicht negativ ist und als Ganzzahl behandelt wird
     amount = Math.max(0, Math.round(amount));
     
-    console.log(`Schaden erhalten: ${amount}, Gesundheit vor Schaden: ${this.health}`);
+    console.log(`[GAME_OBJECT] takeDamage in ${this.constructor.name}: amount=${amount}, health vorher=${this.health}`);
     
     this.health -= amount;
     
     // Begrenzen auf nicht-negative Werte
     this.health = Math.max(0, this.health);
     
-    console.log(`Gesundheit nach Schaden: ${this.health}`);
+    console.log(`[GAME_OBJECT] Gesundheit nach Schaden in ${this.constructor.name}: ${this.health}`);
     
     if (this.health <= 0) {
       this.health = 0;
+      console.log(`[GAME_OBJECT] ${this.constructor.name} wird zerstört`);
       this.onDestroy();
       this.isDestroyed = true;
       return true;

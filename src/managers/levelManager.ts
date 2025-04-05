@@ -36,6 +36,7 @@ export class LevelManager {
   private pendingWaves: Wave[] = [];
   private currentWaveIndex: number = 0;
   private levelEndTriggerWaves: Map<number, boolean> = new Map(); // Speichert die Wellen-Indices, die Level-End-Trigger sind
+  private readonly MAX_LEVEL_DURATION: number = 90000; // 90 Sekunden maximale Dauer, um Probleme mit langen Timern zu vermeiden
   
   constructor(scene: GameScene, enemyManager: NewEnemyManager, spawnManager: SpawnManager, difficultyManager: DifficultyManager) {
     this.scene = scene;
@@ -70,6 +71,13 @@ export class LevelManager {
     // Setze aktuelle Level-Daten
     this.currentLevelIndex = levelIndex;
     this.currentLevel = GameLevels[levelIndex];
+    this.levelCompleted = false;
+    this.currentWaveIndex = 0;
+    this.levelEndTriggerWaves.clear();
+    
+    // Zeitstempel für den Levelstart setzen
+    this.levelStartTime = Date.now();
+    
     console.log(`[LEVEL_MANAGER] Level gesetzt auf: ${this.currentLevel?.name || 'undefined'}`);
     console.log(`[LEVEL_MANAGER] Level hat ${this.currentLevel?.waves?.length || 0} Wellen`);
     
@@ -88,7 +96,7 @@ export class LevelManager {
     if (this.currentLevel.asteroidSpawnRate !== undefined) {
       this.spawnManager.setAsteroidSpawnRate(this.currentLevel.asteroidSpawnRate);
     }
-    
+        
     // Level-Intro anzeigen, falls vorhanden
     if (this.currentLevel.introText && !this.levelIntroShown) {
       this.showLevelIntro(this.currentLevel.introText, () => {
@@ -119,21 +127,13 @@ export class LevelManager {
       this.musicManager.playRandomGameplayTrack();
     }
     
-    // Wellen vorbereiten
-    this.pendingWaves = [...this.currentLevel.waves];
+    // Timed Spawns und Pickups initialisieren
+    this.setupTimedSpawns();
+    this.setupTimedPickups();
+    
+    // Starte die erste Welle
     this.startNextWave();
     
-    // Zeitgesteuerte Spawns starten, falls vorhanden
-    if (this.currentLevel.timedSpawns) {
-      this.setupTimedSpawns(this.currentLevel.timedSpawns);
-    }
-    
-    // Zeitgesteuerte Pickups starten, falls vorhanden
-    if (this.currentLevel.timedPickups) {
-      this.setupTimedPickups(this.currentLevel.timedPickups);
-    }
-    
-    this.levelStartTime = this.scene.time.now;
     console.log(`[LEVEL_MANAGER] Level ${this.currentLevel.name} gestartet`);
   }
   
@@ -207,8 +207,11 @@ export class LevelManager {
   private startLevelTimer(): void {
     if (!this.currentLevel) return;
     
+    // Wir verwenden eine kürzere Maximallaufzeit, um Probleme zu vermeiden
+    const effectiveDuration = Math.min(this.currentLevel.duration, this.MAX_LEVEL_DURATION);
+    
     this.levelTimer = this.scene.time.delayedCall(
-      this.currentLevel.duration,
+      effectiveDuration,
       this.onLevelComplete,
       [],
       this
@@ -216,49 +219,47 @@ export class LevelManager {
   }
   
   /**
-   * Startet die nächste Welle
+   * Startet die nächste Welle (falls vorhanden)
    */
   private startNextWave(): void {
-    console.log(`[LEVEL_MANAGER] startNextWave aufgerufen, verbleibende Wellen: ${this.pendingWaves.length}`);
+    if (!this.currentLevel) return;
     
-    if (this.pendingWaves.length === 0) {
-      console.log('[LEVEL_MANAGER] Alle Wellen abgeschlossen. Warte auf Levelende oder Boss.');
+    // Wenn es keine weiteren Wellen gibt, Level beenden (falls nicht bereits beendet)
+    if (this.currentWaveIndex >= this.currentLevel.waves.length) {
+      if (!this.levelCompleted) {
+        console.log(`[LEVEL_MANAGER] Keine weiteren Wellen vorhanden, Level wird beendet`);
+        this.onLevelComplete();
+      }
       return;
     }
     
-    const nextWave = this.pendingWaves.shift();
-    if (!nextWave) return;
+    const wave = this.currentLevel.waves[this.currentWaveIndex];
     
-    this.currentWaveIndex++;
-    console.log(`[LEVEL_MANAGER] Starte Welle ${this.currentWaveIndex}: ${nextWave.count}x ${nextWave.enemyType} in ${nextWave.formation}`);
+    // Überprüfen, ob der Timer für die aktuelle Welle die maximale Laufzeit überschreitet
+    const levelElapsedTime = Date.now() - this.levelStartTime;
+    if (levelElapsedTime + wave.delay > this.MAX_LEVEL_DURATION) {
+      console.log(`[LEVEL_MANAGER] Welle ${this.currentWaveIndex} würde MAX_LEVEL_DURATION überschreiten, wird übersprungen`);
+      this.currentWaveIndex++;
+      this.startNextWave();
+      return;
+    }
     
-    // Verzögerung für die Welle, falls angegeben
-    const delay = nextWave.delay || 0;
-    console.log(`[LEVEL_MANAGER] Welle wird in ${delay}ms gestartet`);
+    // Timer für die nächste Welle starten
+    console.log(`[LEVEL_MANAGER] Timer für Welle ${this.currentWaveIndex} wird gestartet (Verzögerung: ${wave.delay}ms)`);
     
-    // Timer für die Welle erstellen
-    const waveTimer = this.scene.time.delayedCall(
-      delay,
+    const timer = this.scene.time.delayedCall(
+      wave.delay,
       () => {
-        console.log(`[LEVEL_MANAGER] Wave Timer fired after ${delay}ms delay`);
-        this.spawnWave(nextWave);
-        // Nächste Welle starten nach einer kleinen Pause
-        const nextWaveTimer = this.scene.time.delayedCall(
-          2000, // 2 Sekunden Pause zwischen Wellen
-          () => {
-            console.log(`[LEVEL_MANAGER] Next Wave Timer fired after 2000ms delay`);
-            this.startNextWave();
-          },
-          [],
-          this
-        );
-        this.waveTimers.push(nextWaveTimer);
+        console.log(`[LEVEL_MANAGER] Starte Welle ${this.currentWaveIndex}`);
+        this.spawnWave(wave);
+        this.currentWaveIndex++;
+        this.startNextWave();
       },
       [],
       this
     );
     
-    this.waveTimers.push(waveTimer);
+    this.waveTimers.push(timer);
   }
   
   /**
@@ -375,11 +376,22 @@ export class LevelManager {
   /**
    * Richtet zeitgesteuerte Gegner-Spawns ein
    */
-  private setupTimedSpawns(timedSpawns: TimedSpawn[]): void {
-    timedSpawns.forEach(spawn => {
+  private setupTimedSpawns(): void {
+    if (!this.currentLevel || !this.currentLevel.timedSpawns) return;
+
+    // Alle vorherigen Timer löschen
+    this.clearAllTimedSpawnTimers();
+
+    this.currentLevel.timedSpawns.forEach(spawn => {
+      // Stelle sicher, dass der Timer nicht länger als MAX_LEVEL_DURATION läuft
+      const spawnTime = Math.min(spawn.time, this.MAX_LEVEL_DURATION);
+      
       const timer = this.scene.time.delayedCall(
-        spawn.time,
+        spawnTime,
         () => {
+          // Wenn das Level bereits beendet ist, keine weiteren Gegner spawnen
+          if (this.levelCompleted) return;
+          
           console.log(`[LEVEL_MANAGER] Zeitgesteuerter Spawn: ${spawn.count}x ${spawn.enemyType}`);
           
           const options = {
@@ -399,25 +411,44 @@ export class LevelManager {
         [],
         this
       );
-      
+
       this.timedSpawnTimers.push(timer);
     });
   }
   
   /**
-   * Richtet zeitgesteuerte Pickup-Spawns ein
+   * Löscht alle Timer für zeitgesteuerte Spawns
    */
-  private setupTimedPickups(timedPickups: TimedPickup[]): void {
-    timedPickups.forEach(pickup => {
+  private clearAllTimedSpawnTimers(): void {
+    this.timedSpawnTimers.forEach(timer => {
+      if (timer) timer.remove();
+    });
+    this.timedSpawnTimers = [];
+  }
+  
+  /**
+   * Richtet die zeitgesteuerten Pickups für das Level ein
+   */
+  private setupTimedPickups(): void {
+    if (!this.currentLevel || !this.currentLevel.timedPickups) return;
+
+    // Alle vorherigen Timer löschen
+    this.clearAllTimedPickupTimers();
+
+    this.currentLevel.timedPickups.forEach((timedPickup) => {
+      // Stelle sicher, dass der Timer nicht länger als MAX_LEVEL_DURATION läuft
+      const pickupTime = Math.min(timedPickup.time, this.MAX_LEVEL_DURATION);
+      
       const timer = this.scene.time.delayedCall(
-        pickup.time,
+        pickupTime,
         () => {
           // Wenn das Level bereits beendet ist, keine weiteren Pickups spawnen
           if (this.levelCompleted) return;
           
-          console.log(`[LEVEL_MANAGER] Zeitgesteuerter Pickup: ${pickup.count}x ${pickup.type}`);
+          console.log(`[LEVEL_MANAGER] Zeitgesteuerter Pickup: ${timedPickup.type} bei Zeit ${pickupTime}`);
           
-          for (let i = 0; i < pickup.count; i++) {
+          // Verwende die bestehende Logik für das Spawnen von Pickups
+          for (let i = 0; i < (timedPickup.count || 1); i++) {
             // Verzögertes Spawnen der Pickups
             this.scene.time.delayedCall(
               i * 500, // 500ms Abstand zwischen Spawns
@@ -425,9 +456,9 @@ export class LevelManager {
                 const x = this.scene.scale.width + 50;
                 const y = Phaser.Math.Between(100, this.scene.scale.height - 100);
                 
-                if (pickup.type === PickupType.ENERGY) {
+                if (timedPickup.type === PickupType.ENERGY) {
                   this.spawnManager.spawnEnergyPickup(x, y);
-                } else if (pickup.type === PickupType.POWER) {
+                } else if (timedPickup.type === PickupType.POWER) {
                   this.spawnManager.spawnPowerPickup(x, y);
                 }
               },
@@ -439,11 +470,20 @@ export class LevelManager {
         [],
         this
       );
-      
+
       this.timedPickupTimers.push(timer);
     });
-  }  
-
+  }
+  
+  /**
+   * Löscht alle Timer für zeitgesteuerte Pickups
+   */
+  private clearAllTimedPickupTimers(): void {
+    this.timedPickupTimers.forEach(timer => {
+      if (timer) timer.remove();
+    });
+    this.timedPickupTimers = [];
+  }
   
   /**
    * Handler für Level-Abschluss
@@ -603,23 +643,28 @@ export class LevelManager {
   }
   
   /**
-   * Löscht alle Timer
+   * Löscht alle aktiven Timer (Wellen, Spawns, Pickups)
    */
   private clearAllTimers(): void {
+    // Level-Timer löschen
     if (this.levelTimer) {
       this.levelTimer.remove();
       this.levelTimer = null;
     }
-    
-    this.waveTimers.forEach(timer => timer.remove());
+
+    // Wellen-Timer löschen
+    this.waveTimers.forEach(timer => {
+      if (timer) timer.remove();
+    });
     this.waveTimers = [];
-    
-    this.timedSpawnTimers.forEach(timer => timer.remove());
-    this.timedSpawnTimers = [];
-    
-    this.timedPickupTimers.forEach(timer => timer.remove());
-    this.timedPickupTimers = [];
-    
+
+    // Timed Spawn-Timer löschen
+    this.clearAllTimedSpawnTimers();
+
+    // Timed Pickup-Timer löschen
+    this.clearAllTimedPickupTimers();
+
+    // Boss-Timer löschen
     if (this.bossTimer) {
       this.bossTimer.remove();
       this.bossTimer = null;

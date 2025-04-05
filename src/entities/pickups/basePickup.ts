@@ -112,6 +112,7 @@ export abstract class BasePickup extends GameObject {
    * Wird aufgerufen, wenn das Pickup eingesammelt wird
    */
   public collect(): void {
+    console.log(`[BASE_PICKUP] collect-Methode aufgerufen für ${this.constructor.name}`);
     // Erstelle einen Aufsammel-Effekt
     const collectEffect = this.scene.add.circle(this.sprite.x, this.sprite.y, 20, this.color, 0.5);
     this.scene.tweens.add({
@@ -131,9 +132,11 @@ export abstract class BasePickup extends GameObject {
     });
 
     // Konkrete Implementierung durch abgeleitete Klassen
+    console.log(`[BASE_PICKUP] Rufe onCollect-Methode für ${this.constructor.name} auf`);
     this.onCollect();
 
     // Zerstöre das Pickup
+    console.log(`[BASE_PICKUP] Rufe destroy-Methode für ${this.constructor.name} auf`);
     this.destroy();
   }
 
@@ -153,6 +156,7 @@ export abstract class BasePickup extends GameObject {
    * Wird aufgerufen, wenn das Pickup zerstört wird
    */
   protected onDestroy(): void {
+    console.log(`[BASE_PICKUP] onDestroy-Methode aufgerufen für ${this.constructor.name}`);
     // Entferne den Event-Listener
     if (this.updateEvent) {
       this.scene.events.off('preupdate', this.syncVisuals, this);
@@ -173,5 +177,6 @@ export abstract class BasePickup extends GameObject {
       this.visualText.destroy();
       this.visualText = null;
     }
+    console.log(`[BASE_PICKUP] onDestroy-Methode abgeschlossen für ${this.constructor.name}`);
   }
 } 

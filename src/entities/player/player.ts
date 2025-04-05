@@ -414,7 +414,10 @@ export class Player extends GameObject {
       amount = 0;
     }
     
+    console.log(`[PLAYER] takeDamage aufgerufen mit amount: ${amount}, aktuelle Gesundheit: ${this.health}`);
+    
     const isDead = super.takeDamage(amount);
+    console.log(`[PLAYER] Nach takeDamage: Gesundheit=${this.health}, isDead=${isDead}`);
 
     // Event für UI-Aktualisierung auslösen
     this.eventBus.emit(EventType.PLAYER_DAMAGED, this.health);

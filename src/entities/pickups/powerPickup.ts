@@ -19,7 +19,9 @@ export class PowerPickup extends BasePickup {
    * Wird aufgerufen, wenn das Pickup eingesammelt wird
    */
   protected onCollect(): void {
+    console.log('[POWER_PICKUP] onCollect wird aufgerufen');
     // Teile der Spielwelt mit, dass ein Power-Pickup eingesammelt wurde
     this.eventBus.emit(EventType.POWER_PICKUP_COLLECTED);
+    console.log('[POWER_PICKUP] Event POWER_PICKUP_COLLECTED wurde ausgelöst');
   }
 } 

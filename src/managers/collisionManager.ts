@@ -260,12 +260,25 @@ export class CollisionManager {
     if (!bullet.active || !player.active) return;
     
     console.log('Kollision: Feindlicher Schuss trifft Spieler');
+    console.log('[COLLISION_MANAGER] Feindlicher Schuss Details:', {
+      bulletActive: bullet.active,
+      bulletPosition: { x: bullet.x, y: bullet.y },
+      playerHealth: this.player.getHealth(),
+      schadensWert: Constants.DAMAGE.ENEMY_BULLET,
+      difficulty: this.scene.registry.get('difficulty') || 'unbekannt',
+      level: this.scene.registry.get('level') || 'unbekannt'
+    });
     
     // Entferne das Projektil
     bullet.destroy();
     
     // Spieler nimmt Schaden
-    this.player.takeDamage(Constants.DAMAGE.ENEMY_BULLET);
+    console.log('[COLLISION_MANAGER] Spieler nimmt Schaden:', Constants.DAMAGE.ENEMY_BULLET);
+    const isDead = this.player.takeDamage(Constants.DAMAGE.ENEMY_BULLET);
+    console.log('[COLLISION_MANAGER] Spieler nach Schaden:', {
+      health: this.player.getHealth(),
+      isDead: isDead
+    });
     
     // Visuelles Feedback durch kleine Explosion
     this.createExplosion(bullet.x, bullet.y, 0.5);
@@ -338,13 +351,32 @@ export class CollisionManager {
       return;
     }
     
+    console.log('[COLLISION_MANAGER] Player-Pickup Kollision erkannt:', pickup);
+    
     // Finde das entsprechende GameObject aus dem SpawnManager
     const allPickups = this.spawnManager.getAllPickups();
     const pickupObject = allPickups.find(p => p.getSprite() === pickup);
     
     if (pickupObject) {
+      console.log('[COLLISION_MANAGER] Pickup-Objekt gefunden:', pickupObject);
+      console.log('[COLLISION_MANAGER] Pickup-Typ:', pickupObject.constructor.name);
+      
+      // Überprüfen, ob es sich um ein PowerPickup handelt
+      if (pickupObject.constructor.name === 'PowerPickup') {
+        console.log('[COLLISION_MANAGER] Als PowerPickup identifiziert, rufe destroyPowerPickup auf');
+        // PowerPickup aus dem Array im SpawnManager entfernen
+        this.spawnManager.destroyPowerPickup(pickup);
+      } else {
+        console.log('[COLLISION_MANAGER] Als normales Pickup identifiziert, rufe destroyPickup auf');
+        // EnergyPickup aus dem Array im SpawnManager entfernen
+        this.spawnManager.destroyPickup(pickup);
+      }
+      
       // Rufe die collect-Methode des Pickups auf
+      console.log('[COLLISION_MANAGER] Rufe collect-Methode auf');
       pickupObject.collect();
+    } else {
+      console.warn('[COLLISION_MANAGER] Kein entsprechendes Pickup-Objekt gefunden!');
     }
   }
 

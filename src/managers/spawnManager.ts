@@ -21,8 +21,8 @@ export class SpawnManager {
   private lastUpdateTime: number = 0;
   private minAsteroids: number = 2; // Minimale Anzahl an Asteroiden
   private maxAsteroids: number = 5; // Maximale Anzahl an Asteroiden
-  private maxPickups: number = 3; // Maximale Anzahl an Pickups
-  private maxPowerPickups: number = 1; // Maximale Anzahl an Power-Pickups
+  //private maxPickups: number = 3; // Maximale Anzahl an Pickups
+  //private maxPowerPickups: number = 2; // Maximale Anzahl an Power-Pickups
   private asteroidSpawnRate: number = Constants.SPAWN_RATE_ASTEROID;
 
   constructor(scene: Phaser.Scene) {
@@ -172,7 +172,7 @@ export class SpawnManager {
     if (this.isPaused) return;
     
     // Spawne seltener und begrenzt für bessere Performance
-    if (Math.random() > Constants.ENERGY_PICKUP_SPAWN_CHANCE || this.pickups.length >= this.maxPickups) return;
+    if (Math.random() > Constants.ENERGY_PICKUP_SPAWN_CHANCE ) return;
     
     this.spawnEnergyPickup(this.scene.scale.width + 50, Phaser.Math.Between(100, this.scene.scale.height - 100));
   }
@@ -184,13 +184,7 @@ export class SpawnManager {
     if (this.isPaused) {
       console.log('[SPAWN_MANAGER] Spawning ist pausiert, kein Pickup erzeugt');
       return null;
-    }
-    
-    // Begrenze die Anzahl der Pickups für bessere Performance
-    if (this.pickups.length >= this.maxPickups) {
-      console.log('[SPAWN_MANAGER] Maximale Anzahl an Pickups erreicht:', this.pickups.length);
-      return null;
-    }
+    }   
     
     console.log('[SPAWN_MANAGER] Erzeuge neues EnergyPickup');
     const pickup = new EnergyPickup(this.scene, x, y);
@@ -207,15 +201,10 @@ export class SpawnManager {
       return null;
     }
     
-    // Begrenze die Anzahl der Power-Pickups für bessere Performance
-    if (this.powerPickups.length >= this.maxPowerPickups) {
-      console.log('[SPAWN_MANAGER] Maximale Anzahl an Power-Pickups erreicht:', this.powerPickups.length);
-      return null;
-    }
-    
     console.log('[SPAWN_MANAGER] Erzeuge neues PowerPickup');
     const pickup = new PowerPickup(this.scene, x, y);
     this.powerPickups.push(pickup);
+    console.log('[SPAWN_MANAGER] PowerPickups nach Erzeugung:', this.powerPickups.length, this.powerPickups);
     return pickup;
   }
 
@@ -362,6 +351,25 @@ export class SpawnManager {
       const pickupToDestroy = this.pickups[pickupIndex];
       pickupToDestroy.destroy();
       this.pickups.splice(pickupIndex, 1);
+    }
+  }
+
+  /**
+   * Zerstört ein Power-Pickup
+   */
+  public destroyPowerPickup(pickup: Phaser.GameObjects.GameObject): void {
+    console.log('[SPAWN_MANAGER] destroyPowerPickup aufgerufen. Aktuelle PowerPickups:', this.powerPickups.length);
+    const pickupIndex = this.powerPickups.findIndex(p => p.getSprite() === pickup);
+    console.log('[SPAWN_MANAGER] PowerPickup Index im Array:', pickupIndex);
+    
+    if (pickupIndex !== -1) {
+      const pickupToDestroy = this.powerPickups[pickupIndex];
+      console.log('[SPAWN_MANAGER] PowerPickup wird zerstört:', pickupToDestroy);
+      pickupToDestroy.destroy();
+      this.powerPickups.splice(pickupIndex, 1);
+      console.log('[SPAWN_MANAGER] PowerPickups nach Entfernung:', this.powerPickups.length, this.powerPickups);
+    } else {
+      console.warn('[SPAWN_MANAGER] PowerPickup nicht im Array gefunden, kann nicht entfernt werden');
     }
   }
 

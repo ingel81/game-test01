@@ -24,14 +24,22 @@ export class Constants {
   public static readonly BULLET_SPEED: number = 500;
   public static readonly BULLET_DAMAGE: number = 25;
   public static readonly ENEMY_BULLET_SPEED: number = 300;
-  public static readonly ENEMY_BULLET_DAMAGE: number = 10;
+  public static readonly ENEMY_BULLET_DAMAGE: number = 20;
   public static readonly PLAYER_MAX_POWER_LEVEL: number = 7; // Maximales Power-Level für Spielerwaffe
   
   // Schaden und Heilung
   public static readonly DAMAGE = {
     ENEMY_COLLISION: 20,
-    ENEMY_BULLET: 10
+    ENEMY_BULLET: 20
   };
+  
+  // Debug-Ausgabe für Schadenskonstanten
+  static {
+    console.log('[CONSTANTS] Schadenskonstanten:', {
+      ENEMY_BULLET_DAMAGE: Constants.ENEMY_BULLET_DAMAGE,
+      DAMAGE_ENEMY_BULLET: Constants.DAMAGE.ENEMY_BULLET
+    });
+  }
   
   public static readonly HEAL = {
     ENERGY_PICKUP: 20
@@ -65,7 +73,7 @@ export class Constants {
   public static readonly ENERGY_HEAL_AMOUNT: number = 20;
   public static readonly PICKUP_LIFETIME: number = 10000; // 10 Sekunden (allgemeine Lebensdauer für Pickups)
   public static readonly ENERGY_PICKUP_LIFETIME: number = 10000; // 10 Sekunden
-  public static readonly ENERGY_PICKUP_SPAWN_CHANCE: number = 0.3; // 30% Chance bei regulärem Spawn
+  public static readonly ENERGY_PICKUP_SPAWN_CHANCE: number = 0.1; // 30% Chance bei regulärem Spawn
   public static readonly ENEMY_DROP_CHANCE: number = 0.1; // 10% Chance bei Zerstörung eines normalen Feindes 
   public static readonly BOSS_DROP_CHANCE: number = 0.5; // 50% Chance bei Zerstörung eines Bosses
   
