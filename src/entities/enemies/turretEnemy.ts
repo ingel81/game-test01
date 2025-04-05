@@ -10,6 +10,7 @@ import { MovementPattern } from "./components/movementComponent";
 import { ShootingPattern } from "./components/weaponComponent";
 import { EventBus } from "../../utils/eventBus";
 import { BulletFactory } from "../../factories/BulletFactory";
+import { AssetManager, AssetKey } from "../../utils/assetManager";
 
 export class TurretEnemy extends BaseEnemy {
   // Statischer Klassenname, der im Build erhalten bleibt
@@ -25,9 +26,12 @@ export class TurretEnemy extends BaseEnemy {
   private barrelOffsetY: number = 7; // Vertikaler Abstand zwischen den Läufen
 
   constructor(scene: Phaser.Scene, x: number, y: number, player: Player) {
+    // Asset-Manager holen
+    const assetManager = AssetManager.getInstance();
+    
     // Konfiguration für den Geschützturm
     const config: EnemyConfig = {
-      texture: Constants.ASSET_TURRET_BASE,
+      texture: assetManager.getKey(AssetKey.TURRET_BASE),
       health: 100,
       speed: 30, // Sehr langsame Bewegung (nur in X-Richtung)
       scoreValue: 150,
@@ -68,7 +72,7 @@ export class TurretEnemy extends BaseEnemy {
     this.fireRate = config.fireRate;
 
     // Erstelle den oberen Teil des Turms
-    this.turretTop = scene.add.sprite(x, y, Constants.ASSET_TURRET_TOP);
+    this.turretTop = scene.add.sprite(x, y, assetManager.getKey(AssetKey.TURRET_TOP));
     this.turretTop.setOrigin(0.7, 0.5); // Drehpunkt weiter rechts setzen (anstatt 0.5, 0.5)
     this.turretTop.setScale(0.2);
     this.turretTop.setDepth(this.sprite.depth + 1); // Über der Basis anzeigen

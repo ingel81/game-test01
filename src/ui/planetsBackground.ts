@@ -1,4 +1,5 @@
 import { Constants } from '../utils/constants';
+import { AssetManager, AssetKey } from '../utils/assetManager';
 
 /**
  * PlanetsBackground-Klasse
@@ -103,7 +104,8 @@ export class PlanetsBackground {
     
     // Wähle zufällig einen der verfügbaren Planeten
     const planetNumber = Phaser.Math.Between(1, 16);
-    const planetImg = `planet-${planetNumber}`;
+    const assetManager = AssetManager.getInstance();
+    const planetKey = assetManager.getKey(this.getPlanetAssetKey(planetNumber));
     
     // Bestimme zufällige Position und Größe
     const y = Phaser.Math.Between(100, this.scene.scale.height - 100);
@@ -113,7 +115,7 @@ export class PlanetsBackground {
     const planet = this.scene.add.image(
       this.scene.scale.width + 300, // Noch weiter rechts für größere Planeten
       y,
-      planetImg
+      planetKey
     );
     
     // Konfiguriere den Planeten
@@ -139,6 +141,31 @@ export class PlanetsBackground {
     
     // Füge den Planeten zur Gruppe hinzu
     this.planets.add(planet);
+  }
+  
+  /**
+   * Gibt den AssetKey für eine Planeten-Nummer zurück
+   */
+  private getPlanetAssetKey(number: number): AssetKey {
+    switch (number) {
+      case 1: return AssetKey.PLANET_1;
+      case 2: return AssetKey.PLANET_2;
+      case 3: return AssetKey.PLANET_3;
+      case 4: return AssetKey.PLANET_4;
+      case 5: return AssetKey.PLANET_5;
+      case 6: return AssetKey.PLANET_6;
+      case 7: return AssetKey.PLANET_7;
+      case 8: return AssetKey.PLANET_8;
+      case 9: return AssetKey.PLANET_9;
+      case 10: return AssetKey.PLANET_10;
+      case 11: return AssetKey.PLANET_11;
+      case 12: return AssetKey.PLANET_12;
+      case 13: return AssetKey.PLANET_13;
+      case 14: return AssetKey.PLANET_14;
+      case 15: return AssetKey.PLANET_15;
+      case 16: return AssetKey.PLANET_16;
+      default: return AssetKey.PLANET_1;
+    }
   }
   
   /**

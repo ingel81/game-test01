@@ -12,6 +12,7 @@ import { GameObject } from '../gameObject';
 import { EventBus, EventType } from '../../utils/eventBus';
 import { BulletFactory } from '../../factories/BulletFactory';
 import { Helpers } from '../../utils/helpers';
+import { AssetManager, AssetKey } from '../../utils/assetManager';
 
 // Definiere die verschiedenen Bossphasen
 type BossPhase = 'entry' | 'phase1' | 'phase2' | 'phase3' | 'rage' | 'retreat';
@@ -19,6 +20,9 @@ type BossPhase = 'entry' | 'phase1' | 'phase2' | 'phase3' | 'rage' | 'retreat';
 export class BossEnemy extends BaseEnemy {
   // Statischer Klassenname, der im Build erhalten bleibt
   public static enemyType = 'BossEnemy';
+  
+  // Asset-Manager
+  private assetManager: AssetManager;
   
   // Boss-spezifische Eigenschaften
   private currentPhase: BossPhase = 'entry';
@@ -56,7 +60,7 @@ export class BossEnemy extends BaseEnemy {
   constructor(scene: Phaser.Scene, x: number, y: number, player: Player) {
     // Konfiguriere den Boss-Gegner
     const config: EnemyConfig = {
-      texture: Constants.ASSET_BOSS01,
+      texture: AssetManager.getInstance().getKey(AssetKey.BOSS01),
       health: 200, // Hohe Gesundheit
       speed: 80, // Langsamer als normale Gegner
       scoreValue: 1000, // Viele Punkte
@@ -91,6 +95,9 @@ export class BossEnemy extends BaseEnemy {
     };
     
     super(scene, x, y, player, config);
+    
+    // AssetManager initialisieren
+    this.assetManager = AssetManager.getInstance();
     
     // Boss-spezifische Initialisierung
     this.initBoss();
@@ -306,7 +313,7 @@ export class BossEnemy extends BaseEnemy {
     });
     
     // Sound beim Phasenwechsel
-    this.scene.sound.play(Constants.SOUND_ENEMY_SHOOT, {
+    this.scene.sound.play(this.assetManager.getKey(AssetKey.SOUND_ENEMY_SHOOT), {
       volume: 0.5
     });
   }
@@ -379,7 +386,7 @@ export class BossEnemy extends BaseEnemy {
       // Hier musst du die entsprechende Klasse importieren und verwenden
       // Für dieses Beispiel nutzen wir BaseEnemy direkt
       const config: EnemyConfig = {
-        texture: Constants.ASSET_ENEMY01,
+        texture: this.assetManager.getKey(AssetKey.ENEMY01),
         health: 50,
         speed: 120,
         scoreValue: 20,
@@ -565,7 +572,7 @@ export class BossEnemy extends BaseEnemy {
         
         // Sound-Effekt bei jedem dritten Schuss
         if (i % 3 === 0) {
-          this.scene.sound.play(Constants.SOUND_ENEMY_SHOOT, { volume: 0.2 });
+          this.scene.sound.play(this.assetManager.getKey(AssetKey.SOUND_ENEMY_SHOOT), { volume: 0.2 });
         }
       });
     }
@@ -604,7 +611,7 @@ export class BossEnemy extends BaseEnemy {
     }
     
     // Sound-Effekt
-    this.scene.sound.play(Constants.SOUND_ENEMY_SHOOT, { volume: 0.3 });
+    this.scene.sound.play(this.assetManager.getKey(AssetKey.SOUND_ENEMY_SHOOT), { volume: 0.3 });
     
     // Visuelles Feedback
     this.scene.tweens.add({
@@ -650,7 +657,7 @@ export class BossEnemy extends BaseEnemy {
     }
     
     // Sound-Effekt
-    this.scene.sound.play(Constants.SOUND_ENEMY_SHOOT, {
+    this.scene.sound.play(this.assetManager.getKey(AssetKey.SOUND_ENEMY_SHOOT), {
       volume: 0.4
     });
     
@@ -682,7 +689,7 @@ export class BossEnemy extends BaseEnemy {
     }
     
     // Sound-Effekt
-    this.scene.sound.play(Constants.SOUND_ENEMY_SHOOT, {
+    this.scene.sound.play(this.assetManager.getKey(AssetKey.SOUND_ENEMY_SHOOT), {
       volume: 0.3
     });
     
@@ -759,19 +766,31 @@ export class BossEnemy extends BaseEnemy {
     this.eventBus.emit('BOSS_DESTROYED', this);
     
     // Großen Explosionseffekt erstellen (mehrere zeitversetzte Explosionen)
+    const assetManager = AssetManager.getInstance();
     for (let i = 0; i < 5; i++) {
       this.scene.time.delayedCall(i * 300, () => {
-        // Verwende die zentrale Helper-Funktion für Explosionen
+        // Asset-Manager für die Explosion verwenden
+        const explosionKey = assetManager.getKey(AssetKey.EXPLOSION1);
+        
+        // Erstelle eine temporäre Sprite an der Explosionsposition
+        const tempSprite = this.scene.add.sprite(
+          this.sprite.x + Phaser.Math.Between(-50, 50),
+          this.sprite.y + Phaser.Math.Between(-50, 50),
+          explosionKey
+        );
+        tempSprite.setScale(1.5);
+        
+        // Verwende die neue Helper-Funktion für Explosionen mit größerer Skala
+        const x = tempSprite.x;
+        const y = tempSprite.y;
         Helpers.createExplosion(
           this.scene,
-          this.sprite.x,
-          this.sprite.y,
-          1.5,
-          {
-            offsetX: Phaser.Math.Between(-50, 50),
-            offsetY: Phaser.Math.Between(-50, 50),
-            volume: 0.3,
-            detune: Phaser.Math.Between(-200, 200)
+          x, 
+          y,
+          2.0,
+          () => {
+            // Callback wird nach Abschluss der Animation aufgerufen
+            tempSprite.destroy();
           }
         );
       });

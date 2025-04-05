@@ -11,6 +11,7 @@ import { NewEnemyManager } from '../managers/newEnemyManager';
 import { GlowPipeline } from '../pipelines/glowPipeline';
 import { LevelManager } from '../managers/levelManager';
 import { AssetLoader } from '../utils/assetLoader';
+import { AssetManager, AssetCategory } from '../utils/assetManager';
 
 /**
  * Hauptspielszene
@@ -44,17 +45,18 @@ export class GameScene extends BaseScene {
 
     console.log('[GAME_SCENE] Lade alle Spielassets...');
 
-    // Verwende den AssetLoader für spielspezifische Assets
+    // Verwende den AssetManager für spielspezifische Assets
     try {
-      const gameAssets = [
-        'PLAYER', 'PLAYER_UP', 'PLAYER_DOWN',
-        'BULLET', 'ENEMY_BULLET',
-        'ENEMY01', 'ENEMY02', 'BOSS01', 'TURRET_BASE', 'TURRET_TOP',
-        'ASTEROID', 'ASTEROID_SMALL',
-        'EXPLOSION_1', 'EXPLOSION_2', 'EXPLOSION_3', 'EXPLOSION_4', 'EXPLOSION_5'
-      ];
+      const assetManager = AssetManager.getInstance();
       
-      AssetLoader.loadAssets(this, gameAssets);
+      assetManager.loadAssetsByCategory(this, [
+        AssetCategory.PLAYER,
+        AssetCategory.ENEMY,
+        AssetCategory.BULLET,
+        AssetCategory.EXPLOSION,
+        AssetCategory.ASTEROID,
+        AssetCategory.PICKUP
+      ]);
       
       console.log('[GAME_SCENE] Alle Assets wurden geladen');
     } catch (error) {

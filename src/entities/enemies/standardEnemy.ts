@@ -8,6 +8,7 @@ import { Player } from '../player/player';
 import { Constants } from '../../utils/constants';
 import { MovementPattern } from './components/movementComponent';
 import { ShootingPattern } from './components/weaponComponent';
+import { AssetManager, AssetKey } from '../../utils/assetManager';
 
 export class StandardEnemy extends BaseEnemy {
   // Statischer Klassenname, der im Build erhalten bleibt
@@ -17,9 +18,12 @@ export class StandardEnemy extends BaseEnemy {
   private static readonly EASY_MOVEMENT_PATTERNS: MovementPattern[] = ['linear', 'zigzag', 'circular'];
   
   constructor(scene: Phaser.Scene, x: number, y: number, player: Player) {
+    // Asset-Manager holen
+    const assetManager = AssetManager.getInstance();
+    
     // Konfiguriere den Gegner durch ein Konfigurationsobjekt
     const config: EnemyConfig = {
-      texture: Constants.ASSET_ENEMY01,
+      texture: assetManager.getKey(AssetKey.ENEMY01),
       health: 20,
       speed: 100 + Math.random() * 50, // Leichte Variation in der Geschwindigkeit
       scoreValue: 50,

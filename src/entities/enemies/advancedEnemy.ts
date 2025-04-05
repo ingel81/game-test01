@@ -9,6 +9,7 @@ import { Constants } from '../../utils/constants';
 import { MovementPattern } from './components/movementComponent';
 import { ShootingPattern } from './components/weaponComponent';
 import { GameObject } from '../gameObject';
+import { AssetManager, AssetKey } from '../../utils/assetManager';
 
 export class AdvancedEnemy extends BaseEnemy {
   // Statischer Klassenname, der im Build erhalten bleibt
@@ -18,9 +19,12 @@ export class AdvancedEnemy extends BaseEnemy {
   private static readonly ADVANCED_MOVEMENT_PATTERNS: MovementPattern[] = ['zigzag', 'circular', 'tracking', 'evasive', 'sinusoidal'];
   
   constructor(scene: Phaser.Scene, x: number, y: number, player: Player) {
+    // Asset-Manager holen
+    const assetManager = AssetManager.getInstance();
+    
     // Konfiguriere den fortgeschrittenen Gegner
     const config: EnemyConfig = {
-      texture: Constants.ASSET_ENEMY02, // Verwende verfügbare Textur
+      texture: assetManager.getKey(AssetKey.ENEMY02),
       health: 75, // Mehr Gesundheit
       speed: 150 + Math.random() * 50, // Schneller
       scoreValue: 100, // Mehr Punkte

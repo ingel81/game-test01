@@ -4,6 +4,7 @@ import { GameObjects } from 'phaser';
 import { PlanetsBackground } from '../ui/planetsBackground';
 import { FpsDisplay } from '../ui/fpsDisplay';
 import { AssetLoader } from '../utils/assetLoader';
+import { AssetManager, AssetCategory } from '../utils/assetManager';
 
 /**
  * Debug-Modus Enum
@@ -39,18 +40,14 @@ export abstract class BaseScene extends Phaser.Scene {
    * Lädt die grundlegenden Assets
    */
   preload(): void {
-    // Verwende den AssetLoader für alle grundlegenden Assets
-    const baseAssets = [
-      'BACKGROUND', 'BG_PLANET', 
-      'SOUND_CLICK', 'SOUND_SHOOT', 'SOUND_ENEMY_SHOOT', 'SOUND_EXPLOSION', 'MUSIC_BACKGROUND'
-    ];
+    // Verwende den AssetManager für grundlegende Assets
+    const assetManager = AssetManager.getInstance();
     
-    // Lade auch alle Planeten-Assets
-    for (let i = 1; i <= 16; i++) {
-      baseAssets.push(`PLANET_${i}`);
-    }
-    
-    AssetLoader.loadAssets(this, baseAssets);
+    assetManager.loadAssetsByCategory(this, [
+      AssetCategory.BACKGROUND, 
+      AssetCategory.SOUND,
+      AssetCategory.PLANET
+    ]);
   }
 
   /**

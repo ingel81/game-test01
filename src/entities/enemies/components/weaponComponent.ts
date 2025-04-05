@@ -7,6 +7,8 @@ import { Constants } from '../../../utils/constants';
 import { Player } from '../../player/player';
 import { EventBus } from '../../../utils/eventBus';
 import { BulletFactory } from '../../../factories/BulletFactory';
+import { BaseEnemy } from '../baseEnemy';
+import { AssetManager, AssetKey } from '../../../utils/assetManager';
 
 export type ShootingPattern = 'single' | 'double' | 'burst' | 'spread' | 'random';
 
@@ -28,8 +30,9 @@ export interface WeaponConfig {
 export class WeaponComponent {
   private scene: Phaser.Scene;
   private sprite: Phaser.Physics.Arcade.Sprite;
-  private player: Player;
+  private player: BaseEnemy['player'];
   private eventBus: EventBus;
+  private assetManager: AssetManager;
   
   private pattern: ShootingPattern;
   private fireRate: number;
@@ -53,17 +56,18 @@ export class WeaponComponent {
   private predictiveAim: boolean;
   private targetPlayer: boolean;
 
-  constructor(scene: Phaser.Scene, sprite: Phaser.Physics.Arcade.Sprite, player: Player, config: WeaponConfig) {
+  constructor(scene: Phaser.Scene, sprite: Phaser.Physics.Arcade.Sprite, player: BaseEnemy['player'], config: WeaponConfig) {
     this.scene = scene;
     this.sprite = sprite;
     this.player = player;
     this.eventBus = EventBus.getInstance();
+    this.assetManager = AssetManager.getInstance();
     
     // Grundlegende Waffeneinstellungen
     this.pattern = config.pattern;
     this.fireRate = config.fireRate;
     this.bulletSpeed = config.bulletSpeed || Constants.ENEMY_BULLET_SPEED;
-    this.bulletTexture = config.bulletTexture || Constants.ASSET_ENEMY_BULLET;
+    this.bulletTexture = config.bulletTexture || this.assetManager.getKey(AssetKey.ENEMY_BULLET);
     
     // Muster-Wechsel-Einstellungen
     this.patternChangeInterval = config.patternChangeInterval || 6000;
@@ -248,7 +252,7 @@ export class WeaponComponent {
     }
     
     // Sound-Effekt
-    this.scene.sound.play(Constants.SOUND_ENEMY_SHOOT, {
+    this.scene.sound.play(this.assetManager.getKey(AssetKey.SOUND_ENEMY_SHOOT), {
       volume: 0.2
     });
   }
@@ -275,7 +279,7 @@ export class WeaponComponent {
     }
     
     // Sound-Effekt
-    this.scene.sound.play(Constants.SOUND_ENEMY_SHOOT, {
+    this.scene.sound.play(this.assetManager.getKey(AssetKey.SOUND_ENEMY_SHOOT), {
       volume: 0.3
     });
   }

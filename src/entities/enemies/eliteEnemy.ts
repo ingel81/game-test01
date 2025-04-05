@@ -10,6 +10,7 @@ import { MovementPattern } from './components/movementComponent';
 import { ShootingPattern } from './components/weaponComponent';
 import { GameObject } from '../gameObject';
 import { BulletFactory } from '../../factories/BulletFactory';
+import { AssetManager, AssetKey } from '../../utils/assetManager';
 
 export class EliteEnemy extends BaseEnemy {
   // Statischer Klassenname, der im Build erhalten bleibt
@@ -23,9 +24,12 @@ export class EliteEnemy extends BaseEnemy {
   private specialAttackInterval: number = 5000; // Alle 5 Sekunden
   
   constructor(scene: Phaser.Scene, x: number, y: number, player: Player) {
+    // Asset-Manager holen
+    const assetManager = AssetManager.getInstance();
+    
     // Konfiguriere den Elite-Gegner
     const config: EnemyConfig = {
-      texture: Constants.ASSET_ENEMY03, // Verfügbare Textur
+      texture: assetManager.getKey(AssetKey.ENEMY03),
       health: 100, // Deutlich mehr Gesundheit
       speed: 180 + Math.random() * 50, // Sehr schnell
       scoreValue: 200, // Mehr Punkte

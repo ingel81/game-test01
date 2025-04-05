@@ -101,7 +101,7 @@ export const Level1: LevelConfig = {
   name: 'First Encounters',
   description: 'The first enemies appear. Be careful and test your weapons.',
   difficulty: 1,
-  duration: 60000,
+  duration: 600000,
   minAsteroids: 20,
   maxAsteroids: 50,
   asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID,
@@ -111,18 +111,37 @@ export const Level1: LevelConfig = {
   waves: [
     
     {
-      enemyType: EnemyType.ADVANCED,
-      count: 3,
+      enemyType: EnemyType.STANDARD,
+      count: 1,
       formation: FormationType.LINE,
-      delay: 5000
-    },
-    /*
+      delay: 1000
+    },    
     {
       enemyType: EnemyType.ADVANCED,
-      count: 2,
+      count: 3,
       formation: FormationType.SINGLE,
-      delay: 20000
+      delay: 100000
     },
+    {
+      enemyType: EnemyType.ELITE,
+      count: 3,
+      formation: FormationType.SINGLE,
+      delay: 100000
+    },
+    {
+      enemyType: EnemyType.TURRET,
+      count: 3,
+      formation: FormationType.SINGLE,
+      delay: 100000
+    },
+    {
+      enemyType: EnemyType.BOSS,
+      count: 3,
+      formation: FormationType.SINGLE,
+      delay: 100000,
+      isLevelEndTrigger: true
+    },    
+    /*
     {
       enemyType: EnemyType.TURRET,
       count: 10,

@@ -3,6 +3,7 @@ import { Constants } from '../utils/constants';
 import { EventType } from '../utils/eventBus';
 import { MusicManager } from '../managers/musicManager';
 import { AssetLoader } from '../utils/assetLoader';
+import { AssetManager, AssetCategory } from '../utils/assetManager';
 
 /**
  * Hauptmenü-Szene
@@ -21,12 +22,13 @@ export class MainMenuScene extends BaseScene {
   preload(): void {
     super.preload();
     
-    // Verwende den AssetLoader für menüspezifische Assets
-    const menuAssets = [
-      'MUSIC_TITLE', 'MUSIC_00', 'MUSIC_01', 'MUSIC_02', 'LOGO'
-    ];
+    // Verwende den AssetManager für menüspezifische Assets
+    const assetManager = AssetManager.getInstance();
     
-    AssetLoader.loadAssets(this, menuAssets);
+    assetManager.loadAssetsByCategory(this, [
+      AssetCategory.MUSIC,
+      AssetCategory.UI
+    ]);
   }
 
   /**

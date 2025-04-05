@@ -311,7 +311,9 @@ export class BaseEnemy extends GameObject {
       // Prüfe, ob die Szene und das Sprite noch existieren
       if (this.scene && this.sprite && this.sprite.active) {
         // Verwende die zentrale Helper-Funktion für Explosionen
-        Helpers.createExplosion(this.scene, this.sprite.x, this.sprite.y, 1.0);
+        const x = this.sprite.x;
+        const y = this.sprite.y;
+        Helpers.createExplosion(this.scene, x, y, 1.0);
       }
     } catch (error) {
       console.error('[ERROR] Fehler beim Erstellen der Explosion:', error);

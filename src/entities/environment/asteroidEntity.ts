@@ -128,8 +128,7 @@ export class Asteroid extends GameObject {
       this.scene, 
       explosionX, 
       explosionY, 
-      explosionScale,
-      { volume: 0.2, detune: 300 }
+      explosionScale
     );
 
     // Vergebe Punkte
