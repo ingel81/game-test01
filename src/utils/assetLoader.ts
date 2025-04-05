@@ -52,6 +52,7 @@ export class AssetLoader {
     // Gegner-Assets
     ENEMY01: { key: Constants.ASSET_ENEMY01, path: 'enemy/sprites/enemy01.png', type: AssetType.IMAGE },
     ENEMY02: { key: Constants.ASSET_ENEMY02, path: 'enemy/sprites/enemy02.png', type: AssetType.IMAGE },
+    ENEMY03: { key: Constants.ASSET_ENEMY03, path: 'enemy/sprites/enemy03.png', type: AssetType.IMAGE },
     BOSS01: { key: Constants.ASSET_BOSS01, path: 'enemy/sprites/boss01.png', type: AssetType.IMAGE },
     TURRET_BASE: { key: Constants.ASSET_TURRET_BASE, path: 'enemy/sprites/turret01_base.png', type: AssetType.IMAGE },
     TURRET_TOP: { key: Constants.ASSET_TURRET_TOP, path: 'enemy/sprites/turret01_top.png', type: AssetType.IMAGE },

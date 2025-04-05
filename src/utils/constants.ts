@@ -88,6 +88,7 @@ export class Constants {
   public static readonly ASSET_BULLET: string = 'bullet';
   public static readonly ASSET_ENEMY01: string = 'enemy01';
   public static readonly ASSET_ENEMY02: string = 'enemy02';
+  public static readonly ASSET_ENEMY03: string = 'enemy03';
   public static readonly ASSET_ENEMY_BULLET: string = 'enemyBullet';
   public static readonly ASSET_ASTEROID: string = 'asteroid';
   public static readonly ASSET_ASTEROID_SMALL: string = 'asteroid-small';

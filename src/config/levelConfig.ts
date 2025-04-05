@@ -111,7 +111,7 @@ export const Level1: LevelConfig = {
   waves: [
     
     {
-      enemyType: EnemyType.STANDARD,
+      enemyType: EnemyType.ADVANCED,
       count: 3,
       formation: FormationType.LINE,
       delay: 5000
@@ -128,14 +128,14 @@ export const Level1: LevelConfig = {
       count: 10,
       formation: FormationType.V_FORMATION,
       delay: 3000
-    },*/
+    },
     {
       enemyType: EnemyType.BOSS,
       count: 10,
       formation: FormationType.V_FORMATION,
       delay: 0,
       isLevelEndTrigger: true
-    }
+    }*/
   ],
   
   timedPickups: [

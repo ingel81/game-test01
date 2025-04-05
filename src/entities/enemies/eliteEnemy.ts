@@ -25,7 +25,7 @@ export class EliteEnemy extends BaseEnemy {
   constructor(scene: Phaser.Scene, x: number, y: number, player: Player) {
     // Konfiguriere den Elite-Gegner
     const config: EnemyConfig = {
-      texture: Constants.ASSET_ENEMY02, // Verfügbare Textur
+      texture: Constants.ASSET_ENEMY03, // Verfügbare Textur
       health: 100, // Deutlich mehr Gesundheit
       speed: 180 + Math.random() * 50, // Sehr schnell
       scoreValue: 200, // Mehr Punkte
