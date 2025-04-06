@@ -136,7 +136,7 @@ export class AssetLoader {
         try {
           switch (asset.type) {
             case AssetType.IMAGE:
-              console.log(`[ASSET_LOADER] Lade Bild: ${asset.key} von ${assetPath}`);
+              //console.log(`[ASSET_LOADER] Lade Bild: ${asset.key} von ${assetPath}`);
               scene.load.image(asset.key, assetPath);
               break;
               
@@ -160,7 +160,7 @@ export class AssetLoader {
       
       // Event-Handler für Ladefortschritt
       scene.load.on('progress', (value: number) => {
-        console.log(`[ASSET_LOADER] Ladefortschritt: ${Math.round(value * 100)}%`);
+        //console.log(`[ASSET_LOADER] Ladefortschritt: ${Math.round(value * 100)}%`);
       });
       
       // Event-Handler für Ladefehler

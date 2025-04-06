@@ -495,4 +495,78 @@ export class NewEnemyManager {
     this.eventBus.off('REGISTER_ENEMY_BULLET', this.registerEnemyBullet);
     this.eventBus.off(EventType.DEBUG_TOGGLED, this.onDebugModeChanged);
   }
+  
+  /**
+   * Bereitet den Manager auf das Level-Ende vor
+   * - Stoppt alle automatischen Spawns
+   * - Entfernt Gegner, die außerhalb des Bildschirms sind
+   * - Gibt ein Promise zurück, das aufgelöst wird, wenn alle Gegner den Bildschirm verlassen haben
+   */
+  public prepareForLevelEnd(): Promise<void> {
+    console.log('[ENEMY_MANAGER] Bereite Manager auf Level-Ende vor');
+    
+    // Stoppe alle Spawn-Prozesse
+    this.stopSpawning();
+    
+    // Entferne sofort alle Gegner, die den Bildschirm bereits verlassen haben
+    this.removeOffscreenEnemies();
+    
+    // Gib ein Promise zurück, das aufgelöst wird, wenn alle Gegner weg sind
+    return new Promise<void>((resolve) => {
+      this.checkRemainingEnemies(resolve);
+    });
+  }
+  
+  /**
+   * Entfernt alle Gegner, die außerhalb des Bildschirms sind
+   * @returns Die Anzahl der entfernten Gegner
+   */
+  private removeOffscreenEnemies(): number {
+    let removedCount = 0;
+    
+    for (let i = this.enemies.length - 1; i >= 0; i--) {
+      const enemy = this.enemies[i];
+      const sprite = enemy.getSprite();
+      
+      if (sprite.x < -150 || sprite.y < -150 || sprite.y > this.scene.scale.height + 150) {
+        console.log(`[ENEMY_MANAGER] Gegner außerhalb des Bildschirms bei (${sprite.x}, ${sprite.y}), wird entfernt.`);
+        
+        try {
+          enemy.destroy();
+          removedCount++;
+        } catch (error) {
+          console.error(`[ENEMY_MANAGER] Fehler beim Zerstören des Gegners: ${error}`);
+        }
+        
+        this.enemies.splice(i, 1);
+      }
+    }
+    
+    if (removedCount > 0) {
+      console.log(`[ENEMY_MANAGER] ${removedCount} Gegner außerhalb des Bildschirms entfernt.`);
+    }
+    
+    return removedCount;
+  }
+  
+  /**
+   * Überprüft, ob noch Gegner vorhanden sind und ruft die Callback-Funktion auf, wenn alle weg sind
+   * @param callback Die Funktion, die aufgerufen wird, wenn alle Gegner weg sind
+   */
+  private checkRemainingEnemies(callback: () => void): void {
+    // Entferne nochmals Gegner außerhalb des Bildschirms
+    this.removeOffscreenEnemies();
+    
+    const remainingEnemies = this.enemies.length;
+    console.log(`[ENEMY_MANAGER] Prüfe verbleibende Gegner: ${remainingEnemies}`);
+    
+    if (remainingEnemies === 0) {
+      // Alle Gegner sind weg, löse das Promise auf
+      console.log('[ENEMY_MANAGER] Alle Gegner wurden entfernt.');
+      callback();
+    } else {
+      // Es sind noch Gegner da, warte 100ms und prüfe erneut
+      this.scene.time.delayedCall(100, () => this.checkRemainingEnemies(callback));
+    }
+  }
 } 

@@ -42,7 +42,8 @@ export interface Wave {
   enemyType: EnemyType;       // Typ der Gegner
   count: number;              // Anzahl der Gegner
   formation: FormationType;   // Formation der Gegner
-  delay?: number;             // Verzögerung vor dieser Welle (ms)
+  delay?: number;             // Verzögerung zwischen einzelnen Gegnern in der Welle
+  startDelay?: number;        // Verzögerung vor dem Start der Welle
   healthMultiplier?: number;  // Multiplikator für Gegner-Gesundheit
   speedMultiplier?: number;   // Multiplikator für Gegner-Geschwindigkeit
   isLevelEndTrigger?: boolean;// Ob diese Welle als Level-Ende-Auslöser dient
@@ -108,14 +109,13 @@ export const debugLevel: LevelConfig = {
   introText: 'Enemy ships have been spotted in this sector. Eliminate them to protect our territory.',
   outroText: 'Well done! The first wave has been repelled.',
   
-  waves: [
-    
+  waves: [    
     {
       enemyType: EnemyType.STANDARD,
       count: 1,
       formation: FormationType.LINE,
       delay: 1000,      
-    },/*    
+    }/*,    
     {
       enemyType: EnemyType.ADVANCED,
       count: 3,

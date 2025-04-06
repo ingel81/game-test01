@@ -87,23 +87,44 @@ export class EventBus {
 
 // Event-Typen
 export enum EventType {
-  PLAYER_CREATED = 'PLAYER_CREATED',
-  ENEMY_KILLED = 'ENEMY_KILLED',
-  ENEMY_DESTROYED = 'ENEMY_DESTROYED',
-  BOSS_SPAWNED = 'BOSS_SPAWNED',
-  BOSS_DESTROYED = 'BOSS_DESTROYED',
-  PLAYER_DAMAGED = 'PLAYER_DAMAGED',
-  PLAYER_HEALED = 'PLAYER_HEALED',
-  PLAYER_DESTROYED = 'PLAYER_DESTROYED',
-  SCORE_CHANGED = 'SCORE_CHANGED',
-  DIFFICULTY_CHANGED = 'DIFFICULTY_CHANGED',
-  GAME_OVER = 'GAME_OVER',
-  PAUSE_GAME = 'PAUSE_GAME',
-  RESUME_GAME = 'RESUME_GAME',
-  PICKUP_COLLECTED = 'PICKUP_COLLECTED',
-  ASTEROID_DESTROYED = 'ASTEROID_DESTROYED',
-  GAME_START = 'GAME_START',
-  POWER_PICKUP_COLLECTED = 'POWER_PICKUP_COLLECTED',
-  DEBUG_TOGGLED = 'DEBUG_TOGGLED',
-  GAME_FINISHED = 'GAME_FINISHED'
+  ENEMY_DESTROYED = 'enemy_destroyed',
+  PLAYER_DESTROYED = 'player_destroyed',
+  GAME_OVER = 'game_over',
+  GAME_RESUMED = 'game_resumed',
+  PAUSE_GAME = 'pause_game',
+  RESUME_GAME = 'resume_game',
+  PICKUP_COLLECTED = 'pickup_collected',
+  
+  // Ereignisse für Gegner und Gameplay
+  DIFFICULTY_CHANGED = 'difficulty_changed',
+  DEBUG_TOGGLED = 'debug_toggled',
+  BOSS_SPAWNED = 'boss_spawned',
+  
+  // Neue Level-bezogene Events
+  LEVEL_STARTED = 'level_started',
+  LEVEL_ENDING = 'level_ending',
+  LEVEL_ENEMIES_CLEARED = 'level_enemies_cleared',
+  LEVEL_COMPLETED = 'level_completed',
+  NEXT_LEVEL_STARTING = 'next_level_starting',
+  
+  // Spielerfolgs-Events
+  GAME_WON = 'game_won',
+  
+  // Fehlende Event-Typen hinzufügen
+  ASTEROID_DESTROYED = 'asteroid_destroyed',
+  POWER_PICKUP_COLLECTED = 'power_pickup_collected',
+  BOSS_DESTROYED = 'boss_destroyed',
+  ENEMY_KILLED = 'enemy_killed',
+  PLAYER_DAMAGED = 'player_damaged',
+  PLAYER_HEALED = 'player_healed',
+  
+  // Fehlende Events, die im Code verwendet werden
+  SCORE_CHANGED = 'score_changed',
+  
+  // Zusätzliche String-Events aus der Codebase
+  REGISTER_ENEMY_BULLET = 'REGISTER_ENEMY_BULLET',
+  CREATE_SMALL_ASTEROID = 'CREATE_SMALL_ASTEROID',
+  CREATE_ENERGY_PICKUP = 'CREATE_ENERGY_PICKUP',
+  CREATE_POWER_PICKUP = 'CREATE_POWER_PICKUP',
+  DESTROY_ASTEROID = 'DESTROY_ASTEROID',
 } 

@@ -304,25 +304,34 @@ Implementiert ein Publisher-Subscriber-Muster für die Kommunikation zwischen ve
 - `removeAllEvents()`: Entfernt alle Event-Listener
 
 **Im EventType-Enum definierte Events:**
-- `PLAYER_CREATED`: Spieler wurde erstellt
-- `ENEMY_KILLED`: Gegner wurde getötet
-- `ENEMY_DESTROYED`: Gegner wurde zerstört
-- `BOSS_SPAWNED`: Boss wurde erzeugt
-- `BOSS_DESTROYED`: Boss wurde zerstört
-- `PLAYER_DAMAGED`: Spieler hat Schaden erhalten
-- `PLAYER_HEALED`: Spieler wurde geheilt
+- `ENEMY_DESTROYED`: Gegner wurde zerstört (liefert Objektreferenz)
 - `PLAYER_DESTROYED`: Spieler wurde zerstört
-- `SCORE_CHANGED`: Punktestand hat sich geändert
-- `DIFFICULTY_CHANGED`: Schwierigkeitsgrad hat sich geändert
 - `GAME_OVER`: Spiel ist beendet
+- `GAME_RESUMED`: Spiel wurde wieder aufgenommen
 - `PAUSE_GAME`: Spiel wurde pausiert
 - `RESUME_GAME`: Spiel wurde fortgesetzt
 - `PICKUP_COLLECTED`: Pickup wurde gesammelt
-- `ASTEROID_DESTROYED`: Asteroid wurde zerstört
-- `GAME_START`: Spiel wurde gestartet
-- `POWER_PICKUP_COLLECTED`: Power-Pickup wurde gesammelt
+- `DIFFICULTY_CHANGED`: Schwierigkeitsgrad hat sich geändert
 - `DEBUG_TOGGLED`: Debug-Modus wurde umgeschaltet
-- `GAME_FINISHED`: Spiel wurde erfolgreich abgeschlossen
+- `BOSS_SPAWNED`: Boss wurde erzeugt
+- `LEVEL_STARTED`: Level wurde gestartet
+- `LEVEL_ENDING`: Level geht zu Ende
+- `LEVEL_ENEMIES_CLEARED`: Alle Gegner in einem Level sind besiegt
+- `LEVEL_COMPLETED`: Level wurde abgeschlossen
+- `NEXT_LEVEL_STARTING`: Nächstes Level wird gestartet
+- `GAME_WON`: Spiel wurde gewonnen
+- `ASTEROID_DESTROYED`: Asteroid wurde zerstört
+- `POWER_PICKUP_COLLECTED`: Power-Pickup wurde gesammelt
+- `BOSS_DESTROYED`: Boss wurde zerstört
+- `ENEMY_KILLED`: Gegner wurde getötet
+- `PLAYER_DAMAGED`: Spieler hat Schaden erhalten
+- `PLAYER_HEALED`: Spieler wurde geheilt
+- `SCORE_CHANGED`: Punktestand hat sich geändert
+- `REGISTER_ENEMY_BULLET`: Registriert ein feindliches Projektil zur Kollisionsprüfung
+- `CREATE_SMALL_ASTEROID`: Erzeugt einen kleinen Asteroiden, wenn ein größerer zerstört wird
+- `CREATE_ENERGY_PICKUP`: Erzeugt ein Energie-Pickup an einer bestimmten Position
+- `CREATE_POWER_PICKUP`: Erzeugt ein Power-Pickup an einer bestimmten Position
+- `DESTROY_ASTEROID`: Signal zum Zerstören eines Asteroiden
 
 ```typescript
 // Beispiel zur Verwendung
