@@ -40,7 +40,7 @@ export abstract class Entity {
    * Zerstört die Entität und gibt Ressourcen frei
    */
   public destroy(): void {
-    console.log('Entity: destroy aufgerufen');
+    //console.log('Entity: destroy aufgerufen');
     this.sprite.destroy();
   }
 

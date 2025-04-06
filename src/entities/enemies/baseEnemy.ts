@@ -382,13 +382,6 @@ export class BaseEnemy extends GameObject {
   }
 
   /**
-   * Gibt die Bullets-Gruppe zurück
-   */
-  public getBullets(): Phaser.Physics.Arcade.Group {
-    return this.weaponComponent.getBullets();
-  }
-
-  /**
    * Zerstört die Entität und gibt Ressourcen frei
    */
   public destroy(): void {

@@ -147,6 +147,8 @@ export class CollisionManager {
       
       // Einzelne Kollisionserkennung für jedes Projektil
       if (b.active) {
+        //console.log('[COLLISION_MANAGER] Bullet ist aktiv');
+
         this.scene.physics.overlap(
           b,
           playerSprite,
@@ -154,6 +156,8 @@ export class CollisionManager {
           undefined,
           this
         );
+      }else{
+        //console.log('[COLLISION_MANAGER] Bullet ist nicht aktiv');
       }
       
       return true;
@@ -260,11 +264,15 @@ export class CollisionManager {
     if (!bullet.active || !player.active) return;
     
     console.log('Kollision: Feindlicher Schuss trifft Spieler');
+    
+    // Hole den Schaden des Projektils (Standard ist Constants.DAMAGE.ENEMY_BULLET)
+    const damage = bullet.getData('damage') || Constants.DAMAGE.ENEMY_BULLET;
+    
     console.log('[COLLISION_MANAGER] Feindlicher Schuss Details:', {
       bulletActive: bullet.active,
       bulletPosition: { x: bullet.x, y: bullet.y },
       playerHealth: this.player.getHealth(),
-      schadensWert: Constants.DAMAGE.ENEMY_BULLET,
+      schadensWert: damage,
       difficulty: this.scene.registry.get('difficulty') || 'unbekannt',
       level: this.scene.registry.get('level') || 'unbekannt'
     });
@@ -272,9 +280,9 @@ export class CollisionManager {
     // Entferne das Projektil
     bullet.destroy();
     
-    // Spieler nimmt Schaden
-    console.log('[COLLISION_MANAGER] Spieler nimmt Schaden:', Constants.DAMAGE.ENEMY_BULLET);
-    const isDead = this.player.takeDamage(Constants.DAMAGE.ENEMY_BULLET);
+    // Spieler nimmt Schaden - HIER VERWENDEN WIR DEN AUS DEM BULLET GELESENEN DAMAGE-WERT
+    console.log('[COLLISION_MANAGER] Spieler nimmt Schaden:', damage);
+    const isDead = this.player.takeDamage(damage);
     console.log('[COLLISION_MANAGER] Spieler nach Schaden:', {
       health: this.player.getHealth(),
       isDead: isDead

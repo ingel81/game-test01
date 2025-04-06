@@ -83,7 +83,7 @@ export class Bullet extends Entity {
     this.setVelocityWithRotation(velocityX, velocityY);
     
     // Debug-Log für Projektilrichtung
-    console.log(`[BULLET] Projektil erstellt: Typ=${this.owner}, Winkel=${(angleRadians * 180 / Math.PI).toFixed(0)}°, Geschw.=(${velocityX.toFixed(0)},${velocityY.toFixed(0)})`);
+    //console.log(`[BULLET] Projektil erstellt: Typ=${this.owner}, Winkel=${(angleRadians * 180 / Math.PI).toFixed(0)}°, Geschw.=(${velocityX.toFixed(0)},${velocityY.toFixed(0)})`);
     
     // Sicherstellen, dass es eine signifikante Geschwindigkeit hat
     if (Math.abs(velocityX) < 20 && Math.abs(velocityY) < 20) {

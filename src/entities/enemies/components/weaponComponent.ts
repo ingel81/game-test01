@@ -56,6 +56,11 @@ export class WeaponComponent {
   private predictiveAim: boolean;
   private targetPlayer: boolean;
 
+  /**
+   * Füge eine Methode hinzu, um den Schaden für aktuelle Schwierigkeit zu speichern
+   */
+  private currentBulletDamage: number = Constants.ENEMY_BULLET_DAMAGE;
+
   constructor(scene: Phaser.Scene, sprite: Phaser.Physics.Arcade.Sprite, player: BaseEnemy['player'], config: WeaponConfig) {
     this.scene = scene;
     this.sprite = sprite;
@@ -236,7 +241,7 @@ export class WeaponComponent {
     
     // Erstelle ein Bullet mit der Factory und ERZWINGE einen Mindestgeschwindigkeit und nach links
     const bulletX = this.sprite.x - 20; // 20 Pixel links vom Gegner
-    const bullet = bulletFactory.createEnemyBullet(bulletX, this.sprite.y, angle);
+    const bullet = bulletFactory.createEnemyBullet(bulletX, this.sprite.y, angle, this.currentBulletDamage);
     
     // WICHTIG: Stelle sicher, dass das Projektil eine bedeutende Geschwindigkeit hat
     if (bullet) {
@@ -245,7 +250,7 @@ export class WeaponComponent {
         // Wenn die Geschwindigkeit zu niedrig ist, setze eine Mindestgeschwindigkeit nach links
         const velocity = bulletSprite.body.velocity;
         if (Math.abs(velocity.x) < 50 && Math.abs(velocity.y) < 50) {
-          console.log(`[WEAPON] Korrigiere zu geringe Geschwindigkeit: (${velocity.x.toFixed(0)},${velocity.y.toFixed(0)})`);
+          //console.log(`[WEAPON] Korrigiere zu geringe Geschwindigkeit: (${velocity.x.toFixed(0)},${velocity.y.toFixed(0)})`);
           bulletSprite.body.velocity.x = -this.bulletSpeed;  // Zwinge nach links
         }
       }
@@ -275,7 +280,7 @@ export class WeaponComponent {
       const absoluteAngle = Math.PI + angleRad;
       
       // Erstelle ein Bullet mit der Factory
-      bulletFactory.createEnemyBullet(this.sprite.x - 20, this.sprite.y, absoluteAngle);
+      bulletFactory.createEnemyBullet(this.sprite.x - 20, this.sprite.y, absoluteAngle, this.currentBulletDamage);
     }
     
     // Sound-Effekt
@@ -295,6 +300,12 @@ export class WeaponComponent {
     
     // Erhöhe Geschossgeschwindigkeit
     this.bulletSpeed *= difficultyFactor;
+    
+    // Erhöhe den Schaden bei höherer Schwierigkeit
+    if (difficulty > 1) {
+      this.currentBulletDamage = this.calculateBulletDamage(difficulty);
+      console.log(`[WEAPON_COMPONENT] Bullet Schaden angepasst für Schwierigkeit ${difficulty}: ${this.currentBulletDamage}`);
+    }
     
     // Bei höherer Schwierigkeit komplexere Schussmuster bevorzugen
     if (difficulty >= 3) {
@@ -320,6 +331,20 @@ export class WeaponComponent {
         }
       }
     }
+  }
+  
+  /**
+   * Berechnet den Schaden eines Projektils basierend auf der Schwierigkeit
+   */
+  private calculateBulletDamage(difficulty: number): number {
+    // Basis-Schaden aus den Konstanten
+    const baseDamage = Constants.ENEMY_BULLET_DAMAGE;
+    
+    // Skaliere den Schaden mit der Schwierigkeit, aber mit einem moderaten Faktor
+    const damageFactor = 1 + (difficulty - 1) * 0.15; // 15% mehr Schaden pro Schwierigkeitsstufe
+    
+    // Runde auf ganze Zahlen für konsistente Werte
+    return Math.round(baseDamage * damageFactor);
   }
 
   /**

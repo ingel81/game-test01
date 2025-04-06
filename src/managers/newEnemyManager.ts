@@ -306,18 +306,25 @@ export class NewEnemyManager {
    * Registriert ein Projektil im zentralen Manager
    */
   private registerEnemyBullet = (bullet: Phaser.Physics.Arcade.Sprite): void => {
-    if (!bullet.active) return;
+
+    console.log(`[ENEMY_MANAGER] ${this.allEnemyBullets.getChildren().length}`);
+
+    // Stelle sicher, dass das Projektil aktiv ist
+    bullet.setActive(true).setVisible(true);
     
     // Stelle sicher, dass das Projektil in der zentralen Gruppe ist
     if (!this.allEnemyBullets.contains(bullet)) {
       this.allEnemyBullets.add(bullet);
       console.log(`[ENEMY_MANAGER] Projektil registriert, Geschwindigkeit: (${bullet.body.velocity.x.toFixed(0)}, ${bullet.body.velocity.y.toFixed(0)})`);
-      
-      // Stelle sicher, dass Projektil in die richtige Richtung fliegt (zum Spieler)
-      if (bullet.body.velocity.x > 0) {
-        console.error(`[ENEMY_MANAGER] FEHLER: Projektil fliegt in falsche Richtung! Korrigiere Richtung`);
-        bullet.body.velocity.x = -Math.abs(bullet.body.velocity.x); // Nach links fliegen lassen
-      }
+    } else {
+      // Wenn das Bullet bereits in der Gruppe ist, stelle sicher, dass es aktiv ist
+      console.log(`[ENEMY_MANAGER] Bestehendes Projektil reaktiviert`);
+    }
+    
+    // Stelle sicher, dass Projektil in die richtige Richtung fliegt (zum Spieler)
+    if (bullet.body && bullet.body.velocity.x > 0) {
+      console.error(`[ENEMY_MANAGER] FEHLER: Projektil fliegt in falsche Richtung! Korrigiere Richtung`);
+      bullet.body.velocity.x = -Math.abs(bullet.body.velocity.x); // Nach links fliegen lassen
     }
   }
   

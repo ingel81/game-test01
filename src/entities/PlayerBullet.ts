@@ -20,7 +20,7 @@ export class PlayerBullet extends Bullet {
     this.powerLevel = powerLevel;
     
     // Direkter Debug-Log bei Erstellung
-    console.log(`[PLAYER_BULLET] Erstellt an Position (${x}, ${y})`);
+    //console.log(`[PLAYER_BULLET] Erstellt an Position (${x}, ${y})`);
   }
   
   /**

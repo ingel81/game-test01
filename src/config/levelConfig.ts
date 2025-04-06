@@ -100,7 +100,7 @@ export const debugLevel: LevelConfig = {
   id: 'level-1',
   name: 'First Encounters',
   description: 'The first enemies appear. Be careful and test your weapons.',
-  difficulty: 1,
+  difficulty: 3,
   duration: 600000,
   minAsteroids: 20,
   maxAsteroids: 50,
@@ -114,7 +114,7 @@ export const debugLevel: LevelConfig = {
       enemyType: EnemyType.STANDARD,
       count: 1,
       formation: FormationType.LINE,
-      delay: 1000
+      delay: 1000,      
     },    
     {
       enemyType: EnemyType.ADVANCED,
