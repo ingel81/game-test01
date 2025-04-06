@@ -51,13 +51,8 @@ export class NewEnemyManager {
     this.player = player;
     this.eventBus = EventBus.getInstance();
     
-    // Zentrale Gruppe für alle feindlichen Projektile
-    this.allEnemyBullets = this.scene.physics.add.group({
-      defaultKey: Constants.ASSET_ENEMY_BULLET,
-      maxSize: 300,
-      active: false,
-      visible: false
-    });
+    // Zentrale Gruppe für alle feindlichen Projektile (ohne Pooling)
+    this.allEnemyBullets = this.scene.physics.add.group();
     
     // Event-Listener für Spielevents
     this.eventBus.on(EventType.DIFFICULTY_CHANGED, this.onDifficultyChanged);
@@ -281,24 +276,21 @@ export class NewEnemyManager {
    * Aktualisiert alle Projektile und entfernt inaktive
    */
   private updateBullets(): void {
-    // Entferne Projektile, die den Bildschirm verlassen haben
     this.allEnemyBullets.getChildren().forEach((bullet) => {
-      const bulletSprite = bullet as Phaser.Physics.Arcade.Sprite;
-      if (!bulletSprite.active) return;
-      
-      // Prüfe, ob das Projektil den Bildschirm verlassen hat
-      if (bulletSprite.x < -50 || bulletSprite.x > this.scene.scale.width + 50 || 
-          bulletSprite.y < -50 || bulletSprite.y > this.scene.scale.height + 50) {
-        // Deaktiviere statt zu entfernen für besseres Objekt-Pooling
-        bulletSprite.setActive(false).setVisible(false);
-        console.log(`[ENEMY_MANAGER] Bullet deaktiviert bei Position (${bulletSprite.x.toFixed(0)}, ${bulletSprite.y.toFixed(0)}) - außerhalb des Bildschirms`);
-      }
-      
-      // Prüfe auf "stehende" Projektile - Neuheit zur Fehlerbehebung
-      if (bulletSprite.body && (Math.abs(bulletSprite.body.velocity.x) < 1 && Math.abs(bulletSprite.body.velocity.y) < 1)) {
-        console.log(`[ENEMY_MANAGER] Steckengebliebenes Projektil bei (${bulletSprite.x.toFixed(0)}, ${bulletSprite.y.toFixed(0)}) gefunden und entfernt`);
-        bulletSprite.setActive(false).setVisible(false);
-      }
+        const bulletSprite = bullet as Phaser.Physics.Arcade.Sprite;
+        
+        // Prüfe auf Bullets außerhalb des Bildschirms
+        if (bulletSprite.x < -50 || bulletSprite.x > this.scene.scale.width + 50 || 
+            bulletSprite.y < -50 || bulletSprite.y > this.scene.scale.height + 50) {
+            bulletSprite.destroy();
+            return;
+        }
+        
+        // Prüfe auf steckengebliebene Bullets
+        if (bulletSprite.body && (Math.abs(bulletSprite.body.velocity.x) < 1 && Math.abs(bulletSprite.body.velocity.y) < 1)) {
+            bulletSprite.destroy();
+            return;
+        }
     });
   }
   
@@ -306,25 +298,16 @@ export class NewEnemyManager {
    * Registriert ein Projektil im zentralen Manager
    */
   private registerEnemyBullet = (bullet: Phaser.Physics.Arcade.Sprite): void => {
-
-    console.log(`[ENEMY_MANAGER] ${this.allEnemyBullets.getChildren().length}`);
-
-    // Stelle sicher, dass das Projektil aktiv ist
-    bullet.setActive(true).setVisible(true);
+    // Füge zur Gruppe hinzu
+    this.allEnemyBullets.add(bullet);
     
-    // Stelle sicher, dass das Projektil in der zentralen Gruppe ist
-    if (!this.allEnemyBullets.contains(bullet)) {
-      this.allEnemyBullets.add(bullet);
-      console.log(`[ENEMY_MANAGER] Projektil registriert, Geschwindigkeit: (${bullet.body.velocity.x.toFixed(0)}, ${bullet.body.velocity.y.toFixed(0)})`);
-    } else {
-      // Wenn das Bullet bereits in der Gruppe ist, stelle sicher, dass es aktiv ist
-      console.log(`[ENEMY_MANAGER] Bestehendes Projektil reaktiviert`);
-    }
-    
+    // Debug-Logging
+    console.log(`[ENEMY_MANAGER] Neues Projektil registriert, ID: ${bullet.getData('bulletId')}, Aktive Bullets: ${this.allEnemyBullets.getChildren().length}`);
+
     // Stelle sicher, dass Projektil in die richtige Richtung fliegt (zum Spieler)
     if (bullet.body && bullet.body.velocity.x > 0) {
-      console.error(`[ENEMY_MANAGER] FEHLER: Projektil fliegt in falsche Richtung! Korrigiere Richtung`);
-      bullet.body.velocity.x = -Math.abs(bullet.body.velocity.x); // Nach links fliegen lassen
+        console.error(`[ENEMY_MANAGER] FEHLER: Projektil fliegt in falsche Richtung! Korrigiere Richtung`);
+        bullet.body.velocity.x = -Math.abs(bullet.body.velocity.x); // Nach links fliegen lassen
     }
   }
   

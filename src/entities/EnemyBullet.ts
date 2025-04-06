@@ -38,15 +38,9 @@ export class EnemyBullet extends Bullet {
     const sprite = bullet.getSprite();
     if (sprite && sprite.body) {
       if (Math.abs(sprite.body.velocity.x) < 20 && Math.abs(sprite.body.velocity.y) < 20) {
-        //console.log(`[ENEMY_BULLET] Erzwinge Richtung nach links`);
         sprite.body.velocity.x = -Constants.ENEMY_BULLET_SPEED;
-        
-        // Auch die Rotation entsprechend anpassen (nach links = Math.PI)
         sprite.setRotation(Math.PI);
       }
-      
-      // Debug-Ausgabe für das Projektil
-      //(`[ENEMY_BULLET] Erstellt mit Winkel ${(angle * 180 / Math.PI).toFixed(0)}°, Geschw.=(${sprite.body.velocity.x.toFixed(0)},${sprite.body.velocity.y.toFixed(0)}), Schaden=${damage}`);
     }
     
     // Registriere das Projektil für Kollisionserkennung
@@ -59,7 +53,12 @@ export class EnemyBullet extends Bullet {
    * Registriere das Projektil für die Kollisionserkennung
    */
   public register(): void {
-    this.eventBus.emit('REGISTER_ENEMY_BULLET', this.getSprite());
+    // Setze die Erstellungszeit
+    this.sprite.setData('creationTime', this.scene.time.now);
+    this.sprite.setData('bulletId', Date.now() + Math.random());
+    
+    // Registriere für Kollisionserkennung
+    this.eventBus.emit('REGISTER_ENEMY_BULLET', this.sprite);
   }
   
   /**

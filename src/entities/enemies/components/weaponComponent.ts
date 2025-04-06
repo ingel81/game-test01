@@ -89,14 +89,6 @@ export class WeaponComponent {
     // Zielverfolgung
     this.predictiveAim = config.predictiveAim || false;
     this.targetPlayer = config.targetPlayer || false;
-    
-    // Projektilgruppe initialisieren
-    this.bullets = this.scene.physics.add.group({
-      defaultKey: this.bulletTexture,
-      maxSize: 30,
-      active: false,
-      visible: false
-    });
   }
 
   /**

@@ -52,6 +52,15 @@ export class CollisionManager {
     const playerBullets = this.player.getBullets();
     const playerSprite = this.player.getSprite();
     
+    // Hole feindliche Bullets einmal am Anfang
+    const enemyBullets = this.enemyManager.getBullets();
+    const activeBullets = enemyBullets.getChildren().filter(b => b.active).length;
+    
+    // Debug-Log für die Anzahl aktiver Bullets
+    if (activeBullets > 250) {
+      console.warn(`[COLLISION_MANAGER] Warnung: Hohe Anzahl aktiver Bullets: ${activeBullets}`);
+    }
+
     // Überprüfe Kollisionen mit jedem Feind einzeln
     enemies.forEach(enemy => {
       const enemySprite = enemy.getSprite();
@@ -125,8 +134,6 @@ export class CollisionManager {
     });
 
     // Kollision zwischen Feind-Bullets und Spieler
-    const enemyBullets = this.enemyManager.getBullets();
-    
     // Durchlaufe jede feindliche Bullet einzeln, um Probleme mit der Gruppe zu vermeiden
     enemyBullets.children.each((bullet: Phaser.GameObjects.GameObject) => {
       const b = bullet as Phaser.Physics.Arcade.Sprite;
