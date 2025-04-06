@@ -341,6 +341,7 @@ Verwaltet die Level, deren Progression und Konfiguration.
 - Management von Wellen und zeitgesteuerten Ereignissen
 - Level-Intros und -Outros
 - Übergang zwischen Levels
+- Level-Ende-Logik: Ein Level wird erst beendet, wenn alle Gegner zerstört wurden oder den Bildschirm verlassen haben
 
 ```typescript
 export class LevelManager {

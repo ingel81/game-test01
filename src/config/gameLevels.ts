@@ -20,8 +20,8 @@ import { level10 } from './levels/level10';
  */
 export const GameLevels: LevelConfig[] = [
   // Debug Level ist auskommentiert und wird nur für Testzwecke verwendet
-  //debugLevel,
-  level1,
+  debugLevel,
+  /* level1,
   level2,
   level3,
   level4,
@@ -30,7 +30,7 @@ export const GameLevels: LevelConfig[] = [
   level7,
   level8,
   level9,
-  level10
+  level10 */
 ];
 
 /**

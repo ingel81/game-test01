@@ -250,22 +250,47 @@ export class NewEnemyManager {
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const enemy = this.enemies[i];
       
+      // Überprüfe ob der Gegner noch existiert
+      if (!enemy || !enemy.getSprite) {
+        console.log(`[ENEMY_MANAGER] Ungültiger Gegner an Index ${i} gefunden, wird entfernt.`);
+        this.enemies.splice(i, 1);
+        continue;
+      }
+      
+      const sprite = enemy.getSprite();
+      
       // Überspringe, wenn der Gegner inaktiv ist
-      if (!enemy.getSprite().active) {
+      if (!sprite || !sprite.active) {
+        console.log(`[ENEMY_MANAGER] Gegner mit inaktivem Sprite entfernt.`);
         this.enemies.splice(i, 1);
         continue;
       }
       
       // Entferne Gegner, die zu weit außerhalb des Bildschirms sind
-      if (enemy.getSprite().x < -150 || enemy.getSprite().y < -150 || enemy.getSprite().y > this.scene.scale.height + 150) {
-        console.log(`[ENEMY_MANAGER] Gegner außerhalb des Bildschirms bei (${enemy.getSprite().x}, ${enemy.getSprite().y}), wird entfernt.`);
-        enemy.destroy();
+      if (sprite.x < -150 || sprite.y < -150 || sprite.y > this.scene.scale.height + 150) {
+        console.log(`[ENEMY_MANAGER] Gegner außerhalb des Bildschirms bei (${sprite.x}, ${sprite.y}), wird entfernt.`);
+        
+        // WICHTIG: Wir müssen destroy() aufrufen, um das EventBus-Event ENEMY_DESTROYED auszulösen
+        // Versuche die destroy-Methode aufzurufen und fange Fehler ab
+        try {
+          enemy.destroy();
+        } catch (error) {
+          console.error(`[ENEMY_MANAGER] Fehler beim Zerstören des Gegners: ${error}`);
+        }
+        
+        // Aus der Liste entfernen
         this.enemies.splice(i, 1);
         continue;
       }
       
       // Aktualisiere aktive Gegner
-      enemy.update(time, delta);
+      try {
+        enemy.update(time, delta);
+      } catch (error) {
+        console.error(`[ENEMY_MANAGER] Fehler beim Aktualisieren des Gegners: ${error}`);
+        // Im Fehlerfall Gegner entfernen
+        this.enemies.splice(i, 1);
+      }
     }
     
     // Aktualisiere alle Projektile

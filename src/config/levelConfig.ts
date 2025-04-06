@@ -115,7 +115,7 @@ export const debugLevel: LevelConfig = {
       count: 1,
       formation: FormationType.LINE,
       delay: 1000,      
-    },    
+    },/*    
     {
       enemyType: EnemyType.ADVANCED,
       count: 3,
@@ -140,7 +140,7 @@ export const debugLevel: LevelConfig = {
       formation: FormationType.SINGLE,
       delay: 1000,
       isLevelEndTrigger: true
-    },    
+    },*/    
     /*
     {
       enemyType: EnemyType.TURRET,
