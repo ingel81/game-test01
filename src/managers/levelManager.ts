@@ -162,6 +162,12 @@ export class LevelManager {
     this.currentWaveIndex = 0;
     this.levelEndTriggerWaves.clear();
     
+    console.log(`[LEVEL_MANAGER] Debug - GameLevels.length: ${GameLevels.length}, aktives Level: ${levelIndex}`);
+    console.log(`[LEVEL_MANAGER] Debug - Wellen im Level: ${this.currentLevel.waves?.length || 0}`);
+    if (this.currentLevel.waves && this.currentLevel.waves.length > 0) {
+      console.log(`[LEVEL_MANAGER] Debug - Erste Welle: Typ=${this.currentLevel.waves[0].enemyType}, Anzahl=${this.currentLevel.waves[0].count}`);
+    }
+    
     // Zeitstempel für den Levelstart setzen
     this.levelStartTime = Date.now();
     
@@ -185,16 +191,23 @@ export class LevelManager {
     
     // Level-Intro anzeigen, falls vorhanden
     if (this.currentLevel.introText && !this.levelIntroShown) {
+      console.log(`[LEVEL_MANAGER] Zeige Level-Intro an: "${this.currentLevel.introText.substring(0, 30)}..."`);
       this.showLevelIntro(this.currentLevel.introText, () => {
         // Wechsle zum RUNNING-Zustand erst nach dem Intro
         this.setState(LevelState.RUNNING);
         this.startLevelTimer();
         this.levelIntroShown = true;
+        console.log(`[LEVEL_MANAGER] Level-Intro beendet, starte erste Welle`);
+        this.startNextWave();
       });
     } else {
       // Kein Intro, Level läuft direkt
+      console.log(`[LEVEL_MANAGER] Kein Level-Intro, starte Level direkt`);
       this.setState(LevelState.RUNNING);
       this.startLevelTimer();
+      console.log(`[LEVEL_MANAGER] Vor dem Aufruf von startNextWave()`);
+      this.startNextWave();
+      console.log(`[LEVEL_MANAGER] Nach dem Aufruf von startNextWave()`);
     }
     
     // Level-spezifische Musik starten
@@ -218,9 +231,6 @@ export class LevelManager {
     // Timed Spawns und Pickups initialisieren
     this.setupTimedSpawns();
     this.setupTimedPickups();
-    
-    // Starte die erste Welle
-    this.startNextWave();
     
     console.log(`[LEVEL_MANAGER] Level ${this.currentLevel.name} initialisiert`);
   }
@@ -341,31 +351,41 @@ export class LevelManager {
    * @param isLevelEndTrigger Ob diese Welle ein Level-End-Trigger ist
    */
   private spawnWaveByFormation(formation: FormationType, enemyType: string, count: number, delay: number, isLevelEndTrigger: boolean): void {
+    console.log(`[LEVEL_MANAGER] spawnWaveByFormation aufgerufen: formation=${formation}, enemyType=${enemyType}, count=${count}`);
+    
     // Wenn das Level pausiert oder beendet ist, keine Gegner spawnen
     if (!this.isInState(LevelState.RUNNING)) {
+      console.log(`[LEVEL_MANAGER] spawnWaveByFormation: Level nicht im RUNNING-Zustand, sondern ${this.currentState}`);
       return;
     }
     
     switch (formation) {
       case FormationType.LINE:
+        console.log(`[LEVEL_MANAGER] Spawne Linienformation mit ${count} Gegnern vom Typ ${enemyType}`);
         this.spawnLineFormation(enemyType, count, delay, isLevelEndTrigger);
         break;
       case FormationType.V_FORMATION:
+        console.log(`[LEVEL_MANAGER] Spawne V-Formation mit ${count} Gegnern vom Typ ${enemyType}`);
         this.spawnVFormation(enemyType, count, delay, isLevelEndTrigger);
         break;
       case FormationType.SQUARE:
+        console.log(`[LEVEL_MANAGER] Spawne Quadrat-Formation mit ${count} Gegnern vom Typ ${enemyType}`);
         this.spawnSquareFormation(enemyType, count, delay, isLevelEndTrigger);
         break;
       case FormationType.RANDOM:
+        console.log(`[LEVEL_MANAGER] Spawne Zufalls-Formation mit ${count} Gegnern vom Typ ${enemyType}`);
         this.spawnRandomFormation(enemyType, count, delay, isLevelEndTrigger);
         break;
       case FormationType.SINGLE:
+        console.log(`[LEVEL_MANAGER] Spawne einzelnen Gegner vom Typ ${enemyType}`);
         this.spawnSingleEnemy(enemyType, isLevelEndTrigger);
         break;
       default:
-        console.error(`[LEVEL_MANAGER] Unbekannte Formation: ${formation}`);
+        console.error(`[LEVEL_MANAGER] Unbekannte Formation: ${formation}, verwende Linienformation`);
         this.spawnLineFormation(enemyType, count, delay, isLevelEndTrigger);
     }
+    
+    console.log(`[LEVEL_MANAGER] spawnWaveByFormation abgeschlossen`);
   }
   
   /**
@@ -461,11 +481,16 @@ export class LevelManager {
    * Spawnt einen Gegner mit Verzögerung
    */
   private spawnEnemyWithDelay(enemyType: string, x: number, y: number, delay: number, isLevelEndTrigger: boolean): void {
+    console.log(`[LEVEL_MANAGER] spawnEnemyWithDelay aufgerufen: Typ=${enemyType}, Position=(${x}, ${y}), Delay=${delay}ms`);
+    
     this.scene.time.delayedCall(
       delay,
       () => {
         // Wenn das Level nicht mehr läuft, keine Gegner spawnen
-        if (!this.isInState(LevelState.RUNNING)) return;
+        if (!this.isInState(LevelState.RUNNING)) {
+          console.log(`[LEVEL_MANAGER] Gegner-Spawn abgebrochen, Level nicht im RUNNING-Zustand, sondern ${this.currentState}`);
+          return;
+        }
         
         // Multiplikatoren anwenden (Standard 1.0)
         const options = {
@@ -473,13 +498,22 @@ export class LevelManager {
           speedMultiplier: 1.0
         };
         
-        // Gegner-Instanz erstellen
-        const enemy = this.enemyManager.spawnEnemyOfType(enemyType, x, y, options);
+        console.log(`[LEVEL_MANAGER] Versuche Gegner zu spawnen: Typ=${enemyType}`);
         
-        // Wenn der Gegner Teil einer Level-End-Trigger-Welle ist, markieren wir ihn
-        if (isLevelEndTrigger) {
-          const sprite = enemy.getSprite();
-          sprite.setData('isLevelEndTrigger', true);
+        try {
+          // Gegner-Instanz erstellen
+          const enemy = this.enemyManager.spawnEnemyOfType(enemyType, x, y, options);
+          
+          console.log(`[LEVEL_MANAGER] Gegner erfolgreich gespawnt: ${enemy ? 'Ja' : 'Nein'}`);
+          
+          // Wenn der Gegner Teil einer Level-End-Trigger-Welle ist, markieren wir ihn
+          if (isLevelEndTrigger && enemy && enemy.getSprite) {
+            const sprite = enemy.getSprite();
+            sprite.setData('isLevelEndTrigger', true);
+            console.log(`[LEVEL_MANAGER] Gegner als Level-End-Trigger markiert`);
+          }
+        } catch (error) {
+          console.error(`[LEVEL_MANAGER] Fehler beim Spawnen des Gegners: ${error}`);
         }
       },
       [],
@@ -491,8 +525,11 @@ export class LevelManager {
    * Startet die nächste Welle von Gegnern
    */
   private startNextWave(): void {
+    console.log(`[LEVEL_MANAGER] startNextWave() aufgerufen, currentWaveIndex=${this.currentWaveIndex}`);
+
     // Nichts tun, wenn keine Level-Daten vorhanden oder Level nicht aktiv ist
     if (!this.currentLevel || !this.isInState(LevelState.RUNNING)) {
+      console.log(`[LEVEL_MANAGER] Abbruch: currentLevel=${!!this.currentLevel}, State=${this.currentState}`);
       return;
     }
     
@@ -522,6 +559,7 @@ export class LevelManager {
     
     // Aktuelle Welle holen
     const wave = this.currentLevel.waves[this.currentWaveIndex];
+    console.log(`[LEVEL_MANAGER] Aktuelle Welle geladen: Index=${this.currentWaveIndex}, Typ=${wave.enemyType}, Anzahl=${wave.count}`);
     
     // Bestimme, ob diese Welle ein Level-End-Trigger ist
     const isLevelEndTrigger = wave.isLevelEndTrigger || false;
@@ -536,16 +574,26 @@ export class LevelManager {
     
     // Vorbereitung für die Welle
     const formation = wave.formation || FormationType.LINE;
-    const enemyType = wave.enemyType || '';
+    const enemyType = wave.enemyType ? String(wave.enemyType) : '';
     const count = wave.count || 5;
     const delay = wave.delay || 500;
     const startDelay = wave.startDelay || 0;
     
+    // Debug-Ausgabe für enemyType
+    console.log(`[LEVEL_MANAGER] Verwende enemyType: ${enemyType}, Originalwert: ${wave.enemyType}, formation: ${formation}`);
+    
     // Rufe die entsprechende Spawn-Methode basierend auf dem Formations-Typ auf
-    this.spawnWaveByFormation(formation, enemyType, count, delay, isLevelEndTrigger);
+    try {
+      console.log(`[LEVEL_MANAGER] Rufe spawnWaveByFormation auf`);
+      this.spawnWaveByFormation(formation, enemyType, count, delay, isLevelEndTrigger);
+      console.log(`[LEVEL_MANAGER] spawnWaveByFormation abgeschlossen`);
+    } catch (error) {
+      console.error(`[LEVEL_MANAGER] Fehler beim Spawn der Welle: ${error}`);
+    }
     
     // Erhöhe den Wave-Index für die nächste Welle
     this.currentWaveIndex++;
+    console.log(`[LEVEL_MANAGER] currentWaveIndex erhöht auf ${this.currentWaveIndex}`);
     
     // Finde das Delay für die nächste Welle, wenn vorhanden
     let nextWaveDelay = 0;
@@ -564,6 +612,9 @@ export class LevelManager {
         this
       );
       this.waveTimers.push(timer);
+      console.log(`[LEVEL_MANAGER] Timer für nächste Welle gesetzt`);
+    } else {
+      console.log(`[LEVEL_MANAGER] Keine weiteren Wellen vorhanden`);
     }
   }
   
@@ -591,8 +642,11 @@ export class LevelManager {
           const delay = 500; // Default-Verzögerung
           const isEndTrigger = false; // Zeitgesteuerte Spawns sind keine End-Trigger
           
+          // EnemyType in String konvertieren
+          const enemyType = String(spawn.enemyType);
+          
           // Rufe die entsprechende Spawn-Methode auf
-          this.spawnWaveByFormation(formation, spawn.enemyType, count, delay, isEndTrigger);
+          this.spawnWaveByFormation(formation, enemyType, count, delay, isEndTrigger);
         },
         [],
         this

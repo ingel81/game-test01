@@ -114,57 +114,18 @@ export const debugLevel: LevelConfig = {
       enemyType: EnemyType.STANDARD,
       count: 1,
       formation: FormationType.LINE,
-      delay: 1000,      
-    }/*,    
-    {
-      enemyType: EnemyType.ADVANCED,
-      count: 3,
-      formation: FormationType.SINGLE,
       delay: 1000
-    },
-    {
-      enemyType: EnemyType.ELITE,
-      count: 3,
-      formation: FormationType.SINGLE,
-      delay: 1000
-    },
-    {
-      enemyType: EnemyType.TURRET,
-      count: 3,
-      formation: FormationType.SINGLE,
-      delay: 1000
-    },
-    {
-      enemyType: EnemyType.BOSS,
-      count: 3,
-      formation: FormationType.SINGLE,
-      delay: 1000,
-      isLevelEndTrigger: true
-    },*/    
-    /*
-    {
-      enemyType: EnemyType.TURRET,
-      count: 10,
-      formation: FormationType.V_FORMATION,
-      delay: 3000
-    },
-    {
-      enemyType: EnemyType.BOSS,
-      count: 10,
-      formation: FormationType.V_FORMATION,
-      delay: 0,
-      isLevelEndTrigger: true
-    }*/
+    }
   ],
   
   timedPickups: [
     {
-      time: 20000,
+      time: 5000,
       type: PickupType.ENERGY,
-      count: 2
+      count: 1
     },
     {
-      time: 50000,
+      time: 5000,
       type: PickupType.POWER,
       count: 1
     }

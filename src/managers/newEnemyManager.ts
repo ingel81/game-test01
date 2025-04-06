@@ -159,29 +159,36 @@ export class NewEnemyManager {
     console.log(`[ENEMY_MANAGER] Aktuelle Schwierigkeit: ${this.difficulty}`);
     console.log(`[ENEMY_MANAGER] EnemyType Enum Check - STANDARD = ${EnemyType.STANDARD}, Gleichheit: ${type === EnemyType.STANDARD}`);
     console.log(`[ENEMY_MANAGER] EnemyType direkt als String: ${type}`);
+    console.log(`[ENEMY_MANAGER] Typ-Vergleich: type === 'standard': ${type === 'standard'}`);
+    console.log(`[ENEMY_MANAGER] Typ nach toLowerCase: ${type.toLowerCase()}`);
     
     const spawnStartTime = performance.now();
     
-    switch (type) {
+    switch (type.toLowerCase()) {
       case 'standard':
+        console.log(`[ENEMY_MANAGER] Case 'standard' getroffen`);
         enemy = new StandardEnemy(this.scene, x, y, this.player);
         console.log(`[ENEMY_MANAGER] StandardEnemy erstellt mit ${enemy.getHealth()} HP`);
         break;
       case 'advanced':
+        console.log(`[ENEMY_MANAGER] Case 'advanced' getroffen`);
         enemy = new AdvancedEnemy(this.scene, x, y, this.player);
         console.log(`[ENEMY_MANAGER] AdvancedEnemy erstellt mit ${enemy.getHealth()} HP`);
         break;
       case 'elite':
+        console.log(`[ENEMY_MANAGER] Case 'elite' getroffen`);
         enemy = new EliteEnemy(this.scene, x, y, this.player);
         console.log(`[ENEMY_MANAGER] EliteEnemy erstellt mit ${enemy.getHealth()} HP`);
         break;
       case 'boss':
+        console.log(`[ENEMY_MANAGER] Case 'boss' getroffen`);
         enemy = new BossEnemy(this.scene, x, y, this.player);
         console.log(`[ENEMY_MANAGER] *** BOSS SPAWNED *** mit ${enemy.getHealth()} HP`);
         // Boss-Spawned-Event auslösen
         this.eventBus.emit(EventType.BOSS_SPAWNED, enemy);
         break;
       case 'turret':
+        console.log(`[ENEMY_MANAGER] Case 'turret' getroffen`);
         enemy = new TurretEnemy(this.scene, x, y, this.player);
         this.turretActive = true;
         console.log(`[ENEMY_MANAGER] TurretEnemy erstellt mit ${enemy.getHealth()} HP`);
