@@ -26,25 +26,12 @@ export class NewEnemyManager {
   private scene: Phaser.Scene;
   private player: Player;
   private enemies: BaseEnemy[] = [];
-  private maxEnemies: number = 15;
-  private enemySpawnTimer: Phaser.Time.TimerEvent;
-  private bossSpawnTimer: Phaser.Time.TimerEvent;
   private difficulty: number = 1;
   private eventBus: EventBus;
   private isPaused: boolean = false;
   private turretActive: boolean = false;
   private allEnemyBullets: Phaser.Physics.Arcade.Group;
   private currentDebugMode: DebugMode = DebugMode.OFF;
-  private autoSpawningEnabled: boolean = false;
-  
-  // Wahrscheinlichkeiten für das Spawn verschiedener Gegnertypen
-  private enemySpawnChance: Record<string, number> = {
-    standard: 0.3,
-    advanced: 0.1,
-    elite: 0.1,
-    boss: 0, // Boss wird über einen Timer gespawnt
-    turret: 0.1 // 90% Chance für Turrets
-  };
 
   constructor(scene: Phaser.Scene, player: Player) {
     this.scene = scene;
@@ -62,92 +49,6 @@ export class NewEnemyManager {
     this.eventBus.on('REGISTER_ENEMY_BULLET', this.registerEnemyBullet);
     this.eventBus.on(EventType.DEBUG_TOGGLED, this.onDebugModeChanged);
     this.eventBus.on(EventType.ENEMY_REMOVED, this.handleEnemyRemoved);
-  }
-  
-  /**
-   * Startet die automatischen Spawn-Timer
-   * Diese werden NUR genutzt, wenn kein LevelManager verwendet wird
-   */
-  public startAutoSpawnTimers(): void {
-    // Starte Spawn-Timer
-    this.enemySpawnTimer = this.scene.time.addEvent({
-      delay: Constants.SPAWN_RATE_ENEMY,
-      callback: this.spawnEnemy,
-      callbackScope: this,
-      loop: true
-    });
-    
-    this.bossSpawnTimer = this.scene.time.addEvent({
-      delay: Constants.SPAWN_RATE_BOSS,
-      callback: this.trySpawnBoss,
-      callbackScope: this,
-      loop: true
-    });
-    
-    this.autoSpawningEnabled = true;
-  }
-  
-  /**
-   * Spawnt einen zufälligen Gegner basierend auf den Wahrscheinlichkeiten
-   * Wird nur vom automatischen Spawning-System verwendet
-   */
-  private spawnEnemy = (): void => {
-    if (this.isPaused || !this.autoSpawningEnabled) return;
-    
-    // Begrenze die Anzahl der Gegner
-    if (this.enemies.length >= this.maxEnemies) {
-      console.log(`[ENEMY_MANAGER] Maximale Anzahl Gegner erreicht (${this.enemies.length}/${this.maxEnemies}). Kein weiterer Spawn.`);
-      return;
-    }
-    
-    // Bestimme den Gegnertyp basierend auf den Wahrscheinlichkeiten
-    const randomValue = Math.random();
-    let enemyType: string = 'standard';
-    let cumulativeProbability = 0;
-    
-    console.log(`[ENEMY_MANAGER] Zufallswert für Spawn: ${randomValue.toFixed(4)}`);
-    console.log(`[ENEMY_MANAGER] Aktuelle Spawn-Wahrscheinlichkeiten: Standard=${this.enemySpawnChance.standard.toFixed(2)}, Advanced=${this.enemySpawnChance.advanced.toFixed(2)}, Elite=${this.enemySpawnChance.elite.toFixed(2)}, Turret=${this.enemySpawnChance.turret.toFixed(2)}`);
-    
-    // Definiere die Reihenfolge der Typen explizit
-    const enemyTypes: string[] = ['standard', 'advanced', 'elite', 'turret', 'boss'];
-    
-    // Verwende die sortierte Reihenfolge für konsistente Ergebnisse
-    for (const type of enemyTypes) {
-      cumulativeProbability += this.enemySpawnChance[type];
-      if (randomValue <= cumulativeProbability) {
-        enemyType = type;
-        break;
-      }
-    }
-    
-    console.log(`[ENEMY_MANAGER] Ausgewählter Gegnertyp: ${enemyType}`);
-    
-    // Spawn Position
-    const x = this.scene.scale.width + 50;
-    const y = Phaser.Math.Between(100, this.scene.scale.height - 100);
-    
-    // Spawne den Gegner
-    this.spawnEnemyOfType(enemyType, x, y);
-  }
-  
-  /**
-   * Versucht, einen Boss zu spawnen, wenn die Bedingungen erfüllt sind
-   * Wird nur vom automatischen Spawning-System verwendet
-   */
-  private trySpawnBoss = (): void => {
-    if (this.isPaused || !this.autoSpawningEnabled) return;
-    
-    // Spawne nur, wenn Schwierigkeit hoch genug ist
-    if (this.difficulty < 2) {
-      console.log(`[ENEMY_MANAGER] Boss-Spawn übersprungen, da Schwierigkeit zu niedrig (${this.difficulty})`);
-      return;
-    }
-    
-    console.log('[ENEMY_MANAGER] Spawne Boss!');
-    const x = this.scene.scale.width + 100;
-    const y = this.scene.scale.height / 2;
-    
-    this.spawnEnemyOfType('boss', x, y);
   }
   
   /**
@@ -246,12 +147,6 @@ export class NewEnemyManager {
     if (this.currentDebugMode !== DebugMode.OFF && time % 1000 < 20) {
       const activeEnemies = this.enemies.length;
       const activeBullets = this.allEnemyBullets.getChildren().filter(bullet => bullet.active).length;
-      
-      if (this.currentDebugMode === DebugMode.FULL) {
-        console.log(`[ENEMY_MANAGER] Update: ${activeEnemies} Gegner, ${activeBullets} Feind-Projektile, Schwierigkeit ${this.difficulty}, 
-                     Modus: ${this.autoSpawningEnabled ? 'Auto-Spawn' : 'Level-gesteuert'}, 
-                     Turret: ${this.turretActive}`);
-      }
     }
     
     // Aktualisiere alle Gegner
@@ -333,10 +228,7 @@ export class NewEnemyManager {
   private onDifficultyChanged = (data: any): void => {
     const newDifficulty = typeof data === 'object' ? data.difficulty : data;
     this.difficulty = newDifficulty;
-    
-    // Passe Spawn-Wahrscheinlichkeiten an
-    this.adjustSpawnRates();
-    
+       
     // Informiere alle aktiven Gegner über die Schwierigkeitsänderung
     this.enemies.forEach(enemy => {
       enemy.applyDifficulty({
@@ -353,21 +245,7 @@ export class NewEnemyManager {
     this.currentDebugMode = mode;
     console.log(`[ENEMY_MANAGER] Debug-Modus geändert auf: ${mode}`);
   }
-  
-  /**
-   * Passt die Spawn-Raten basierend auf der Schwierigkeit an
-   */
-  private adjustSpawnRates(): void {
-    // Mit steigender Schwierigkeit mehr fortgeschrittene Gegner
-    this.enemySpawnChance.standard = Math.max(0.1, 0.5 - (this.difficulty - 1) * 0.05);
-    this.enemySpawnChance.advanced = Math.min(0.4, 0.1 + (this.difficulty - 1) * 0.04);
-    this.enemySpawnChance.elite = Math.min(0.3, 0.1 + (this.difficulty - 1) * 0.03);
-    this.enemySpawnChance.turret = Math.min(0.2, 0.05 + (this.difficulty - 1) * 0.02);
-    this.enemySpawnChance.boss = 0; // Boss wird über Timer gesteuert
     
-    console.log(`[ENEMY_MANAGER] Spawn-Raten angepasst für Schwierigkeit ${this.difficulty}: Standard=${this.enemySpawnChance.standard.toFixed(2)}, Advanced=${this.enemySpawnChance.advanced.toFixed(2)}, Elite=${this.enemySpawnChance.elite.toFixed(2)}, Turret=${this.enemySpawnChance.turret.toFixed(2)}`);
-  }
-  
   /**
    * Gibt alle aktiven Gegner zurück
    */
@@ -387,8 +265,6 @@ export class NewEnemyManager {
    */
   private pauseSpawning = (): void => {
     this.isPaused = true;
-    if (this.enemySpawnTimer) this.enemySpawnTimer.paused = true;
-    if (this.bossSpawnTimer) this.bossSpawnTimer.paused = true;
   }
   
   /**
@@ -396,8 +272,6 @@ export class NewEnemyManager {
    */
   private resumeSpawning = (): void => {
     this.isPaused = false;
-    if (this.enemySpawnTimer) this.enemySpawnTimer.paused = false;
-    if (this.bossSpawnTimer) this.bossSpawnTimer.paused = false;
   }
   
   /**
@@ -405,9 +279,6 @@ export class NewEnemyManager {
    */
   private stopSpawning = (): void => {
     this.isPaused = true;
-    this.autoSpawningEnabled = false;
-    if (this.enemySpawnTimer) this.enemySpawnTimer.remove();
-    if (this.bossSpawnTimer) this.bossSpawnTimer.remove();
   }
   
   /**
@@ -468,16 +339,7 @@ export class NewEnemyManager {
     
     // Zerstöre alle Gegner
     this.destroyAllEnemies();
-    
-    // Entferne Timer, falls vorhanden
-    if (this.enemySpawnTimer) {
-      this.enemySpawnTimer.remove();
-    }
-    
-    if (this.bossSpawnTimer) {
-      this.bossSpawnTimer.remove();
-    }
-    
+        
     // Entferne Event-Listener
     this.eventBus.off(EventType.DIFFICULTY_CHANGED, this.onDifficultyChanged);
     this.eventBus.off(EventType.PAUSE_GAME, this.pauseSpawning);

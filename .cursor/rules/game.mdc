@@ -11,10 +11,10 @@ alwaysApply: true
 
 # Your rule content
 
-Falls Informationen zur grundsätzlichen Struktur des Projekts benötigt werden einfach in die readme.md schauen.
-Nach Implementierung neuer Dinge oder Änderungen von Dingen muss stets die readme.md aktualisiert werden.
+Schaue dir immer vor jeder Anfrage die [README.md](mdc:README.md) an um Anfragen besser verstehen zu können.
+Nach Implementierung oder Änderung von von beliebigen Inhalten muss stets die [README.md](mdc:README.md) aktualisiert werden falls notwendig.
 
-Mache keine grundsätzlichen Änderungen außer du wirst darum gebeten. Behalte die Ordnerstruktur bei.
-Mache nur worum du gebeten wirst. Baue grundsätzlich keine neuen Features ein, wenn nicht explizit darum gebeten wurde, auch nichts triviales.
-
-Ändere nichts am grundlegenden Setup wie Versionen von Bibliotheken, Typescript configs, etc
+- Behalte die Ordnerstruktur bei.
+- Mache keine grundsätzlichen Änderungen außer du wirst darum gebeten. 
+- Mache nur worum du gebeten wirst. Überlege dir nicht eigenmächtig neue Features wenn nicht explizit darum gebeten wurde.
+- Ändere nichts am grundlegenden Projekt-Setup wie z.B.: Versionen von Bibliotheken, Typescript configs, Buildeinstellungen, etc.
