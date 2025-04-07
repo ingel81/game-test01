@@ -559,17 +559,17 @@ export class AssetManager {
         try {
           switch (asset.type) {
             case AssetType.IMAGE:
-              console.log(`[ASSET_MANAGER] Lade Bild: ${asset.key} von ${assetPath}`);
+              console.debug(`[ASSET_MANAGER] Lade Bild: ${asset.key} von ${assetPath}`);
               scene.load.image(asset.key, assetPath);
               break;
               
             case AssetType.AUDIO:
-              console.log(`[ASSET_MANAGER] Lade Audio: ${asset.key} von ${assetPath}`);
+              console.debug(`[ASSET_MANAGER] Lade Audio: ${asset.key} von ${assetPath}`);
               scene.load.audio(asset.key, assetPath);
               break;
               
             case AssetType.SPRITESHEET:
-              console.log(`[ASSET_MANAGER] Lade Spritesheet: ${asset.key} von ${assetPath}`);
+              console.debug(`[ASSET_MANAGER] Lade Spritesheet: ${asset.key} von ${assetPath}`);
               scene.load.spritesheet(asset.key, assetPath, asset.config);
               break;
               
@@ -579,12 +579,7 @@ export class AssetManager {
         } catch (assetError) {
           console.error(`[ASSET_MANAGER] Fehler beim Laden von Asset ${asset.key}:`, assetError);
         }
-      }
-      
-      // Event-Handler für Ladefortschritt
-      scene.load.on('progress', (value: number) => {
-        console.log(`[ASSET_MANAGER] Ladefortschritt: ${Math.round(value * 100)}%`);
-      });
+      }      
       
       // Event-Handler für Ladefehler
       scene.load.on('loaderror', (file: any) => {

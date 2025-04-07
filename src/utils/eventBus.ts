@@ -127,4 +127,7 @@ export enum EventType {
   CREATE_ENERGY_PICKUP = 'CREATE_ENERGY_PICKUP',
   CREATE_POWER_PICKUP = 'CREATE_POWER_PICKUP',
   DESTROY_ASTEROID = 'DESTROY_ASTEROID',
+  
+  // Neues Event für still entfernte Gegner
+  ENEMY_REMOVED = 'enemy_removed',
 } 

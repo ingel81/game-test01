@@ -233,10 +233,12 @@ export class BaseEnemy extends GameObject {
   public update(time: number, delta: number): void {
     if (this.isDestroyed) return;
     
-    // Löschen, wenn zu weit links aus dem Bildschirm
-    if (this.sprite.x < -100) {
-      console.log(`[ENEMY] Gegner außerhalb des Bildschirms (${this.sprite.x}, ${this.sprite.y}), wird zerstört`);
-      this.destroy();
+    // Löschen, wenn außerhalb des Bildschirms
+    if (this.sprite.x < Constants.OFFSCREEN_MARGIN || 
+        this.sprite.y < Constants.OFFSCREEN_MARGIN || 
+        this.sprite.y > this.scene.scale.height + Math.abs(Constants.OFFSCREEN_MARGIN)) {
+      console.log(`[ENEMY] Gegner außerhalb des Bildschirms (${this.sprite.x}, ${this.sprite.y}), wird entfernt`);
+      this.remove(); // Statt this.destroy()
       return;
     }
     
@@ -392,12 +394,7 @@ export class BaseEnemy extends GameObject {
     
     // Zerstöre den Debug-Text
     if (this.debugText) {
-      console.log(`[DEBUG] Versuche Debug-Text zu zerstören für ${this.constructor.name} an Position (${this.sprite.x}, ${this.sprite.y})`);
-      console.log(`[DEBUG] Debug-Text aktiv: ${this.debugText.active}, sichtbar: ${this.debugText.visible}, Text: ${this.debugText.text}`);
       this.debugText.destroy();
-      console.log(`[DEBUG] Debug-Text nach destroy - aktiv: ${this.debugText.active}, sichtbar: ${this.debugText.visible}`);
-    } else {
-      console.log(`[DEBUG] Kein Debug-Text für ${this.constructor.name} an Position (${this.sprite.x}, ${this.sprite.y})`);
     }
     
     // Zerstöre alle Komponenten
@@ -406,5 +403,32 @@ export class BaseEnemy extends GameObject {
     // Rufe die Basis-Destroy-Methode auf
     console.log(`[DEBUG] Rufe super.destroy() für ${this.constructor.name} an Position (${this.sprite.x}, ${this.sprite.y}) auf`);
     super.destroy();
+  }
+  
+  /**
+   * Entfernt den Gegner still aus dem Spiel
+   * Für das Entfernen von Objekten außerhalb des Bildschirms
+   */
+  public remove(): void {
+    // Entferne Debug-Event-Handler
+    if (this.debugToggleHandler) {
+      this.eventBus.off(EventType.DEBUG_TOGGLED, this.debugToggleHandler);
+    }
+    
+    // Zerstöre den Debug-Text
+    if (this.debugText) {
+      this.debugText.destroy();
+    }
+    
+    // Zerstöre alle Komponenten, aber ohne visuelle Effekte
+    if (this.visualComponent) {
+      this.visualComponent.destroy();
+    }
+    
+    // Informiere das System über das Entfernen des Gegners
+    this.eventBus.emit(EventType.ENEMY_REMOVED, { enemy: this, sprite: this.sprite });
+    
+    // Rufe die Basis-Remove-Methode auf
+    super.remove();
   }
 } 

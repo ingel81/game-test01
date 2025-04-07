@@ -45,6 +45,15 @@ export abstract class Entity {
   }
 
   /**
+   * Entfernt die Entität still aus dem Spiel ohne Effekte
+   * Für das Entfernen von Objekten außerhalb des Bildschirms
+   */
+  public remove(): void {
+    // Nur das Sprite entfernen, ohne weitere Effekte
+    this.sprite.destroy();
+  }
+
+  /**
    * Setzt die Position der Entität
    */
   public setPosition(x: number, y: number): void {

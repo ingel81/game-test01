@@ -156,12 +156,7 @@ export class AssetLoader {
         } catch (assetError) {
           console.error(`[ASSET_LOADER] Fehler beim Laden von Asset ${key}:`, assetError);
         }
-      }
-      
-      // Event-Handler für Ladefortschritt
-      scene.load.on('progress', (value: number) => {
-        //console.log(`[ASSET_LOADER] Ladefortschritt: ${Math.round(value * 100)}%`);
-      });
+      }    
       
       // Event-Handler für Ladefehler
       scene.load.on('loaderror', (file: any) => {

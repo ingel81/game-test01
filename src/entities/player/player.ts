@@ -394,11 +394,7 @@ export class Player extends GameObject {
       this.scene, 
       this.sprite.x, 
       this.sprite.y, 
-      3.0,
-      () => {
-        // Effekt abgeschlossen
-        console.log('[PLAYER] Explosionseffekt abgeschlossen');
-      }
+      3.0      
     );
 
     // Teile der Spielwelt mit, dass der Spieler zerstört wurde

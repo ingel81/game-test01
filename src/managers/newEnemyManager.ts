@@ -61,6 +61,7 @@ export class NewEnemyManager {
     this.eventBus.on(EventType.GAME_OVER, this.stopSpawning);
     this.eventBus.on('REGISTER_ENEMY_BULLET', this.registerEnemyBullet);
     this.eventBus.on(EventType.DEBUG_TOGGLED, this.onDebugModeChanged);
+    this.eventBus.on(EventType.ENEMY_REMOVED, this.handleEnemyRemoved);
   }
   
   /**
@@ -269,23 +270,6 @@ export class NewEnemyManager {
       // Überspringe, wenn der Gegner inaktiv ist
       if (!sprite || !sprite.active) {
         console.log(`[ENEMY_MANAGER] Gegner mit inaktivem Sprite entfernt.`);
-        this.enemies.splice(i, 1);
-        continue;
-      }
-      
-      // Entferne Gegner, die zu weit außerhalb des Bildschirms sind
-      if (sprite.x < -150 || sprite.y < -150 || sprite.y > this.scene.scale.height + 150) {
-        console.log(`[ENEMY_MANAGER] Gegner außerhalb des Bildschirms bei (${sprite.x}, ${sprite.y}), wird entfernt.`);
-        
-        // WICHTIG: Wir müssen destroy() aufrufen, um das EventBus-Event ENEMY_DESTROYED auszulösen
-        // Versuche die destroy-Methode aufzurufen und fange Fehler ab
-        try {
-          enemy.destroy();
-        } catch (error) {
-          console.error(`[ENEMY_MANAGER] Fehler beim Zerstören des Gegners: ${error}`);
-        }
-        
-        // Aus der Liste entfernen
         this.enemies.splice(i, 1);
         continue;
       }
@@ -501,6 +485,7 @@ export class NewEnemyManager {
     this.eventBus.off(EventType.GAME_OVER, this.stopSpawning);
     this.eventBus.off('REGISTER_ENEMY_BULLET', this.registerEnemyBullet);
     this.eventBus.off(EventType.DEBUG_TOGGLED, this.onDebugModeChanged);
+    this.eventBus.off(EventType.ENEMY_REMOVED, this.handleEnemyRemoved);
   }
   
   /**
@@ -525,35 +510,29 @@ export class NewEnemyManager {
   }
   
   /**
-   * Entfernt alle Gegner, die außerhalb des Bildschirms sind
-   * @returns Die Anzahl der entfernten Gegner
+   * Ruft update() für alle Gegner auf, um die Selbstzerstörungslogik auszulösen
+   * @returns Die Anzahl der aktualisierten Gegner
    */
   private removeOffscreenEnemies(): number {
-    let removedCount = 0;
+    const enemyCount = this.enemies.length;
+    
+    // Aktualisiere alle Gegner, um deren Selbstzerstörungslogik auszulösen
+    const time = this.scene.time.now;
+    const delta = this.scene.game.loop.delta;
     
     for (let i = this.enemies.length - 1; i >= 0; i--) {
-      const enemy = this.enemies[i];
-      const sprite = enemy.getSprite();
-      
-      if (sprite.x < -150 || sprite.y < -150 || sprite.y > this.scene.scale.height + 150) {
-        console.log(`[ENEMY_MANAGER] Gegner außerhalb des Bildschirms bei (${sprite.x}, ${sprite.y}), wird entfernt.`);
-        
-        try {
-          enemy.destroy();
-          removedCount++;
-        } catch (error) {
-          console.error(`[ENEMY_MANAGER] Fehler beim Zerstören des Gegners: ${error}`);
+      try {
+        const enemy = this.enemies[i];
+        if (enemy) {
+          enemy.update(time, delta);
         }
-        
-        this.enemies.splice(i, 1);
+      } catch (error) {
+        console.error(`[ENEMY_MANAGER] Fehler beim Prüfen auf Gegner außerhalb des Bildschirms: ${error}`);
       }
     }
     
-    if (removedCount > 0) {
-      console.log(`[ENEMY_MANAGER] ${removedCount} Gegner außerhalb des Bildschirms entfernt.`);
-    }
-    
-    return removedCount;
+    // Gib die Anzahl der Gegner vor der Aktualisierung zurück
+    return enemyCount;
   }
   
   /**
@@ -574,6 +553,21 @@ export class NewEnemyManager {
     } else {
       // Es sind noch Gegner da, warte 100ms und prüfe erneut
       this.scene.time.delayedCall(100, () => this.checkRemainingEnemies(callback));
+    }
+  }
+  
+  /**
+   * Reagiert auf das ENEMY_REMOVED Event
+   */
+  private handleEnemyRemoved = (data: any): void => {
+    if (data && data.enemy) {
+      // Finde den Gegner im Array
+      const index = this.enemies.findIndex(e => e === data.enemy);
+      if (index !== -1) {
+        // Entferne nur aus der Liste, ohne weitere Effekte
+        this.enemies.splice(index, 1);
+        console.log(`[ENEMY_MANAGER] Gegner still entfernt. Verbleibende Anzahl: ${this.enemies.length}`);
+      }
     }
   }
 } 

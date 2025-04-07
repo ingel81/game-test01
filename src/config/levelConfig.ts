@@ -114,18 +114,18 @@ export const debugLevel: LevelConfig = {
       enemyType: EnemyType.STANDARD,
       count: 1,
       formation: FormationType.LINE,
-      delay: 1000
+      delay: 0
     }
   ],
   
   timedPickups: [
     {
-      time: 5000,
+      time: 1000,
       type: PickupType.ENERGY,
       count: 1
     },
     {
-      time: 5000,
+      time: 1000,
       type: PickupType.POWER,
       count: 1
     }

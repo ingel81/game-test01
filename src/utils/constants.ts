@@ -9,6 +9,7 @@ export class Constants {
   // Allgemeine Spielkonstanten
   public static readonly GAME_TITLE: string = 'Echoes from the Rift';
   public static readonly TOOLBAR_HEIGHT: number = 60;
+  public static readonly OFFSCREEN_MARGIN: number = -150; // Grenzwert für Objekte außerhalb des Bildschirms
   
   // Dynamische Werte für verschiedene Bildschirmgrößen
   public static getToolbarHeight(isMobile: boolean = false): number {

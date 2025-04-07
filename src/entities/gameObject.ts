@@ -84,6 +84,18 @@ export abstract class GameObject extends Entity {
   protected abstract onDestroy(): void;
 
   /**
+   * Entfernt das GameObject still ohne Effekte
+   * Für das Entfernen von Objekten außerhalb des Bildschirms
+   */
+  public remove(): void {
+    // Markiere als zerstört, aber ohne onDestroy aufzurufen
+    this.isDestroyed = true;
+    
+    // Rufe die Basis-Remove-Methode auf
+    super.remove();
+  }
+
+  /**
    * Zerstört die Entität und gibt Ressourcen frei
    * Überschreibt die Basismethode, um sicherzustellen, dass onDestroy aufgerufen wird
    */
