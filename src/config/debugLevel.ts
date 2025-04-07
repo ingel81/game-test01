@@ -9,10 +9,10 @@ export const debugLevel: LevelConfig = {
   name: 'First Encounters',
   description: 'The first enemies appear. Be careful and test your weapons.',
   difficulty: 3,
-  duration: 60000,
+  duration: 20000,
   minAsteroids: 20,
   maxAsteroids: 20,
-  asteroidSpawnRate: 1,  
+  asteroidSpawnRate: 500,  
   introText: 'Enemy ships have been spotted in this sector. Eliminate them to protect our territory.',
   outroText: 'Well done! The first wave has been repelled.',
 

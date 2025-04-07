@@ -243,7 +243,7 @@ export class LevelManager {
       console.log('[LEVEL_MANAGER] Letztes Level abgeschlossen, Spiel beendet!');
       
       this.scene.time.delayedCall(
-        3000,
+        1000,
         () => {
           this.eventBus.emit(EventType.GAME_WON);
         },

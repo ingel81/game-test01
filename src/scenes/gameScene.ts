@@ -165,6 +165,9 @@ export class GameScene extends BaseScene {
       // Event-Listener für Game Over
       this.eventBus.on(EventType.PLAYER_DESTROYED, this.endGame);
       
+      // Event-Listener für Game Won
+      this.eventBus.on(EventType.GAME_WON, this.gameWon);
+      
       // Tastendruck-Listener für ESC-Taste
       this.input.keyboard?.on('keydown-ESC', this.togglePause, this);
       
@@ -297,6 +300,17 @@ export class GameScene extends BaseScene {
   }
 
   /**
+   * Spiel gewonnen Handler
+   */
+  private gameWon = (): void => {
+    // Alle Sounds stoppen
+    this.sound.stopAll();
+    
+    // Zur Finished Scene wechseln
+    this.scene.start(Constants.SCENE_FINISHED, { score: this.score });
+  }
+
+  /**
    * Bereinigt alle Ressourcen
    */
   private cleanup(): void {
@@ -307,6 +321,7 @@ export class GameScene extends BaseScene {
     this.eventBus.off(EventType.PAUSE_GAME, this.pauseGame);
     this.eventBus.off(EventType.RESUME_GAME, this.resumeGame);
     this.eventBus.off(EventType.PLAYER_DESTROYED, this.endGame);
+    this.eventBus.off(EventType.GAME_WON, this.gameWon);
     
     // Entferne spezifische Event-Listener (wir können keine Referenz auf die Lambdas haben,
     // also entfernen wir alle Listener für diese Events)
