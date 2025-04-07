@@ -35,7 +35,6 @@ export class LevelManager {
   
   private currentLevel: LevelConfig | null = null;
   private currentLevelIndex: number = 0;
-  private levelStartTime: number = 0;
   private levelTimer: Phaser.Time.TimerEvent | null = null;
   private waveTimers: Phaser.Time.TimerEvent[] = [];
   private timedSpawnTimers: Phaser.Time.TimerEvent[] = [];
@@ -167,9 +166,6 @@ export class LevelManager {
     if (this.currentLevel.waves && this.currentLevel.waves.length > 0) {
       console.log(`[LEVEL_MANAGER] Debug - Erste Welle: Typ=${this.currentLevel.waves[0].enemyType}, Anzahl=${this.currentLevel.waves[0].count}`);
     }
-    
-    // Zeitstempel für den Levelstart setzen
-    this.levelStartTime = Date.now();
     
     console.log(`[LEVEL_MANAGER] Level gesetzt auf: ${this.currentLevel?.name || 'undefined'}`);
     

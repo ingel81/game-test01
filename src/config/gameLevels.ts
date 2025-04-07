@@ -3,7 +3,8 @@
  * Importiert alle Level und stellt sie für das Spiel bereit
  */
 
-import { LevelConfig, debugLevel } from './levelConfig';
+import { LevelConfig } from './levelConfig';
+import { debugLevel } from './debugLevel';
 import { level1 } from './levels/level1';
 import { level2 } from './levels/level2';
 import { level3 } from './levels/level3';
@@ -19,9 +20,9 @@ import { level10 } from './levels/level10';
  * Array aller Level für das Spiel, in aufsteigender Schwierigkeit sortiert
  */
 export const GameLevels: LevelConfig[] = [
-  // Debug Level ist auskommentiert und wird nur für Testzwecke verwendet
   debugLevel,
-  /* level1,
+  /*
+  level1,
   level2,
   level3,
   level4,
@@ -30,7 +31,8 @@ export const GameLevels: LevelConfig[] = [
   level7,
   level8,
   level9,
-  level10 */
+  level10 
+  */
 ];
 
 /**
