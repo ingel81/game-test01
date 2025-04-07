@@ -1,6 +1,6 @@
 import { Scene, GameObjects, Physics } from 'phaser';
 import { Player } from '../entities/player/player';
-import { NewEnemyManager } from './newEnemyManager';
+import { NewEnemyManager } from './enemyManager';
 import { SpawnManager } from './spawnManager';
 import { Constants } from '../utils/constants';
 import { EventBus, EventType } from '../utils/eventBus';

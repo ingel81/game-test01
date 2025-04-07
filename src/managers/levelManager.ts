@@ -10,7 +10,7 @@ import { Constants } from '../utils/constants';
 import { GameScene } from '../scenes/gameScene';
 import { MusicManager } from './musicManager';
 import { SpawnManager } from './spawnManager';
-import { NewEnemyManager } from './newEnemyManager';
+import { NewEnemyManager } from './enemyManager';
 import { DifficultyManager } from './difficultyManager';
 import { BaseEnemy } from '../entities/enemies/baseEnemy';
 
@@ -1043,89 +1043,6 @@ export class LevelManager {
     
     // Fallback: Verwende den Registry-Wert
     return this.scene.registry.get('score') || 0;
-  }
-  
-  /**
-   * Startet ein Test-Level direkt, ohne auf die GameLevels zu warten
-   */
-  public startTestLevel(): void {
-    console.log(`[LEVEL_MANAGER] Starte Test-Level`);
-    this.reset();
-    
-    // Erstelle ein einfaches Testlevel
-    const testLevel: LevelConfig = {
-      id: 'test-level',
-      name: 'Test Level',
-      description: 'Ein einfaches Testlevel',
-      difficulty: 1,
-      duration: 60000, // 1 Minute
-      minAsteroids: 5,
-      maxAsteroids: 10,
-      asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID,
-      introText: 'Test Level gestartet',
-      outroText: 'Test Level beendet',
-      
-      waves: [
-        {
-          enemyType: EnemyType.STANDARD,
-          count: 3,
-          formation: FormationType.LINE,
-          delay: 2000
-        },
-        {
-          enemyType: EnemyType.ADVANCED,
-          count: 2,
-          formation: FormationType.SINGLE,
-          delay: 10000
-        },
-        {
-          enemyType: EnemyType.STANDARD,
-          count: 5,
-          formation: FormationType.V_FORMATION,
-          delay: 15000,
-          isLevelEndTrigger: true
-        }
-      ]
-    };
-    
-    // Setze aktuelle Level-Daten
-    this.currentLevelIndex = 0;
-    this.currentLevel = testLevel;
-    console.log(`[LEVEL_MANAGER] Test-Level gesetzt: ${this.currentLevel.name}`);
-    console.log(`[LEVEL_MANAGER] Test-Level hat ${this.currentLevel.waves.length} Wellen`);
-    
-    // Setze Schwierigkeit auf Level-Schwierigkeit
-    this.difficultyManager.setDifficulty(this.currentLevel.difficulty);
-    
-    // Konfiguriere SpawnManager mit Level-Einstellungen
-    if (this.currentLevel.minAsteroids !== undefined) {
-      this.spawnManager.setMinAsteroids(this.currentLevel.minAsteroids);
-    }
-    
-    if (this.currentLevel.maxAsteroids !== undefined) {
-      this.spawnManager.setMaxAsteroids(this.currentLevel.maxAsteroids);
-    }
-    
-    if (this.currentLevel.asteroidSpawnRate !== undefined) {
-      this.spawnManager.setAsteroidSpawnRate(this.currentLevel.asteroidSpawnRate);
-    }
-    
-    // Level-Intro anzeigen, falls vorhanden
-    if (this.currentLevel.introText && !this.levelIntroShown) {
-      this.showLevelIntro(this.currentLevel.introText, () => {
-        this.startLevelTimer();
-        this.levelIntroShown = true;
-      });
-    } else {
-      this.startLevelTimer();
-    }
-    
-    // Wellen vorbereiten
-    this.pendingWaves = [...this.currentLevel.waves];
-    console.log(`[LEVEL_MANAGER] Test-Level Wellen vorbereitet: ${this.pendingWaves.length}`);
-    this.startNextWave();
-    
-    this.levelStartTime = this.scene.time.now;
-    console.log(`[LEVEL_MANAGER] Test-Level gestartet: ${this.currentLevel.name}`);
-  }
+  } 
+
 } 

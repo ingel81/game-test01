@@ -19,10 +19,8 @@ export class SpawnManager {
   private eventBus: EventBus;
   private isPaused: boolean = false;
   private lastUpdateTime: number = 0;
-  private minAsteroids: number = 2; // Minimale Anzahl an Asteroiden
-  private maxAsteroids: number = 5; // Maximale Anzahl an Asteroiden
-  //private maxPickups: number = 3; // Maximale Anzahl an Pickups
-  //private maxPowerPickups: number = 2; // Maximale Anzahl an Power-Pickups
+  private minAsteroids: number = 2;
+  private maxAsteroids: number = 5;
   private asteroidSpawnRate: number = Constants.SPAWN_RATE_ASTEROID;
 
   constructor(scene: Phaser.Scene) {
@@ -253,13 +251,6 @@ export class SpawnManager {
   private onDifficultyIncrease = (data: any): void => {
     const newDifficulty = typeof data === 'object' ? data.difficulty : data;
     this.difficulty = newDifficulty;
-    
-    // Erhöhe die maximale Anzahl der Asteroiden abhängig vom Schwierigkeitsgrad, aber weniger als vorher
-    this.maxAsteroids = 4 + newDifficulty;
-    
-    // Erhöhe die Spawn-Rate für Asteroiden
-    const newAsteroidRate = Constants.SPAWN_RATE_ASTEROID * Math.pow(0.7, newDifficulty - 1);
-    this.setAsteroidSpawnRate(newAsteroidRate);
   }
 
   /**

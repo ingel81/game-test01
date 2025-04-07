@@ -7,7 +7,7 @@ import { BaseEnemy } from '../entities/enemies/baseEnemy';
 import { StandardEnemy } from '../entities/enemies/standardEnemy';
 import { AdvancedEnemy } from '../entities/enemies/advancedEnemy';
 import { EliteEnemy } from '../entities/enemies/eliteEnemy';
-import { BossEnemy } from '../entities/enemies/newBossEnemy';
+import { BossEnemy } from '../entities/enemies/bossEnemy';
 import { TurretEnemy } from '../entities/enemies/turretEnemy';
 import { Constants } from '../utils/constants';
 import { Player } from '../entities/player/player';

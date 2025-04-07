@@ -7,7 +7,7 @@ import { CollisionManager } from '../managers/collisionManager';
 import { GameUI } from '../ui/gameUI';
 import { DifficultyManager } from '../managers/difficultyManager';
 import { MusicManager } from '../managers/musicManager';
-import { NewEnemyManager } from '../managers/newEnemyManager';
+import { NewEnemyManager } from '../managers/enemyManager';
 import { GlowPipeline } from '../pipelines/glowPipeline';
 import { LevelManager } from '../managers/levelManager';
 import { AssetLoader } from '../utils/assetLoader';
