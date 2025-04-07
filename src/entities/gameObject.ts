@@ -103,9 +103,9 @@ export abstract class GameObject extends Entity {
     console.log('GameObject: destroy aufgerufen');
     if (!this.isDestroyed) {
       this.onDestroy();
-      this.isDestroyed = true;
+      // isDestroyed wird in remove() gesetzt
     }
-    // Rufe die Basis-Destroy-Methode auf
-    super.destroy();
+    // Anstatt super.destroy() aufzurufen, verwenden wir remove()
+    this.remove();
   }
 } 

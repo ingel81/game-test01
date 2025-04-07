@@ -387,21 +387,16 @@ export class BaseEnemy extends GameObject {
    * Zerstört die Entität und gibt Ressourcen frei
    */
   public destroy(): void {
-    // Entferne Debug-Event-Handler
-    if (this.debugToggleHandler) {
-      this.eventBus.off(EventType.DEBUG_TOGGLED, this.debugToggleHandler);
-    }
+    // Wir verwenden onDestroy() für alle visuellen Effekte und Events,
+    // die nur bei einer echten Zerstörung ausgelöst werden sollen.
+    // Danach rufen wir einfach remove() auf, um Codewiederholung zu vermeiden.
     
-    // Zerstöre den Debug-Text
-    if (this.debugText) {
-      this.debugText.destroy();
-    }
+    // Wir rufen hier nicht manuell eventBus und debugText.destroy auf,
+    // da dies bereits in remove() erledigt wird.
     
-    // Zerstöre alle Komponenten
-    this.visualComponent.destroy();
+    console.log(`[DEBUG] Rufe destroy() für ${this.constructor.name} an Position (${this.sprite.x}, ${this.sprite.y}) auf`);
     
-    // Rufe die Basis-Destroy-Methode auf
-    console.log(`[DEBUG] Rufe super.destroy() für ${this.constructor.name} an Position (${this.sprite.x}, ${this.sprite.y}) auf`);
+    // Rufe die Basis-Methode auf, die onDestroy() und dann remove() aufruft
     super.destroy();
   }
   
