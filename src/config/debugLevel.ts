@@ -8,7 +8,6 @@ export const debugLevel: LevelConfig = {
   id: 'level-1',
   name: 'First Encounters',
   description: 'The first enemies appear. Be careful and test your weapons.',
-  difficulty: 3,
   duration: 20000,
   minAsteroids: 20,
   maxAsteroids: 20,

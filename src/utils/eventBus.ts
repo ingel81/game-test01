@@ -97,7 +97,6 @@ export enum EventType {
   
   // Ereignisse für Gegner und Gameplay
   DEBUG_TOGGLED = 'debug_toggled',
-  BOSS_SPAWNED = 'boss_spawned',
   
   // Neue Level-bezogene Events
   LEVEL_STARTED = 'level_started',

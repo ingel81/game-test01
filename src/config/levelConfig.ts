@@ -78,7 +78,6 @@ export interface LevelConfig {
   id: string;                     // Eindeutige Level-ID
   name: string;                   // Name des Levels
   description: string;            // Beschreibung des Levels
-  difficulty: number;             // Schwierigkeitsgrad des Levels (1-10)
   duration: number;               // Dauer des Levels in Millisekunden
   minAsteroids?: number;          // Minimale Anzahl an Asteroiden
   maxAsteroids?: number;          // Maximale Anzahl an Asteroiden

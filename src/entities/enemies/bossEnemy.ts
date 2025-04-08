@@ -113,9 +113,6 @@ export class BossEnemy extends BaseEnemy {
     // Setze den Sprite als Boss-Typ
     this.sprite.setData('type', 'boss');
     
-    // Event-Listener für Boss-bezogene Events
-    this.eventBus.emit(EventType.BOSS_SPAWNED, this);
-    
     // Starte mit der Entry-Phase
     this.enterPhase('entry');
     

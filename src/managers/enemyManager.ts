@@ -29,7 +29,6 @@ export class NewEnemyManager {
   private difficulty: number = 1;
   private eventBus: EventBus;
   private isPaused: boolean = false;
-  private turretActive: boolean = false;
   private allEnemyBullets: Phaser.Physics.Arcade.Group;
   private currentDebugMode: DebugMode = DebugMode.OFF;
 
@@ -56,54 +55,30 @@ export class NewEnemyManager {
   public spawnEnemyOfType(type: string, x: number, y: number, options?: EnemySpawnOptions): BaseEnemy {
     let enemy: BaseEnemy;
     
-    console.log(`[ENEMY_MANAGER] Spawne neuen Gegner vom Typ '${type}' an Position (${x}, ${y})`);
-    console.log(`[ENEMY_MANAGER] Aktuelle Schwierigkeit: ${this.difficulty}`);
-    console.log(`[ENEMY_MANAGER] EnemyType Enum Check - STANDARD = ${EnemyType.STANDARD}, Gleichheit: ${type === EnemyType.STANDARD}`);
-    console.log(`[ENEMY_MANAGER] EnemyType direkt als String: ${type}`);
-    console.log(`[ENEMY_MANAGER] Typ-Vergleich: type === 'standard': ${type === 'standard'}`);
-    console.log(`[ENEMY_MANAGER] Typ nach toLowerCase: ${type.toLowerCase()}`);
-    
     const spawnStartTime = performance.now();
     
     switch (type.toLowerCase()) {
       case 'standard':
-        console.log(`[ENEMY_MANAGER] Case 'standard' getroffen`);
         enemy = new StandardEnemy(this.scene, x, y, this.player);
-        console.log(`[ENEMY_MANAGER] StandardEnemy erstellt mit ${enemy.getHealth()} HP`);
         break;
       case 'advanced':
-        console.log(`[ENEMY_MANAGER] Case 'advanced' getroffen`);
         enemy = new AdvancedEnemy(this.scene, x, y, this.player);
-        console.log(`[ENEMY_MANAGER] AdvancedEnemy erstellt mit ${enemy.getHealth()} HP`);
         break;
       case 'elite':
-        console.log(`[ENEMY_MANAGER] Case 'elite' getroffen`);
         enemy = new EliteEnemy(this.scene, x, y, this.player);
-        console.log(`[ENEMY_MANAGER] EliteEnemy erstellt mit ${enemy.getHealth()} HP`);
         break;
       case 'boss':
-        console.log(`[ENEMY_MANAGER] Case 'boss' getroffen`);
         enemy = new BossEnemy(this.scene, x, y, this.player);
-        console.log(`[ENEMY_MANAGER] *** BOSS SPAWNED *** mit ${enemy.getHealth()} HP`);
-        // Boss-Spawned-Event auslösen
-        this.eventBus.emit(EventType.BOSS_SPAWNED, enemy);
         break;
       case 'turret':
-        console.log(`[ENEMY_MANAGER] Case 'turret' getroffen`);
         enemy = new TurretEnemy(this.scene, x, y, this.player);
-        this.turretActive = true;
-        console.log(`[ENEMY_MANAGER] TurretEnemy erstellt mit ${enemy.getHealth()} HP`);
-        console.log(`[ENEMY_MANAGER] TurretActive-Flag gesetzt auf ${this.turretActive}`);
         break;
       default:
-        console.warn(`[ENEMY_MANAGER] Unbekannter Gegnertyp '${type}', erstelle StandardEnemy`);
         enemy = new StandardEnemy(this.scene, x, y, this.player);
-        console.log(`[ENEMY_MANAGER] Fallback: StandardEnemy erstellt mit ${enemy.getHealth()} HP`);
     }
     
     // Spawn-Zeit protokollieren
     const spawnEndTime = performance.now();
-    console.log(`[ENEMY_MANAGER] Gegner erzeugt in ${(spawnEndTime - spawnStartTime).toFixed(2)}ms`);
     
     // Gegner zur Liste hinzufügen
     this.enemies.push(enemy);
@@ -131,9 +106,7 @@ export class NewEnemyManager {
       difficultyOptions.factor *= options.healthMultiplier;
     }
     
-    enemy.applyDifficulty(difficultyOptions);
-    
-    console.log(`[ENEMY_MANAGER] Multiplikatoren angewendet: health=${options.healthMultiplier || 1}, speed=${options.speedMultiplier || 1}, fireRate=${options.fireRateMultiplier || 1}`);
+    enemy.applyDifficulty(difficultyOptions);   
   }
   
   /**
@@ -154,7 +127,6 @@ export class NewEnemyManager {
       
       // Überprüfe ob der Gegner noch existiert
       if (!enemy || !enemy.getSprite) {
-        console.log(`[ENEMY_MANAGER] Ungültiger Gegner an Index ${i} gefunden, wird entfernt.`);
         this.enemies.splice(i, 1);
         continue;
       }
@@ -163,7 +135,6 @@ export class NewEnemyManager {
       
       // Überspringe, wenn der Gegner inaktiv ist
       if (!sprite || !sprite.active) {
-        console.log(`[ENEMY_MANAGER] Gegner mit inaktivem Sprite entfernt.`);
         this.enemies.splice(i, 1);
         continue;
       }
@@ -172,7 +143,6 @@ export class NewEnemyManager {
       try {
         enemy.update(time, delta);
       } catch (error) {
-        console.error(`[ENEMY_MANAGER] Fehler beim Aktualisieren des Gegners: ${error}`);
         // Im Fehlerfall Gegner entfernen
         this.enemies.splice(i, 1);
       }
@@ -209,14 +179,10 @@ export class NewEnemyManager {
    */
   private registerEnemyBullet = (bullet: Phaser.Physics.Arcade.Sprite): void => {
     // Füge zur Gruppe hinzu
-    this.allEnemyBullets.add(bullet);
-    
-    // Debug-Logging
-    console.log(`[ENEMY_MANAGER] Neues Projektil registriert, ID: ${bullet.getData('bulletId')}, Aktive Bullets: ${this.allEnemyBullets.getChildren().length}`);
+    this.allEnemyBullets.add(bullet);    
 
     // Stelle sicher, dass Projektil in die richtige Richtung fliegt (zum Spieler)
     if (bullet.body && bullet.body.velocity.x > 0) {
-        console.error(`[ENEMY_MANAGER] FEHLER: Projektil fliegt in falsche Richtung! Korrigiere Richtung`);
         bullet.body.velocity.x = -Math.abs(bullet.body.velocity.x); // Nach links fliegen lassen
     }
   }
@@ -226,7 +192,6 @@ export class NewEnemyManager {
    */
   private onDebugModeChanged = (mode: DebugMode): void => {
     this.currentDebugMode = mode;
-    console.log(`[ENEMY_MANAGER] Debug-Modus geändert auf: ${mode}`);
   }
     
   /**
@@ -267,9 +232,7 @@ export class NewEnemyManager {
   /**
    * Zerstört alle aktiven Gegner
    */
-  public destroyAllEnemies(): void {
-    console.log(`[ENEMY_MANAGER] Zerstöre alle ${this.enemies.length} Gegner`);
-    
+  public destroyAllEnemies(): void {    
     // Kopiere das Array, um Probleme beim Entfernen zu vermeiden
     const enemiesToDestroy = [...this.enemies];
     
@@ -280,7 +243,6 @@ export class NewEnemyManager {
     
     // Leere das Array
     this.enemies = [];
-    this.turretActive = false;
   }
   
   /**
@@ -292,25 +254,13 @@ export class NewEnemyManager {
     
     if (index !== -1) {
       const enemy = this.enemies[index];
-      const enemyType = enemy.constructor.name;
-      
-      console.log(`[ENEMY_MANAGER] Zerstöre Gegner vom Typ ${enemyType}`);
-      
-      // Wenn es ein Turret war, setze turretActive zurück
-      if (enemyType === 'TurretEnemy') {
-        this.turretActive = false;
-        console.log(`[ENEMY_MANAGER] TurretActive auf false gesetzt nach Turret-Zerstörung`);
-      }
-      
-      // BUGFIX: Zuerst die destroy-Methode des Gegners aufrufen, um die visuellen Effekte zu starten
+      const enemyType = enemy.constructor.name; 
+
       enemy.destroy();
-      console.log(`[ENEMY_MANAGER] Enemy.destroy() wurde aufgerufen für ${enemyType}`);
       
       // Entferne den Gegner aus dem Array
       this.enemies.splice(index, 1);
-      console.log(`[ENEMY_MANAGER] Gegner aus der Liste entfernt. Verbleibende Anzahl: ${this.enemies.length}`);
     } else {
-      console.warn(`[ENEMY_MANAGER] destroyEnemy: Gegner nicht in der Liste gefunden.`);
     }
   }
   
@@ -318,7 +268,6 @@ export class NewEnemyManager {
    * Bereinigt alle Ressourcen
    */
   public destroy(): void {
-    console.log(`[ENEMY_MANAGER] Manager wird zerstört`);
     
     // Zerstöre alle Gegner
     this.destroyAllEnemies();
@@ -339,7 +288,6 @@ export class NewEnemyManager {
    * - Gibt ein Promise zurück, das aufgelöst wird, wenn alle Gegner den Bildschirm verlassen haben
    */
   public prepareForLevelEnd(): Promise<void> {
-    console.log('[ENEMY_MANAGER] Bereite Manager auf Level-Ende vor');
     
     // Stoppe alle Spawn-Prozesse
     this.stopSpawning();
@@ -388,11 +336,9 @@ export class NewEnemyManager {
     this.removeOffscreenEnemies();
     
     const remainingEnemies = this.enemies.length;
-    console.log(`[ENEMY_MANAGER] Prüfe verbleibende Gegner: ${remainingEnemies}`);
     
     if (remainingEnemies === 0) {
       // Alle Gegner sind weg, löse das Promise auf
-      console.log('[ENEMY_MANAGER] Alle Gegner wurden entfernt.');
       callback();
     } else {
       // Es sind noch Gegner da, warte 100ms und prüfe erneut
@@ -410,7 +356,6 @@ export class NewEnemyManager {
       if (index !== -1) {
         // Entferne nur aus der Liste, ohne weitere Effekte
         this.enemies.splice(index, 1);
-        console.log(`[ENEMY_MANAGER] Gegner still entfernt. Verbleibende Anzahl: ${this.enemies.length}`);
       }
     }
   }
