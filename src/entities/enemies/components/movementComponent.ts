@@ -438,12 +438,15 @@ export class MovementComponent {
   /**
    * Passt Bewegungsparameter an die Schwierigkeit an
    */
-  public adjustForDifficulty(difficulty: number): void {
+  public adjustForDifficulty(difficulty: number, speedFactor?: number): void {
     const difficultyFactor = 1 + (difficulty - 1) * 0.15;
     
+    // Wende zusätzlichen speedFactor an, falls angegeben
+    const finalSpeedFactor = speedFactor !== undefined ? speedFactor : difficultyFactor;
+    
     // Erhöhe Geschwindigkeit mit steigender Schwierigkeit
-    this.speed *= difficultyFactor;
-    this.baseVelocityX *= difficultyFactor;
+    this.speed *= finalSpeedFactor;
+    this.baseVelocityX *= finalSpeedFactor;
     
     // Verbessere Tracking mit steigender Schwierigkeit
     if (difficulty >= 3) {

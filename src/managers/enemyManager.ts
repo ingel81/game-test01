@@ -98,12 +98,18 @@ export class NewEnemyManager {
     // Nur Optionen anwenden, die tatsächlich gesetzt sind
     const difficultyOptions = {
       difficulty: this.difficulty,
-      factor: 1.0 + (this.difficulty - 1) * 0.1
+      factor: 1.0 + (this.difficulty - 1) * 0.1,
+      speedFactor: 1.0 + (this.difficulty - 1) * 0.1
     };
     
     // Modifiziere die Faktoren basierend auf den übergebenen Optionen
     if (options.healthMultiplier) {
       difficultyOptions.factor *= options.healthMultiplier;
+    }
+    
+    // Modifiziere den Speed-Faktor basierend auf den übergebenen Optionen
+    if (options.speedMultiplier) {
+      difficultyOptions.speedFactor *= options.speedMultiplier;
     }
     
     enemy.applyDifficulty(difficultyOptions);   

@@ -340,8 +340,8 @@ export class LevelManager {
    * @param delay Die Verzögerung zwischen den Spawns
    * @param isLevelEndTrigger Ob diese Welle ein Level-End-Trigger ist
    */
-  private spawnWaveByFormation(formation: FormationType, enemyType: string, count: number, delay: number, isLevelEndTrigger: boolean): void {
-    console.log(`[LEVEL_MANAGER] spawnWaveByFormation aufgerufen: formation=${formation}, enemyType=${enemyType}, count=${count}`);
+  private spawnWaveByFormation(formation: FormationType, enemyType: string, count: number, delay: number, isLevelEndTrigger: boolean, healthMultiplier?: number, speedMultiplier?: number): void {
+    console.log(`[LEVEL_MANAGER] spawnWaveByFormation aufgerufen: formation=${formation}, enemyType=${enemyType}, count=${count}, healthMultiplier=${healthMultiplier}, speedMultiplier=${speedMultiplier}`);
     
     // Wenn das Level pausiert oder beendet ist, keine Gegner spawnen
     if (!this.isInState(LevelState.RUNNING)) {
@@ -352,27 +352,27 @@ export class LevelManager {
     switch (formation) {
       case FormationType.LINE:
         console.log(`[LEVEL_MANAGER] Spawne Linienformation mit ${count} Gegnern vom Typ ${enemyType}`);
-        this.spawnLineFormation(enemyType, count, delay, isLevelEndTrigger);
+        this.spawnLineFormation(enemyType, count, delay, isLevelEndTrigger, healthMultiplier, speedMultiplier);
         break;
       case FormationType.V_FORMATION:
         console.log(`[LEVEL_MANAGER] Spawne V-Formation mit ${count} Gegnern vom Typ ${enemyType}`);
-        this.spawnVFormation(enemyType, count, delay, isLevelEndTrigger);
+        this.spawnVFormation(enemyType, count, delay, isLevelEndTrigger, healthMultiplier, speedMultiplier);
         break;
       case FormationType.SQUARE:
         console.log(`[LEVEL_MANAGER] Spawne Quadrat-Formation mit ${count} Gegnern vom Typ ${enemyType}`);
-        this.spawnSquareFormation(enemyType, count, delay, isLevelEndTrigger);
+        this.spawnSquareFormation(enemyType, count, delay, isLevelEndTrigger, healthMultiplier, speedMultiplier);
         break;
       case FormationType.RANDOM:
         console.log(`[LEVEL_MANAGER] Spawne Zufalls-Formation mit ${count} Gegnern vom Typ ${enemyType}`);
-        this.spawnRandomFormation(enemyType, count, delay, isLevelEndTrigger);
+        this.spawnRandomFormation(enemyType, count, delay, isLevelEndTrigger, healthMultiplier, speedMultiplier);
         break;
       case FormationType.SINGLE:
         console.log(`[LEVEL_MANAGER] Spawne einzelnen Gegner vom Typ ${enemyType}`);
-        this.spawnSingleEnemy(enemyType, isLevelEndTrigger);
+        this.spawnSingleEnemy(enemyType, isLevelEndTrigger, healthMultiplier, speedMultiplier);
         break;
       default:
         console.error(`[LEVEL_MANAGER] Unbekannte Formation: ${formation}, verwende Linienformation`);
-        this.spawnLineFormation(enemyType, count, delay, isLevelEndTrigger);
+        this.spawnLineFormation(enemyType, count, delay, isLevelEndTrigger, healthMultiplier, speedMultiplier);
     }
     
     console.log(`[LEVEL_MANAGER] spawnWaveByFormation abgeschlossen`);
@@ -381,7 +381,7 @@ export class LevelManager {
   /**
    * Spawnt Gegner in einer Linienformation
    */
-  private spawnLineFormation(enemyType: string, count: number, delay: number, isLevelEndTrigger: boolean): void {
+  private spawnLineFormation(enemyType: string, count: number, delay: number, isLevelEndTrigger: boolean, healthMultiplier?: number, speedMultiplier?: number): void {
     const screenWidth = this.scene.scale.width;
     const screenHeight = this.scene.scale.height;
     const baseX = screenWidth + 100;
@@ -391,14 +391,14 @@ export class LevelManager {
       const y = 150 + (screenHeight - 300) * (i / (count - 1 || 1));
       const spawnDelay = i * delay;
       
-      this.spawnEnemyWithDelay(enemyType, baseX, y, spawnDelay, isLevelEndTrigger);
+      this.spawnEnemyWithDelay(enemyType, baseX, y, spawnDelay, isLevelEndTrigger, healthMultiplier, speedMultiplier);
     }
   }
   
   /**
    * Spawnt Gegner in einer V-Formation
    */
-  private spawnVFormation(enemyType: string, count: number, delay: number, isLevelEndTrigger: boolean): void {
+  private spawnVFormation(enemyType: string, count: number, delay: number, isLevelEndTrigger: boolean, healthMultiplier?: number, speedMultiplier?: number): void {
     const screenWidth = this.scene.scale.width;
     const screenHeight = this.scene.scale.height;
     const baseX = screenWidth + 100;
@@ -411,14 +411,14 @@ export class LevelManager {
       const x = baseX + distance * 50; // X-Versatz für V-Form
       const spawnDelay = distance * delay;
       
-      this.spawnEnemyWithDelay(enemyType, x, y, spawnDelay, isLevelEndTrigger);
+      this.spawnEnemyWithDelay(enemyType, x, y, spawnDelay, isLevelEndTrigger, healthMultiplier, speedMultiplier);
     }
   }
   
   /**
    * Spawnt Gegner in einer Quadrat-Formation
    */
-  private spawnSquareFormation(enemyType: string, count: number, delay: number, isLevelEndTrigger: boolean): void {
+  private spawnSquareFormation(enemyType: string, count: number, delay: number, isLevelEndTrigger: boolean, healthMultiplier?: number, speedMultiplier?: number): void {
     const screenWidth = this.scene.scale.width;
     const screenHeight = this.scene.scale.height;
     const baseX = screenWidth + 100;
@@ -433,14 +433,14 @@ export class LevelManager {
       const x = baseX + col * 50; // X-Versatz für Spalten
       const spawnDelay = (row * side + col) * (delay / 2);
       
-      this.spawnEnemyWithDelay(enemyType, x, y, spawnDelay, isLevelEndTrigger);
+      this.spawnEnemyWithDelay(enemyType, x, y, spawnDelay, isLevelEndTrigger, healthMultiplier, speedMultiplier);
     }
   }
   
   /**
    * Spawnt Gegner in zufälligen Positionen
    */
-  private spawnRandomFormation(enemyType: string, count: number, delay: number, isLevelEndTrigger: boolean): void {
+  private spawnRandomFormation(enemyType: string, count: number, delay: number, isLevelEndTrigger: boolean, healthMultiplier?: number, speedMultiplier?: number): void {
     const screenWidth = this.scene.scale.width;
     const screenHeight = this.scene.scale.height;
     const baseX = screenWidth + 100;
@@ -451,27 +451,27 @@ export class LevelManager {
       const x = baseX + Phaser.Math.Between(-50, 50);
       const spawnDelay = Phaser.Math.Between(0, delay * 2);
       
-      this.spawnEnemyWithDelay(enemyType, x, y, spawnDelay, isLevelEndTrigger);
+      this.spawnEnemyWithDelay(enemyType, x, y, spawnDelay, isLevelEndTrigger, healthMultiplier, speedMultiplier);
     }
   }
   
   /**
    * Spawnt einen einzelnen Gegner
    */
-  private spawnSingleEnemy(enemyType: string, isLevelEndTrigger: boolean): void {
+  private spawnSingleEnemy(enemyType: string, isLevelEndTrigger: boolean, healthMultiplier?: number, speedMultiplier?: number): void {
     const screenWidth = this.scene.scale.width;
     const screenHeight = this.scene.scale.height;
     const x = screenWidth + 100;
     const y = screenHeight / 2;
     
-    this.spawnEnemyWithDelay(enemyType, x, y, 0, isLevelEndTrigger);
+    this.spawnEnemyWithDelay(enemyType, x, y, 0, isLevelEndTrigger, healthMultiplier, speedMultiplier);
   }
   
   /**
    * Spawnt einen Gegner mit Verzögerung
    */
-  private spawnEnemyWithDelay(enemyType: string, x: number, y: number, delay: number, isLevelEndTrigger: boolean): void {
-    console.log(`[LEVEL_MANAGER] spawnEnemyWithDelay aufgerufen: Typ=${enemyType}, Position=(${x}, ${y}), Delay=${delay}ms`);
+  private spawnEnemyWithDelay(enemyType: string, x: number, y: number, delay: number, isLevelEndTrigger: boolean, healthMultiplier?: number, speedMultiplier?: number): void {
+    console.log(`[LEVEL_MANAGER] spawnEnemyWithDelay aufgerufen: Typ=${enemyType}, Position=(${x}, ${y}), Delay=${delay}ms, healthMultiplier=${healthMultiplier}, speedMultiplier=${speedMultiplier}`);
     
     this.scene.time.delayedCall(
       delay,
@@ -484,11 +484,11 @@ export class LevelManager {
         
         // Multiplikatoren anwenden (Standard 1.0)
         const options = {
-          healthMultiplier: 1.0,
-          speedMultiplier: 1.0
+          healthMultiplier: healthMultiplier !== undefined ? healthMultiplier : 1.0,
+          speedMultiplier: speedMultiplier !== undefined ? speedMultiplier : 1.0
         };
         
-        console.log(`[LEVEL_MANAGER] Versuche Gegner zu spawnen: Typ=${enemyType}`);
+        console.log(`[LEVEL_MANAGER] Versuche Gegner zu spawnen: Typ=${enemyType}, Multiplikatoren: Health=${options.healthMultiplier}, Speed=${options.speedMultiplier}`);
         
         try {
           // Gegner-Instanz erstellen
@@ -568,14 +568,17 @@ export class LevelManager {
     const count = wave.count || 5;
     const delay = wave.delay || 500;
     const startDelay = wave.startDelay || 0;
+    const healthMultiplier = wave.healthMultiplier;
+    const speedMultiplier = wave.speedMultiplier;
     
-    // Debug-Ausgabe für enemyType
+    // Debug-Ausgabe für enemyType und Multiplikatoren
     console.log(`[LEVEL_MANAGER] Verwende enemyType: ${enemyType}, Originalwert: ${wave.enemyType}, formation: ${formation}`);
+    console.log(`[LEVEL_MANAGER] Multiplikatoren: Health=${healthMultiplier}, Speed=${speedMultiplier}`);
     
     // Rufe die entsprechende Spawn-Methode basierend auf dem Formations-Typ auf
     try {
       console.log(`[LEVEL_MANAGER] Rufe spawnWaveByFormation auf`);
-      this.spawnWaveByFormation(formation, enemyType, count, delay, isLevelEndTrigger);
+      this.spawnWaveByFormation(formation, enemyType, count, delay, isLevelEndTrigger, healthMultiplier, speedMultiplier);
       console.log(`[LEVEL_MANAGER] spawnWaveByFormation abgeschlossen`);
     } catch (error) {
       console.error(`[LEVEL_MANAGER] Fehler beim Spawn der Welle: ${error}`);
@@ -631,12 +634,17 @@ export class LevelManager {
           const count = spawn.count || 1;
           const delay = 500; // Default-Verzögerung
           const isEndTrigger = false; // Zeitgesteuerte Spawns sind keine End-Trigger
+          const healthMultiplier = spawn.healthMultiplier;
+          const speedMultiplier = spawn.speedMultiplier;
           
           // EnemyType in String konvertieren
           const enemyType = String(spawn.enemyType);
           
+          // Debug-Ausgabe für Multiplikatoren
+          console.log(`[LEVEL_MANAGER] Timed Spawn Multiplikatoren: Health=${healthMultiplier}, Speed=${speedMultiplier}`);
+          
           // Rufe die entsprechende Spawn-Methode auf
-          this.spawnWaveByFormation(formation, enemyType, count, delay, isEndTrigger);
+          this.spawnWaveByFormation(formation, enemyType, count, delay, isEndTrigger, healthMultiplier, speedMultiplier);
         },
         [],
         this

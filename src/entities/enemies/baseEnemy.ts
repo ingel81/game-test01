@@ -367,20 +367,16 @@ export class BaseEnemy extends GameObject {
   /**
    * Wendet Schwierigkeitsanpassungen auf alle Komponenten an
    */
-  public applyDifficulty(data: { difficulty: number, factor: number }): void {
+  public applyDifficulty(data: { difficulty: number, factor: number, speedFactor?: number }): void {
     const difficulty = data.difficulty;
     
     // Anpassungen für jede Komponente
-    this.movementComponent.adjustForDifficulty(difficulty);
+    this.movementComponent.adjustForDifficulty(difficulty, data.speedFactor);
     this.weaponComponent.adjustForDifficulty(difficulty);
-    this.visualComponent.adjustForDifficulty(difficulty);
+    this.visualComponent.adjustForDifficulty(difficulty);    
     
-    // Erhöhe Gesundheit bei höherer Schwierigkeit
-    if (difficulty > 1) {
-      const healthBoost = Math.min(2, 1 + (difficulty - 1) * 0.2);
-      this.maxHealth = Math.ceil(this.maxHealth * healthBoost);
-      this.health = this.maxHealth;
-    }
+    this.maxHealth = Math.ceil(this.maxHealth * data.factor);
+    this.health = this.maxHealth;
   }
 
   /**
