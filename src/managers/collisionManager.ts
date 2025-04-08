@@ -29,16 +29,6 @@ export class CollisionManager {
   public setManagers(enemyManager: NewEnemyManager, spawnManager: SpawnManager): void {
     this.enemyManager = enemyManager;
     this.spawnManager = spawnManager;
-    this.setupCollisions();
-  }
-
-  /**
-   * Richtet die Kollisionen ein
-   */
-  private setupCollisions(): void {
-    if (!this.enemyManager || !this.spawnManager) return;
-
-    // Dynamische Kollisionserkennung wird in der update-Methode durchgeführt
   }
 
   /**

@@ -4,9 +4,8 @@
  */
 
 import { EventBus, EventType } from '../utils/eventBus';
-import { LevelConfig, Wave, TimedSpawn, TimedPickup, EnemyType, PickupType, FormationType } from '../config/levelConfig';
+import { LevelConfig, Wave, PickupType, FormationType } from '../config/levelConfig';
 import { GameLevels } from '../config/gameLevels';
-import { Constants } from '../utils/constants';
 import { GameScene } from '../scenes/gameScene';
 import { MusicManager } from './musicManager';
 import { SpawnManager } from './spawnManager';

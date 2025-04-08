@@ -220,23 +220,7 @@ export class NewEnemyManager {
         bullet.body.velocity.x = -Math.abs(bullet.body.velocity.x); // Nach links fliegen lassen
     }
   }
-  
-  /**
-   * Reagiert auf Änderungen des Schwierigkeitsgrads
-   */
-  private onDifficultyChanged = (data: any): void => {
-    const newDifficulty = typeof data === 'object' ? data.difficulty : data;
-    this.difficulty = newDifficulty;
-       
-    // Informiere alle aktiven Gegner über die Schwierigkeitsänderung
-    this.enemies.forEach(enemy => {
-      enemy.applyDifficulty({
-        difficulty: newDifficulty,
-        factor: 1.0 + (newDifficulty - 1) * 0.1
-      });
-    });
-  }
-  
+    
   /**
    * Reagiert auf Änderungen des Debug-Modus
    */
