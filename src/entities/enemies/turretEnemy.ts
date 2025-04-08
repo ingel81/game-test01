@@ -6,11 +6,14 @@
 import { BaseEnemy, EnemyConfig } from "./baseEnemy";
 import { Player } from "../player/player";
 import { Constants } from "../../utils/constants";
-import { MovementPattern } from "./components/movementComponent";
-import { ShootingPattern } from "./components/weaponComponent";
+import { MovementPattern, MovementConfig } from "./components/movementComponent";
+import { ShootingPattern, WeaponComponent, WeaponConfig } from "./components/weaponComponent";
+import { VisualConfig } from "./components/visualComponent";
 import { EventBus } from "../../utils/eventBus";
 import { BulletFactory } from "../../factories/BulletFactory";
 import { AssetManager, AssetKey } from "../../utils/assetManager";
+import { MovementComponent } from "./components/movementComponent";
+import { VisualComponent } from "./components/visualComponent";
 
 export class TurretEnemy extends BaseEnemy {
   // Statischer Klassenname, der im Build erhalten bleibt
@@ -28,7 +31,7 @@ export class TurretEnemy extends BaseEnemy {
   constructor(scene: Phaser.Scene, x: number, y: number, player: Player) {
     // Asset-Manager holen
     const assetManager = AssetManager.getInstance();
-    
+
     // Konfiguration für den Geschützturm
     const config: EnemyConfig = {
       texture: assetManager.getKey(AssetKey.TURRET_BASE),
@@ -67,12 +70,16 @@ export class TurretEnemy extends BaseEnemy {
 
     // Referenz auf die Basis speichern
     this.turretBase = this.sprite;
-    
+
     // Feuerrate speichern
     this.fireRate = config.fireRate;
 
     // Erstelle den oberen Teil des Turms
-    this.turretTop = scene.add.sprite(x, y, assetManager.getKey(AssetKey.TURRET_TOP));
+    this.turretTop = scene.add.sprite(
+      x,
+      y,
+      assetManager.getKey(AssetKey.TURRET_TOP)
+    );
     this.turretTop.setOrigin(0.7, 0.5); // Drehpunkt weiter rechts setzen (anstatt 0.5, 0.5)
     this.turretTop.setScale(0.2);
     this.turretTop.setDepth(this.sprite.depth + 1); // Über der Basis anzeigen
@@ -83,6 +90,7 @@ export class TurretEnemy extends BaseEnemy {
    */
   update(time: number, delta: number): void {
     // Basisaktualisierung von BaseEnemy aufrufen
+
     super.update(time, delta);
 
     if (
@@ -111,58 +119,72 @@ export class TurretEnemy extends BaseEnemy {
         // Setze die Rotation des oberen Teils (plus 180°, da das Sprite nach rechts zeigt)
         // und der Turm zum Spieler zeigen soll, nicht von ihm weg
         this.turretTop.rotation = angle + Math.PI; // Füge 180 Grad (π) hinzu
-        
+
         // Eigenes Schussverhalten basierend auf der Rotation
         this.fireTurret(time);
       }
     }
   }
-  
+
   /**
    * Überschreibt das Standard-Schussverhalten mit turretspezifischem Verhalten
    */
   private fireTurret(time: number): void {
     // Überprüfe die Feuerrate
     if (time > this.lastFireTime + this.fireRate) {
+
+
       this.lastFireTime = time;
-      
-      // Die Richtung zum Spieler ist der berechnete Winkel aus der update-Methode
-      // Da wir dort aber 180° hinzugefügt haben, müssen wir hier den ursprünglichen Winkel verwenden
+
+      // Die Richtung zum Spieler
       const firingAngle = this.turretTop.rotation - Math.PI;
-      
+
+
       // Bestimme, welcher Lauf als nächstes feuern soll
-      this.activeBarrel = (this.activeBarrel === 0) ? 1 : 0;
-      
+      this.activeBarrel = this.activeBarrel === 0 ? 1 : 0;
+
       // Berechne Offset für den aktuellen Lauf
       // Die Läufe sind horizontal nebeneinander, daher rotieren wir den Offset
-      const barrelOffsetX = this.activeBarrel === 0 ? this.barrelOffsetX : -this.barrelOffsetX;
-      const barrelOffsetY = this.activeBarrel === 0 ? this.barrelOffsetY : -this.barrelOffsetY;
-      
+      const barrelOffsetX =
+        this.activeBarrel === 0 ? this.barrelOffsetX : -this.barrelOffsetX;
+      const barrelOffsetY =
+        this.activeBarrel === 0 ? this.barrelOffsetY : -this.barrelOffsetY;
+
       // Rotiere den Lauf-Offset entsprechend der Turm-Rotation
-      const rotatedOffsetX = barrelOffsetX * Math.cos(firingAngle) - barrelOffsetY * Math.sin(firingAngle);
-      const rotatedOffsetY = barrelOffsetX * Math.sin(firingAngle) + barrelOffsetY * Math.cos(firingAngle);
-      
+      const rotatedOffsetX =
+        barrelOffsetX * Math.cos(firingAngle) -
+        barrelOffsetY * Math.sin(firingAngle);
+      const rotatedOffsetY =
+        barrelOffsetX * Math.sin(firingAngle) +
+        barrelOffsetY * Math.cos(firingAngle);
+
       // Berechne die Position, von der aus geschossen wird (relativ zum Turm)
       const barrelLength = 40; // Länge der Läufe vom Drehpunkt aus
-      const startX = this.turretTop.x + Math.cos(firingAngle) * barrelLength + rotatedOffsetX;
-      const startY = this.turretTop.y + Math.sin(firingAngle) * barrelLength + rotatedOffsetY;
-      
+      const startX =
+        this.turretTop.x +
+        Math.cos(firingAngle) * barrelLength +
+        rotatedOffsetX;
+      const startY =
+        this.turretTop.y +
+        Math.sin(firingAngle) * barrelLength +
+        rotatedOffsetY;
+
       // Erstelle einen Schuss mit der BulletFactory
       const bulletFactory = BulletFactory.getInstance(this.scene);
       bulletFactory.createTurretBullet(startX, startY, firingAngle);
-      
+
       // Sound-Effekt
       this.scene.sound.play(Constants.SOUND_ENEMY_SHOOT, {
-        volume: 0.2
+        volume: 0.2,
       });
-      
+
       // Visuelles Feedback: kurzes Aufleuchten beim Schießen
       this.scene.tweens.add({
         targets: this.turretTop,
         alpha: 0.8,
         duration: 50,
         yoyo: true,
-        ease: 'Sine.easeInOut'
+        ease: "Sine.easeInOut",
       });
     }
   }
@@ -204,5 +226,59 @@ export class TurretEnemy extends BaseEnemy {
     }
 
     return result;
+  }
+
+  protected initComponents(config: EnemyConfig): void {
+    // Erstelle Bewegungskomponente wie gewohnt
+    const movementConfig: MovementConfig = config.movement || {
+      pattern: this.getRandomMovementPattern(),
+      speed: this.speed,
+      baseVelocityX: -100 - Math.random() * 50,
+      changePatternRandomly: true,
+      patternChangeInterval: 4000 + Math.random() * 2000
+    };
+    
+    this.movementComponent = new MovementComponent(
+      this.scene, 
+      this.sprite, 
+      this.player, 
+      movementConfig
+    );
+    
+    // Erstelle eine Dummy-Waffen-Komponente, die nichts tut
+    // Dies verhindert, dass die Standard-Waffenkomponente mit unserer eigenen Schusslogik in Konflikt gerät
+    const dummyWeaponConfig: WeaponConfig = {
+      pattern: 'single',
+      fireRate: 99999999, // Extrem hohe Feuerrate, sodass sie praktisch nie feuert
+      targetPlayer: false
+    };
+    
+    // Echte Komponente erstellen, aber mit einer Override-Methode für update
+    this.weaponComponent = new WeaponComponent(
+      this.scene,
+      this.sprite,
+      this.player,
+      dummyWeaponConfig
+    );
+    
+    // Override der update-Methode, um sicherzustellen, dass sie nichts tut
+    const originalUpdate = this.weaponComponent.update;
+    this.weaponComponent.update = () => {
+      // Tue nichts - wir verwenden unsere eigene fireTurret-Methode
+      console.log("[TURRET] Überspringe WeaponComponent-Update, verwende eigene Schusslogik");
+    };
+    
+    // Erstelle visuelle Komponente wie gewohnt
+    const visualConfig: VisualConfig = config.visual || {
+      tint: 0xFFFFFF,
+      scale: 1,
+      hitEffectDuration: 150
+    };
+    
+    this.visualComponent = new VisualComponent(
+      this.scene, 
+      this.sprite, 
+      visualConfig
+    );
   }
 }
