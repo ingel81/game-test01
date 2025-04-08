@@ -96,7 +96,6 @@ export enum EventType {
   PICKUP_COLLECTED = 'pickup_collected',
   
   // Ereignisse für Gegner und Gameplay
-  DIFFICULTY_CHANGED = 'difficulty_changed',
   DEBUG_TOGGLED = 'debug_toggled',
   BOSS_SPAWNED = 'boss_spawned',
   

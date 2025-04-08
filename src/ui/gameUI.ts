@@ -49,7 +49,7 @@ export class GameUI {
     this.levelDisplay = this.scene.add.text(
       screenWidth / 2,
       this.toolbarHeight / 2,
-      'LEVEL 1',
+      '',
       {
         fontSize: this.isMobile ? '16px' : '20px',
         color: '#00ffff',
@@ -78,7 +78,7 @@ export class GameUI {
     }
     
     // Registriere Event-Listener für Level-Änderungen
-    this.eventBus.on(EventType.DIFFICULTY_CHANGED, this.onDifficultyChanged);
+    this.eventBus.on(EventType.LEVEL_STARTED, this.onLevelStarted);
     this.eventBus.on(EventType.PLAYER_DAMAGED, this.onPlayerDamaged);
     this.eventBus.on(EventType.PLAYER_HEALED, this.onPlayerHealed);
   }
@@ -94,12 +94,14 @@ export class GameUI {
   }
 
   /**
-   * Handler für Schwierigkeitsgradänderungen
+   * Handler für Level-Start
    */
-  private onDifficultyChanged = (data: any): void => {
-    const newDifficulty = typeof data === 'object' ? data.difficulty : data;
-    // Aktualisiere die Level-Anzeige
-    this.updateLevel(newDifficulty);
+  private onLevelStarted = (data: any): void => {
+    // Hole den Levelnamen aus dem Event
+    const levelName = typeof data === 'object' && data.levelName ? data.levelName : `LEVEL ${data.index + 1}`;
+    
+    // Aktualisiere die Level-Anzeige mit dem Namen
+    this.updateLevel(levelName);
   }
   
   /**
@@ -159,8 +161,8 @@ export class GameUI {
   /**
    * Aktualisiert die Level-Anzeige
    */
-  public updateLevel(level: number): void {
-    this.levelDisplay.setText(`LEVEL ${level}`);
+  public updateLevel(levelText: string): void {
+    this.levelDisplay.setText(levelText);
     
     // Kurze Pulsier-Animation für die Level-Anzeige
     this.scene.tweens.add({
@@ -208,7 +210,7 @@ export class GameUI {
   public destroy(): void {
     this.toolbar.destroy();
     this.levelDisplay.destroy();
-    this.eventBus.off(EventType.DIFFICULTY_CHANGED, this.onDifficultyChanged);
+    this.eventBus.off(EventType.LEVEL_STARTED, this.onLevelStarted);
     this.eventBus.off(EventType.PLAYER_DAMAGED, this.onPlayerDamaged);
     this.eventBus.off(EventType.PLAYER_HEALED, this.onPlayerHealed);
     // HealthBar und ScoreDisplay haben keine destroy-Methode

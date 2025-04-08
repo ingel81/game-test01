@@ -15,10 +15,8 @@ export class SpawnManager {
   private asteroids: Asteroid[] = [];
   private pickups: EnergyPickup[] = [];
   private powerPickups: PowerPickup[] = [];
-  private difficulty: number = 1;
   private eventBus: EventBus;
   private isPaused: boolean = false;
-  private lastUpdateTime: number = 0;
   private minAsteroids: number = 2;
   private maxAsteroids: number = 5;
   private asteroidSpawnRate: number = Constants.SPAWN_RATE_ASTEROID;
@@ -28,7 +26,6 @@ export class SpawnManager {
     this.eventBus = EventBus.getInstance();
 
     // Event-Listener registrieren
-    this.eventBus.on(EventType.DIFFICULTY_CHANGED, this.onDifficultyIncrease);
     this.eventBus.on(EventType.PAUSE_GAME, this.pauseSpawning);
     this.eventBus.on(EventType.RESUME_GAME, this.resumeSpawning);
     this.eventBus.on(EventType.GAME_OVER, this.stopSpawning);
@@ -246,14 +243,6 @@ export class SpawnManager {
   }
 
   /**
-   * Reagiert auf Erhöhung des Schwierigkeitsgrads
-   */
-  private onDifficultyIncrease = (data: any): void => {
-    const newDifficulty = typeof data === 'object' ? data.difficulty : data;
-    this.difficulty = newDifficulty;
-  }
-
-  /**
    * Pausiert das Spawnen
    */
   private pauseSpawning = (): void => {
@@ -365,13 +354,6 @@ export class SpawnManager {
   }
 
   /**
-   * Gibt den EnemyManager zurück
-   */
-  public getEnemyManager(): any {
-    return this.scene.registry.get('enemyManager');
-  }
-
-  /**
    * Bereinigt Ressourcen
    */
   public destroy(): void {
@@ -389,7 +371,6 @@ export class SpawnManager {
     this.destroyAllObjects();
     
     // Entferne Event-Listener
-    this.eventBus.off(EventType.DIFFICULTY_CHANGED, this.onDifficultyIncrease);
     this.eventBus.off(EventType.PAUSE_GAME, this.pauseSpawning);
     this.eventBus.off(EventType.RESUME_GAME, this.resumeSpawning);
     this.eventBus.off(EventType.GAME_OVER, this.stopSpawning);

@@ -11,7 +11,6 @@ import { GameScene } from '../scenes/gameScene';
 import { MusicManager } from './musicManager';
 import { SpawnManager } from './spawnManager';
 import { NewEnemyManager } from './enemyManager';
-import { DifficultyManager } from './difficultyManager';
 import { BaseEnemy } from '../entities/enemies/baseEnemy';
 
 /**
@@ -30,7 +29,6 @@ export class LevelManager {
   private eventBus: EventBus;
   private enemyManager: NewEnemyManager;
   private spawnManager: SpawnManager;
-  private difficultyManager: DifficultyManager;
   private musicManager: MusicManager;
   
   private currentLevel: LevelConfig | null = null;
@@ -55,12 +53,11 @@ export class LevelManager {
   private currentWaveIndex: number = 0;
   private levelEndTriggerWaves: Map<number, boolean> = new Map();
   
-  constructor(scene: GameScene, enemyManager: NewEnemyManager, spawnManager: SpawnManager, difficultyManager: DifficultyManager) {
+  constructor(scene: GameScene, enemyManager: NewEnemyManager, spawnManager: SpawnManager) {
     this.scene = scene;
     this.eventBus = EventBus.getInstance();
     this.enemyManager = enemyManager;
     this.spawnManager = spawnManager;
-    this.difficultyManager = difficultyManager;
     this.musicManager = MusicManager.getInstance();
     
     // Event-Listener registrieren
@@ -113,7 +110,8 @@ export class LevelManager {
           if (oldState === LevelState.INACTIVE) {
             this.eventBus.emit(EventType.LEVEL_STARTED, { 
               level: this.currentLevel, 
-              index: this.currentLevelIndex 
+              index: this.currentLevelIndex,
+              levelName: this.currentLevel?.name
             });
           }
           break;
@@ -168,9 +166,6 @@ export class LevelManager {
     }
     
     console.log(`[LEVEL_MANAGER] Level gesetzt auf: ${this.currentLevel?.name || 'undefined'}`);
-    
-    // Setze Schwierigkeit auf Level-Schwierigkeit
-    this.difficultyManager.setDifficulty(this.currentLevel.difficulty);
     
     // Konfiguriere SpawnManager mit Level-Einstellungen
     if (this.currentLevel.minAsteroids !== undefined) {

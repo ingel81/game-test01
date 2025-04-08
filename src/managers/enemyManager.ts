@@ -42,7 +42,6 @@ export class NewEnemyManager {
     this.allEnemyBullets = this.scene.physics.add.group();
     
     // Event-Listener für Spielevents
-    this.eventBus.on(EventType.DIFFICULTY_CHANGED, this.onDifficultyChanged);
     this.eventBus.on(EventType.PAUSE_GAME, this.pauseSpawning);
     this.eventBus.on(EventType.RESUME_GAME, this.resumeSpawning);
     this.eventBus.on(EventType.GAME_OVER, this.stopSpawning);
@@ -341,7 +340,6 @@ export class NewEnemyManager {
     this.destroyAllEnemies();
         
     // Entferne Event-Listener
-    this.eventBus.off(EventType.DIFFICULTY_CHANGED, this.onDifficultyChanged);
     this.eventBus.off(EventType.PAUSE_GAME, this.pauseSpawning);
     this.eventBus.off(EventType.RESUME_GAME, this.resumeSpawning);
     this.eventBus.off(EventType.GAME_OVER, this.stopSpawning);

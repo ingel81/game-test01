@@ -61,10 +61,6 @@ export class Constants {
   public static readonly ASTEROID_SPEED: number = 80;
   public static readonly ASTEROID_SCORE: number = 50;
   
-  // Schwierigkeit
-  public static readonly DIFFICULTY_INCREASE_INTERVAL: number = 20000; // 20 Sekunden
-  public static readonly MAX_DIFFICULTY: number = 99;
-  
   // Spawn-Raten (ms)
   public static readonly SPAWN_RATE_ENEMY: number = 2000;
   public static readonly SPAWN_RATE_BOSS: number = 8000;

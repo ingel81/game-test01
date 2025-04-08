@@ -5,7 +5,6 @@ import { Player } from '../entities/player/player';
 import { SpawnManager } from '../managers/spawnManager';
 import { CollisionManager } from '../managers/collisionManager';
 import { GameUI } from '../ui/gameUI';
-import { DifficultyManager } from '../managers/difficultyManager';
 import { MusicManager } from '../managers/musicManager';
 import { NewEnemyManager } from '../managers/enemyManager';
 import { GlowPipeline } from '../pipelines/glowPipeline';
@@ -22,7 +21,6 @@ export class GameScene extends BaseScene {
   private enemyManager!: NewEnemyManager;
   private collisionManager!: CollisionManager;
   private uiManager!: GameUI;
-  private difficultyManager!: DifficultyManager;
   private levelManager!: LevelManager;
   private musicManager: MusicManager;
   private score: number = 0;
@@ -107,12 +105,8 @@ export class GameScene extends BaseScene {
       
       console.log('GameScene: Erstelle Spieler');
       // Erstelle den Spieler
-      this.player = new Player(this, this.scale.width * 0.2, this.scale.height * 0.5);
-      
-      // Erstelle den DifficultyManager
-      console.log('GameScene: Erstelle DifficultyManager');
-      this.difficultyManager = new DifficultyManager(this);
-      
+      this.player = new Player(this, this.scale.width * 0.2, this.scale.height * 0.5);      
+     
       // Erstelle den EnemyManager
       console.log('GameScene: Erstelle EnemyManager');
       this.enemyManager = new NewEnemyManager(this, this.player);
@@ -135,7 +129,7 @@ export class GameScene extends BaseScene {
       
       // Erstelle den LevelManager und starte das erste Level
       console.log('GameScene: Erstelle LevelManager');
-      this.levelManager = new LevelManager(this, this.enemyManager, this.spawnManager, this.difficultyManager);
+      this.levelManager = new LevelManager(this, this.enemyManager, this.spawnManager);
       
       // Event-Listener hinzufügen
       console.log('GameScene: Registriere Event-Listener');
@@ -202,9 +196,6 @@ export class GameScene extends BaseScene {
     
     // Update UI
     this.uiManager.update(time, delta);
-    
-    // Update DifficultyManager
-    this.difficultyManager.update(time, delta);
     
     // Prüfe Mausbewegungen für Cursor-Ausblendung
     this.updateMouseHiding(time);
