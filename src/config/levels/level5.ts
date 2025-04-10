@@ -9,7 +9,6 @@ export const level5: LevelConfig = {
   id: 'level-5',
   name: 'Command Center',
   description: 'Infiltrate an enemy command center protected by elite forces and a powerful commander.',
-  duration: 180000, // 3 minutes
   minAsteroids: 30,
   maxAsteroids: 45,
   asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID * 0.6, // Very fast asteroid spawn rate
@@ -69,8 +68,7 @@ export const level5: LevelConfig = {
       formation: FormationType.SINGLE,
       delay: 12000,
       healthMultiplier: 1.5,
-      speedMultiplier: 1.2,
-      isLevelEndTrigger: true
+      speedMultiplier: 1.2
     }
   ],
   

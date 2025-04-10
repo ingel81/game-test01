@@ -228,7 +228,9 @@ export class BaseEnemy extends GameObject {
   }
 
   /**
-   * Aktualisiert den Gegner und seine Komponenten
+   * Aktualisiert den Zustand des Gegners
+   * @param time Die aktuelle Zeit
+   * @param delta Die Zeitdifferenz seit dem letzten Frame
    */
   public update(time: number, delta: number): void {
     if (this.isDestroyed) return;
@@ -380,20 +382,35 @@ export class BaseEnemy extends GameObject {
   }
 
   /**
-   * Zerstört die Entität und gibt Ressourcen frei
+   * Zerstört den Gegner und löst alle Events aus
    */
   public destroy(): void {
-    // Wir verwenden onDestroy() für alle visuellen Effekte und Events,
-    // die nur bei einer echten Zerstörung ausgelöst werden sollen.
-    // Danach rufen wir einfach remove() auf, um Codewiederholung zu vermeiden.
+    if (this.isDestroyed) {
+      console.log(`[ENEMY] Versuch, bereits zerstörten Gegner zu zerstören`);
+      return;
+    }
     
-    // Wir rufen hier nicht manuell eventBus und debugText.destroy auf,
-    // da dies bereits in remove() erledigt wird.
+    console.log(`[ENEMY] Gegner wird zerstört an Position (${this.sprite?.x}, ${this.sprite?.y})`);
     
-    console.log(`[DEBUG] Rufe destroy() für ${this.constructor.name} an Position (${this.sprite.x}, ${this.sprite.y}) auf`);
+    // Als zerstört markieren, um doppelte Zerstörung zu verhindern
+    this.isDestroyed = true;
     
-    // Rufe die Basis-Methode auf, die onDestroy() und dann remove() aufruft
-    super.destroy();
+    // Rufe die Ereignismethode auf
+    this.onDestroy();
+    
+    // Entferne den Sprite
+    if (this.sprite && this.sprite.active) {
+      this.sprite.destroy();
+    }
+    
+    // Entferne den Debug-Text
+    if (this.debugText && this.debugText.active) {
+      this.debugText.destroy();
+    }
+    
+    // Events auslösen, dass der Gegner zerstört wurde
+    this.eventBus.emit(EventType.ENEMY_DESTROYED, this);
+    this.eventBus.emit(EventType.ENEMY_REMOVED, this);
   }
   
   /**

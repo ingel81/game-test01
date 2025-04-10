@@ -9,7 +9,6 @@ export const level8: LevelConfig = {
   id: 'level-8',
   name: 'Enemy Ace Pilot',
   description: 'Face the legendary enemy ace pilot and their elite squadron in an epic battle.',
-  duration: 180000, // 3 minutes
   minAsteroids: 45,
   maxAsteroids: 60,
   asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID * 0.3, // Extremely fast asteroid spawn rate
@@ -77,8 +76,7 @@ export const level8: LevelConfig = {
       formation: FormationType.V_FORMATION,
       delay: 4000,
       healthMultiplier: 1.4,
-      speedMultiplier: 1.4,
-      isLevelEndTrigger: true
+      speedMultiplier: 1.4
     }
   ],
   

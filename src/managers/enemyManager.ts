@@ -301,36 +301,12 @@ export class NewEnemyManager {
     // Entferne sofort alle Gegner, die den Bildschirm bereits verlassen haben
     this.removeOffscreenEnemies();
     
+    console.log(`[ENEMY_MANAGER] prepareForLevelEnd: ${this.enemies.length} Gegner noch vorhanden`);
+    
     // Gib ein Promise zurück, das aufgelöst wird, wenn alle Gegner weg sind
     return new Promise<void>((resolve) => {
       this.checkRemainingEnemies(resolve);
     });
-  }
-  
-  /**
-   * Ruft update() für alle Gegner auf, um die Selbstzerstörungslogik auszulösen
-   * @returns Die Anzahl der aktualisierten Gegner
-   */
-  private removeOffscreenEnemies(): number {
-    const enemyCount = this.enemies.length;
-    
-    // Aktualisiere alle Gegner, um deren Selbstzerstörungslogik auszulösen
-    const time = this.scene.time.now;
-    const delta = this.scene.game.loop.delta;
-    
-    for (let i = this.enemies.length - 1; i >= 0; i--) {
-      try {
-        const enemy = this.enemies[i];
-        if (enemy) {
-          enemy.update(time, delta);
-        }
-      } catch (error) {
-        console.error(`[ENEMY_MANAGER] Fehler beim Prüfen auf Gegner außerhalb des Bildschirms: ${error}`);
-      }
-    }
-    
-    // Gib die Anzahl der Gegner vor der Aktualisierung zurück
-    return enemyCount;
   }
   
   /**
@@ -343,13 +319,65 @@ export class NewEnemyManager {
     
     const remainingEnemies = this.enemies.length;
     
+    console.log(`[ENEMY_MANAGER] checkRemainingEnemies: ${remainingEnemies} Gegner noch übrig`);
+    
     if (remainingEnemies === 0) {
       // Alle Gegner sind weg, löse das Promise auf
+      console.log(`[ENEMY_MANAGER] Alle Gegner entfernt, rufe Callback auf`);
       callback();
     } else {
       // Es sind noch Gegner da, warte 100ms und prüfe erneut
       this.scene.time.delayedCall(100, () => this.checkRemainingEnemies(callback));
     }
+  }
+  
+  /**
+   * Entfernt Gegner, die außerhalb des Bildschirms sind
+   */
+  private removeOffscreenEnemies(): void {
+    const screenWidth = this.scene.scale.width;
+    const screenHeight = this.scene.scale.height;
+    const margin = 100; // Randbereich, in dem Gegner noch als "auf dem Bildschirm" gelten
+    
+    console.log(`[ENEMY_MANAGER] removeOffscreenEnemies: Prüfe ${this.enemies.length} Gegner`);
+    
+    // Überprüfe jeden Gegner
+    for (let i = this.enemies.length - 1; i >= 0; i--) {
+      const enemy = this.enemies[i];
+      
+      if (!enemy || !enemy.getSprite) {
+        // Ungültiger Gegner, entfernen
+        this.enemies.splice(i, 1);
+        continue;
+      }
+      
+      const sprite = enemy.getSprite();
+      
+      if (!sprite || !sprite.active) {
+        // Inaktiver Sprite, entfernen
+        this.enemies.splice(i, 1);
+        continue;
+      }
+      
+      // Prüfe, ob der Gegner außerhalb des Bildschirms ist
+      const x = sprite.x;
+      const y = sprite.y;
+      
+      if (
+        x < -margin ||
+        x > screenWidth + margin ||
+        y < -margin ||
+        y > screenHeight + margin
+      ) {
+        console.log(`[ENEMY_MANAGER] Entferne Offscreen-Gegner vom Typ ${enemy.constructor.name} an Position (${x}, ${y})`);
+        
+        // Gegner ist außerhalb des Bildschirms, entfernen
+        enemy.destroy();
+        this.enemies.splice(i, 1);
+      }
+    }
+    
+    console.log(`[ENEMY_MANAGER] removeOffscreenEnemies: ${this.enemies.length} Gegner verbleiben nach Bereinigung`);
   }
   
   /**

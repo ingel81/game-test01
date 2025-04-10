@@ -46,7 +46,6 @@ export interface Wave {
   startDelay?: number;        // Verzögerung vor dem Start der Welle
   healthMultiplier?: number;  // Multiplikator für Gegner-Gesundheit
   speedMultiplier?: number;   // Multiplikator für Gegner-Geschwindigkeit
-  isLevelEndTrigger?: boolean;// Ob diese Welle als Level-Ende-Auslöser dient
 }
 
 /**
@@ -78,7 +77,6 @@ export interface LevelConfig {
   id: string;                     // Eindeutige Level-ID
   name: string;                   // Name des Levels
   description: string;            // Beschreibung des Levels
-  duration: number;               // Dauer des Levels in Millisekunden
   minAsteroids?: number;          // Minimale Anzahl an Asteroiden
   maxAsteroids?: number;          // Maximale Anzahl an Asteroiden
   asteroidSpawnRate?: number;     // Spawn-Rate für Asteroiden in ms

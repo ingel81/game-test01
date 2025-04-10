@@ -9,7 +9,6 @@ export const level7: LevelConfig = {
   id: 'level-7',
   name: 'Elite Command Fleet',
   description: 'Face multiple elite commanders and their combined forces in a decisive battle.',
-  duration: 180000, // 3 minutes
   minAsteroids: 40,
   maxAsteroids: 55,
   asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID * 0.4, // Extremely fast asteroid spawn rate
@@ -87,8 +86,7 @@ export const level7: LevelConfig = {
       formation: FormationType.SINGLE,
       delay: 15000,
       healthMultiplier: 1.6,
-      speedMultiplier: 1.3,
-      isLevelEndTrigger: true
+      speedMultiplier: 1.3
     }
   ],
   

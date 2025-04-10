@@ -7,16 +7,15 @@ import { Constants } from '../../utils/constants';
  */
 export const level6: LevelConfig = {
   id: 'level-6',
-  name: 'Asteroid Field Guardian',
-  description: 'Face the guardian of a massive asteroid field, protected by elite forces and advanced defense systems.',
-  duration: 180000, // 3 minutes
+  name: 'Enemy Commander',
+  description: 'Face off against an enemy commander and their elite forces.',
   minAsteroids: 35,
   maxAsteroids: 50,
-  asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID * 0.5, // Extremely fast asteroid spawn rate
-  asteroidSpeedMultiplier: 1.5, // Extremely fast asteroids
-  background: 'bg-asteroidguardian',
-  introText: 'A powerful guardian protects this asteroid field. It commands elite forces and advanced defense systems. This will be a challenging battle.',
-  outroText: 'The guardian has been defeated! The asteroid field is now under our control.',
+  asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID * 0.5, // Very fast asteroid spawn rate
+  asteroidSpeedMultiplier: 1.5, // Very fast asteroids
+  background: 'bg-commander',
+  introText: 'An enemy commander has been spotted in this sector. They command a formidable force of elite units. This will be a challenging battle.',
+  outroText: 'The enemy commander has been defeated! Their forces are in disarray.',
   
   waves: [
     // Initial ambush from multiple directions
@@ -60,8 +59,7 @@ export const level6: LevelConfig = {
       formation: FormationType.SINGLE,
       delay: 15000,
       healthMultiplier: 1.6,
-      speedMultiplier: 1.2,
-      isLevelEndTrigger: true
+      speedMultiplier: 1.2
     }
   ],
   

@@ -9,7 +9,6 @@ export const level10: LevelConfig = {
   id: 'level-10',
   name: 'Final Stand',
   description: 'Face the enemy\'s ultimate weapon and their most elite forces in a battle for survival.',
-  duration: 240000, // 4 minutes
   minAsteroids: 60,
   maxAsteroids: 75,
   asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID * 0.15, // Extremely fast asteroid spawn rate
@@ -88,8 +87,7 @@ export const level10: LevelConfig = {
       formation: FormationType.SINGLE,
       delay: 15000,
       healthMultiplier: 2.5,
-      speedMultiplier: 1.7,
-      isLevelEndTrigger: true
+      speedMultiplier: 1.7
     }
   ],
   
@@ -177,59 +175,34 @@ export const level10: LevelConfig = {
   timedPickups: [
     // Strategic pickups for the intense battle
     {
-      time: 20000,
+      time: 15000,
       type: PickupType.ENERGY,
-      count: 4
-    },
-    {
-      time: 40000,
-      type: PickupType.POWER,
-      count: 3
+      count: 2
     },
     {
       time: 60000,
-      type: PickupType.ENERGY,
-      count: 4
-    },
-    {
-      time: 80000,
       type: PickupType.POWER,
-      count: 3
-    },
-    {
-      time: 100000,
-      type: PickupType.ENERGY,
-      count: 5
+      count: 1
     },
     {
       time: 120000,
-      type: PickupType.POWER,
-      count: 3
-    },
-    {
-      time: 140000,
       type: PickupType.ENERGY,
-      count: 4
-    },
-    {
-      time: 160000,
-      type: PickupType.POWER,
       count: 3
     },
     {
       time: 180000,
-      type: PickupType.ENERGY,
-      count: 5
+      type: PickupType.POWER,
+      count: 1
     },
     {
       time: 200000,
-      type: PickupType.POWER,
-      count: 4
+      type: PickupType.ENERGY,
+      count: 5
     },
     {
       time: 220000,
-      type: PickupType.ENERGY,
-      count: 5
+      type: PickupType.POWER,
+      count: 4
     }
   ]
 }; 

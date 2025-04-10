@@ -9,7 +9,6 @@ export const level4: LevelConfig = {
   id: 'level-4',
   name: 'Elite Defense',
   description: 'Face off against elite enemy forces and their advanced defense systems.',
-  duration: 180000, // 3 minutes
   minAsteroids: 25,
   maxAsteroids: 40,
   asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID * 0.7, // Even faster asteroid spawn rate
@@ -68,8 +67,7 @@ export const level4: LevelConfig = {
       formation: FormationType.V_FORMATION,
       delay: 12000,
       healthMultiplier: 1.2,
-      speedMultiplier: 1.2,
-      isLevelEndTrigger: true
+      speedMultiplier: 1.2
     }
   ],
   
@@ -107,24 +105,24 @@ export const level4: LevelConfig = {
   
   timedPickups: [
     {
-      time: 20000,
+      time: 15000,
       type: PickupType.ENERGY,
       count: 2
     },
     {
       time: 45000,
       type: PickupType.POWER,
-      count: 2
+      count: 1
     },
     {
-      time: 80000,
+      time: 90000,
       type: PickupType.ENERGY,
       count: 3
     },
     {
       time: 120000,
       type: PickupType.POWER,
-      count: 2
+      count: 1
     }
   ]
 }; 

@@ -13,7 +13,6 @@ export const level1: LevelConfig = {
   id: 'level-1',
   name: 'First Contact',
   description: 'Your first encounter with enemy scouts. Stay focused and learn the controls.',
-  duration: 30000,
   minAsteroids: 15,
   maxAsteroids: 25,
   asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID * 1.2, // Slightly faster asteroid spawn rate
@@ -52,8 +51,7 @@ export const level1: LevelConfig = {
       enemyType: EnemyType.STANDARD,
       count: 10,
       formation: FormationType.V_FORMATION,
-      delay: 8000,
-      //isLevelEndTrigger: true
+      delay: 8000
     }
   ],
   

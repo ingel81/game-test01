@@ -9,7 +9,6 @@ export const level3: LevelConfig = {
   id: 'level-3',
   name: 'Enemy Outpost',
   description: 'Infiltrate an enemy outpost protected by advanced defense systems and elite guard units.',
-  duration: 150000, // 2.5 minutes
   minAsteroids: 20,
   maxAsteroids: 35,
   asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID * 0.8, // Even faster asteroid spawn rate
@@ -62,15 +61,14 @@ export const level3: LevelConfig = {
       healthMultiplier: 1.0,
       speedMultiplier: 1.0
     },
-    // Final wave - Outpost commander with guards
+    // Final wave - advanced enemies in V formation
     {
-      enemyType: EnemyType.ELITE,
-      count: 5,
+      enemyType: EnemyType.ADVANCED,
+      count: 15,
       formation: FormationType.V_FORMATION,
-      delay: 12000,
+      delay: 15000,
       healthMultiplier: 1.2,
-      speedMultiplier: 1.1,
-      isLevelEndTrigger: true
+      speedMultiplier: 1.2
     }
   ],
   

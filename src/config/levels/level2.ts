@@ -9,7 +9,6 @@ export const level2: LevelConfig = {
   id: 'level-2',
   name: 'Asteroid Field',
   description: 'Navigate through a dense asteroid field while fighting enemy forces.',
-  duration: 120000, // 2 minutes
   minAsteroids: 450,
   maxAsteroids: 450,
   asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID * 0.3, // Faster asteroid spawn rate

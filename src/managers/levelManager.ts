@@ -32,11 +32,11 @@ export class LevelManager {
   
   private currentLevel: LevelConfig | null = null;
   private currentLevelIndex: number = 0;
-  private levelTimer: Phaser.Time.TimerEvent | null = null;
   private waveTimers: Phaser.Time.TimerEvent[] = [];
   private timedSpawnTimers: Phaser.Time.TimerEvent[] = [];
   private timedPickupTimers: Phaser.Time.TimerEvent[] = [];
   private bossTimer: Phaser.Time.TimerEvent | null = null;
+  private endCheckTimer: Phaser.Time.TimerEvent | null = null;
   
   // Der aktuelle Zustand des Levels
   private currentState: LevelState = LevelState.INACTIVE;
@@ -50,7 +50,7 @@ export class LevelManager {
   private levelIntroShown: boolean = false;
   private pendingWaves: Wave[] = [];
   private currentWaveIndex: number = 0;
-  private levelEndTriggerWaves: Map<number, boolean> = new Map();
+  private allWavesSpawned: boolean = false;
   
   constructor(scene: GameScene, enemyManager: NewEnemyManager, spawnManager: SpawnManager) {
     this.scene = scene;
@@ -156,7 +156,7 @@ export class LevelManager {
     this.currentLevelIndex = levelIndex;
     this.currentLevel = GameLevels[levelIndex];
     this.currentWaveIndex = 0;
-    this.levelEndTriggerWaves.clear();
+    this.allWavesSpawned = false;
     
     console.log(`[LEVEL_MANAGER] Debug - GameLevels.length: ${GameLevels.length}, aktives Level: ${levelIndex}`);
     console.log(`[LEVEL_MANAGER] Debug - Wellen im Level: ${this.currentLevel.waves?.length || 0}`);
@@ -185,7 +185,6 @@ export class LevelManager {
       this.showLevelIntro(this.currentLevel.introText, () => {
         // Wechsle zum RUNNING-Zustand erst nach dem Intro
         this.setState(LevelState.RUNNING);
-        this.startLevelTimer();
         this.levelIntroShown = true;
         console.log(`[LEVEL_MANAGER] Level-Intro beendet, starte erste Welle`);
         this.startNextWave();
@@ -194,10 +193,7 @@ export class LevelManager {
       // Kein Intro, Level läuft direkt
       console.log(`[LEVEL_MANAGER] Kein Level-Intro, starte Level direkt`);
       this.setState(LevelState.RUNNING);
-      this.startLevelTimer();
-      console.log(`[LEVEL_MANAGER] Vor dem Aufruf von startNextWave()`);
       this.startNextWave();
-      console.log(`[LEVEL_MANAGER] Nach dem Aufruf von startNextWave()`);
     }
     
     // Level-spezifische Musik starten
@@ -281,7 +277,6 @@ export class LevelManager {
     this.isPaused = true;
     
     // Alle Timer pausieren
-    if (this.levelTimer) this.levelTimer.paused = true;
     this.waveTimers.forEach(timer => timer.paused = true);
     this.timedSpawnTimers.forEach(timer => timer.paused = true);
     this.timedPickupTimers.forEach(timer => timer.paused = true);
@@ -298,38 +293,10 @@ export class LevelManager {
     this.isPaused = false;
     
     // Alle Timer fortsetzen
-    if (this.levelTimer) this.levelTimer.paused = false;
     this.waveTimers.forEach(timer => timer.paused = false);
     this.timedSpawnTimers.forEach(timer => timer.paused = false);
     this.timedPickupTimers.forEach(timer => timer.paused = false);
     if (this.bossTimer) this.bossTimer.paused = false;
-  }
-  
-  /**
-   * Startet den Timer für das Level
-   */
-  private startLevelTimer(): void {
-    if (!this.currentLevel) return;    
-    
-    const effectiveDuration = this.currentLevel.duration
-    
-    this.levelTimer = this.scene.time.delayedCall(
-      effectiveDuration,
-      () => {
-        console.log('[LEVEL_MANAGER] Level-Timer abgelaufen. Bereite Level-Ende vor.');
-        
-        // Wenn bereits ein Level-Ende im Gange ist, nichts tun
-        if (this.levelCompleted || this.levelEndingInProgress) {
-          console.log('[LEVEL_MANAGER] Level-Ende bereits eingeleitet, Timer-Auslöser wird ignoriert.');
-          return;
-        }
-        
-        // Level-Abschluss einleiten
-        this.onLevelComplete();
-      },
-      [],
-      this
-    );
   }
   
   /**
@@ -338,9 +305,8 @@ export class LevelManager {
    * @param enemyType Der Typ der Gegner
    * @param count Die Anzahl der Gegner
    * @param delay Die Verzögerung zwischen den Spawns
-   * @param isLevelEndTrigger Ob diese Welle ein Level-End-Trigger ist
    */
-  private spawnWaveByFormation(formation: FormationType, enemyType: string, count: number, delay: number, isLevelEndTrigger: boolean, healthMultiplier?: number, speedMultiplier?: number): void {
+  private spawnWaveByFormation(formation: FormationType, enemyType: string, count: number, delay: number, healthMultiplier?: number, speedMultiplier?: number): void {
     console.log(`[LEVEL_MANAGER] spawnWaveByFormation aufgerufen: formation=${formation}, enemyType=${enemyType}, count=${count}, healthMultiplier=${healthMultiplier}, speedMultiplier=${speedMultiplier}`);
     
     // Wenn das Level pausiert oder beendet ist, keine Gegner spawnen
@@ -352,27 +318,27 @@ export class LevelManager {
     switch (formation) {
       case FormationType.LINE:
         console.log(`[LEVEL_MANAGER] Spawne Linienformation mit ${count} Gegnern vom Typ ${enemyType}`);
-        this.spawnLineFormation(enemyType, count, delay, isLevelEndTrigger, healthMultiplier, speedMultiplier);
+        this.spawnLineFormation(enemyType, count, delay, healthMultiplier, speedMultiplier);
         break;
       case FormationType.V_FORMATION:
         console.log(`[LEVEL_MANAGER] Spawne V-Formation mit ${count} Gegnern vom Typ ${enemyType}`);
-        this.spawnVFormation(enemyType, count, delay, isLevelEndTrigger, healthMultiplier, speedMultiplier);
+        this.spawnVFormation(enemyType, count, delay, healthMultiplier, speedMultiplier);
         break;
       case FormationType.SQUARE:
         console.log(`[LEVEL_MANAGER] Spawne Quadrat-Formation mit ${count} Gegnern vom Typ ${enemyType}`);
-        this.spawnSquareFormation(enemyType, count, delay, isLevelEndTrigger, healthMultiplier, speedMultiplier);
+        this.spawnSquareFormation(enemyType, count, delay, healthMultiplier, speedMultiplier);
         break;
       case FormationType.RANDOM:
         console.log(`[LEVEL_MANAGER] Spawne Zufalls-Formation mit ${count} Gegnern vom Typ ${enemyType}`);
-        this.spawnRandomFormation(enemyType, count, delay, isLevelEndTrigger, healthMultiplier, speedMultiplier);
+        this.spawnRandomFormation(enemyType, count, delay, healthMultiplier, speedMultiplier);
         break;
       case FormationType.SINGLE:
         console.log(`[LEVEL_MANAGER] Spawne einzelnen Gegner vom Typ ${enemyType}`);
-        this.spawnSingleEnemy(enemyType, isLevelEndTrigger, healthMultiplier, speedMultiplier);
+        this.spawnSingleEnemy(enemyType, healthMultiplier, speedMultiplier);
         break;
       default:
         console.error(`[LEVEL_MANAGER] Unbekannte Formation: ${formation}, verwende Linienformation`);
-        this.spawnLineFormation(enemyType, count, delay, isLevelEndTrigger, healthMultiplier, speedMultiplier);
+        this.spawnLineFormation(enemyType, count, delay, healthMultiplier, speedMultiplier);
     }
     
     console.log(`[LEVEL_MANAGER] spawnWaveByFormation abgeschlossen`);
@@ -381,7 +347,7 @@ export class LevelManager {
   /**
    * Spawnt Gegner in einer Linienformation
    */
-  private spawnLineFormation(enemyType: string, count: number, delay: number, isLevelEndTrigger: boolean, healthMultiplier?: number, speedMultiplier?: number): void {
+  private spawnLineFormation(enemyType: string, count: number, delay: number, healthMultiplier?: number, speedMultiplier?: number): void {
     const screenWidth = this.scene.scale.width;
     const screenHeight = this.scene.scale.height;
     const baseX = screenWidth + 100;
@@ -391,14 +357,14 @@ export class LevelManager {
       const y = 150 + (screenHeight - 300) * (i / (count - 1 || 1));
       const spawnDelay = i * delay;
       
-      this.spawnEnemyWithDelay(enemyType, baseX, y, spawnDelay, isLevelEndTrigger, healthMultiplier, speedMultiplier);
+      this.spawnEnemyWithDelay(enemyType, baseX, y, spawnDelay, healthMultiplier, speedMultiplier);
     }
   }
   
   /**
    * Spawnt Gegner in einer V-Formation
    */
-  private spawnVFormation(enemyType: string, count: number, delay: number, isLevelEndTrigger: boolean, healthMultiplier?: number, speedMultiplier?: number): void {
+  private spawnVFormation(enemyType: string, count: number, delay: number, healthMultiplier?: number, speedMultiplier?: number): void {
     const screenWidth = this.scene.scale.width;
     const screenHeight = this.scene.scale.height;
     const baseX = screenWidth + 100;
@@ -411,14 +377,14 @@ export class LevelManager {
       const x = baseX + distance * 50; // X-Versatz für V-Form
       const spawnDelay = distance * delay;
       
-      this.spawnEnemyWithDelay(enemyType, x, y, spawnDelay, isLevelEndTrigger, healthMultiplier, speedMultiplier);
+      this.spawnEnemyWithDelay(enemyType, x, y, spawnDelay, healthMultiplier, speedMultiplier);
     }
   }
   
   /**
    * Spawnt Gegner in einer Quadrat-Formation
    */
-  private spawnSquareFormation(enemyType: string, count: number, delay: number, isLevelEndTrigger: boolean, healthMultiplier?: number, speedMultiplier?: number): void {
+  private spawnSquareFormation(enemyType: string, count: number, delay: number, healthMultiplier?: number, speedMultiplier?: number): void {
     const screenWidth = this.scene.scale.width;
     const screenHeight = this.scene.scale.height;
     const baseX = screenWidth + 100;
@@ -433,14 +399,14 @@ export class LevelManager {
       const x = baseX + col * 50; // X-Versatz für Spalten
       const spawnDelay = (row * side + col) * (delay / 2);
       
-      this.spawnEnemyWithDelay(enemyType, x, y, spawnDelay, isLevelEndTrigger, healthMultiplier, speedMultiplier);
+      this.spawnEnemyWithDelay(enemyType, x, y, spawnDelay, healthMultiplier, speedMultiplier);
     }
   }
   
   /**
    * Spawnt Gegner in zufälligen Positionen
    */
-  private spawnRandomFormation(enemyType: string, count: number, delay: number, isLevelEndTrigger: boolean, healthMultiplier?: number, speedMultiplier?: number): void {
+  private spawnRandomFormation(enemyType: string, count: number, delay: number, healthMultiplier?: number, speedMultiplier?: number): void {
     const screenWidth = this.scene.scale.width;
     const screenHeight = this.scene.scale.height;
     const baseX = screenWidth + 100;
@@ -451,26 +417,26 @@ export class LevelManager {
       const x = baseX + Phaser.Math.Between(-50, 50);
       const spawnDelay = Phaser.Math.Between(0, delay * 2);
       
-      this.spawnEnemyWithDelay(enemyType, x, y, spawnDelay, isLevelEndTrigger, healthMultiplier, speedMultiplier);
+      this.spawnEnemyWithDelay(enemyType, x, y, spawnDelay, healthMultiplier, speedMultiplier);
     }
   }
   
   /**
    * Spawnt einen einzelnen Gegner
    */
-  private spawnSingleEnemy(enemyType: string, isLevelEndTrigger: boolean, healthMultiplier?: number, speedMultiplier?: number): void {
+  private spawnSingleEnemy(enemyType: string, healthMultiplier?: number, speedMultiplier?: number): void {
     const screenWidth = this.scene.scale.width;
     const screenHeight = this.scene.scale.height;
     const x = screenWidth + 100;
     const y = screenHeight / 2;
     
-    this.spawnEnemyWithDelay(enemyType, x, y, 0, isLevelEndTrigger, healthMultiplier, speedMultiplier);
+    this.spawnEnemyWithDelay(enemyType, x, y, 0, healthMultiplier, speedMultiplier);
   }
   
   /**
    * Spawnt einen Gegner mit Verzögerung
    */
-  private spawnEnemyWithDelay(enemyType: string, x: number, y: number, delay: number, isLevelEndTrigger: boolean, healthMultiplier?: number, speedMultiplier?: number): void {
+  private spawnEnemyWithDelay(enemyType: string, x: number, y: number, delay: number, healthMultiplier?: number, speedMultiplier?: number): void {
     console.log(`[LEVEL_MANAGER] spawnEnemyWithDelay aufgerufen: Typ=${enemyType}, Position=(${x}, ${y}), Delay=${delay}ms, healthMultiplier=${healthMultiplier}, speedMultiplier=${speedMultiplier}`);
     
     this.scene.time.delayedCall(
@@ -494,14 +460,6 @@ export class LevelManager {
           // Gegner-Instanz erstellen
           const enemy = this.enemyManager.spawnEnemyOfType(enemyType, x, y, options);
           
-          console.log(`[LEVEL_MANAGER] Gegner erfolgreich gespawnt: ${enemy ? 'Ja' : 'Nein'}`);
-          
-          // Wenn der Gegner Teil einer Level-End-Trigger-Welle ist, markieren wir ihn
-          if (isLevelEndTrigger && enemy && enemy.getSprite) {
-            const sprite = enemy.getSprite();
-            sprite.setData('isLevelEndTrigger', true);
-            console.log(`[LEVEL_MANAGER] Gegner als Level-End-Trigger markiert`);
-          }
         } catch (error) {
           console.error(`[LEVEL_MANAGER] Fehler beim Spawnen des Gegners: ${error}`);
         }
@@ -529,20 +487,23 @@ export class LevelManager {
       return;
     }
     
-    // Wenn keine weiteren Wellen vorhanden sind, Spiel beenden
+    // Wenn keine weiteren Wellen vorhanden sind, Level-End-Check starten
     if (this.currentWaveIndex >= this.currentLevel.waves.length) {
       console.log('[LEVEL_MANAGER] Alle Wellen abgeschlossen');
-      // Wenn keine aktiven Trigger-Wellen definiert sind, gilt das Level als beendet
-      if (this.levelEndTriggerWaves.size === 0) {
-        console.log('[LEVEL_MANAGER] Keine End-Trigger-Wellen definiert. Prüfe auf verbleibende Gegner.');
-        const remainingEnemies = this.enemyManager.getAllEnemies().length;
+      this.allWavesSpawned = true;
+      
+      // Prüfe auf verbleibende Gegner
+      const remainingEnemies = this.enemyManager.getAllEnemies().length;
+      console.log(`[LEVEL_MANAGER] Alle Wellen gespawnt. Verbleibende Gegner: ${remainingEnemies}`);
+      
+      if (remainingEnemies === 0) {
+        console.log('[LEVEL_MANAGER] Keine Gegner mehr übrig. Level wird abgeschlossen.');
+        this.onLevelComplete();
+      } else {
+        console.log(`[LEVEL_MANAGER] Es sind noch ${remainingEnemies} Gegner übrig. Warte auf deren Zerstörung.`);
         
-        if (remainingEnemies === 0) {
-          console.log('[LEVEL_MANAGER] Keine Gegner mehr übrig. Level wird abgeschlossen.');
-          this.onLevelComplete();
-        } else {
-          console.log(`[LEVEL_MANAGER] Es sind noch ${remainingEnemies} Gegner übrig. Warte auf deren Zerstörung.`);
-        }
+        // Hier fügen wir einen regelmäßigen Check ein, um den Fall abzufangen, dass Gegner den Bildschirm verlassen haben
+        this.createEndCheckTimer();
       }
       return;
     }
@@ -550,15 +511,6 @@ export class LevelManager {
     // Aktuelle Welle holen
     const wave = this.currentLevel.waves[this.currentWaveIndex];
     console.log(`[LEVEL_MANAGER] Aktuelle Welle geladen: Index=${this.currentWaveIndex}, Typ=${wave.enemyType}, Anzahl=${wave.count}`);
-    
-    // Bestimme, ob diese Welle ein Level-End-Trigger ist
-    const isLevelEndTrigger = wave.isLevelEndTrigger || false;
-    
-    // Merke dir, ob diese Welle ein Level-End-Trigger ist
-    if (isLevelEndTrigger) {
-      this.levelEndTriggerWaves.set(this.currentWaveIndex, false);
-      console.log(`[LEVEL_MANAGER] Welle ${this.currentWaveIndex} ist ein Level-End-Trigger`);
-    }
     
     console.log(`[LEVEL_MANAGER] Starte Welle ${this.currentWaveIndex + 1} von ${this.currentLevel.waves.length}`);
     
@@ -578,7 +530,7 @@ export class LevelManager {
     // Rufe die entsprechende Spawn-Methode basierend auf dem Formations-Typ auf
     try {
       console.log(`[LEVEL_MANAGER] Rufe spawnWaveByFormation auf`);
-      this.spawnWaveByFormation(formation, enemyType, count, delay, isLevelEndTrigger, healthMultiplier, speedMultiplier);
+      this.spawnWaveByFormation(formation, enemyType, count, delay, healthMultiplier, speedMultiplier);
       console.log(`[LEVEL_MANAGER] spawnWaveByFormation abgeschlossen`);
     } catch (error) {
       console.error(`[LEVEL_MANAGER] Fehler beim Spawn der Welle: ${error}`);
@@ -587,6 +539,9 @@ export class LevelManager {
     // Erhöhe den Wave-Index für die nächste Welle
     this.currentWaveIndex++;
     console.log(`[LEVEL_MANAGER] currentWaveIndex erhöht auf ${this.currentWaveIndex}`);
+    
+    // Prüfe, ob das die letzte Welle war
+    this.checkIfLastWave();
     
     // Finde das Delay für die nächste Welle, wenn vorhanden
     let nextWaveDelay = 0;
@@ -633,7 +588,6 @@ export class LevelManager {
           const formation = spawn.formation || FormationType.LINE;
           const count = spawn.count || 1;
           const delay = 500; // Default-Verzögerung
-          const isEndTrigger = false; // Zeitgesteuerte Spawns sind keine End-Trigger
           const healthMultiplier = spawn.healthMultiplier;
           const speedMultiplier = spawn.speedMultiplier;
           
@@ -644,7 +598,7 @@ export class LevelManager {
           console.log(`[LEVEL_MANAGER] Timed Spawn Multiplikatoren: Health=${healthMultiplier}, Speed=${speedMultiplier}`);
           
           // Rufe die entsprechende Spawn-Methode auf
-          this.spawnWaveByFormation(formation, enemyType, count, delay, isEndTrigger, healthMultiplier, speedMultiplier);
+          this.spawnWaveByFormation(formation, enemyType, count, delay, healthMultiplier, speedMultiplier);
         },
         [],
         this
@@ -925,12 +879,6 @@ export class LevelManager {
    * Löscht alle aktiven Timer (Wellen, Spawns, Pickups)
    */
   private clearAllTimers(): void {
-    // Level-Timer löschen
-    if (this.levelTimer) {
-      this.levelTimer.remove();
-      this.levelTimer = null;
-    }
-
     // Wellen-Timer löschen
     this.waveTimers.forEach(timer => {
       if (timer) timer.remove();
@@ -948,6 +896,12 @@ export class LevelManager {
       this.bossTimer.remove();
       this.bossTimer = null;
     }
+    
+    // End-Check-Timer löschen
+    if (this.endCheckTimer) {
+      this.endCheckTimer.remove();
+      this.endCheckTimer = null;
+    }
   }
   
   /**
@@ -959,10 +913,11 @@ export class LevelManager {
     this.timedSpawnTimers = [];
     this.timedPickupTimers = [];
     this.bossTimer = null;
+    this.endCheckTimer = null;
     this.levelIntroShown = false;
     this.pendingWaves = [];
     this.currentWaveIndex = 0;
-    this.levelEndTriggerWaves.clear();
+    this.allWavesSpawned = false;
     
     // Setze Zustand zurück
     this.setState(LevelState.INACTIVE);
@@ -984,7 +939,7 @@ export class LevelManager {
   
   /**
    * Event-Handler, der aufgerufen wird, wenn ein Gegner zerstört wurde
-   * Prüft, ob das Level abgeschlossen ist (alle Wave-Endpunkte erreicht und keine Gegner mehr)
+   * Prüft, ob das Level abgeschlossen ist (alle Wellen gespawnt und keine Gegner mehr)
    */
   private onEnemyDestroyed = (enemy: BaseEnemy): void => {
     // Wenn Level bereits abgeschlossen ist, nichts tun
@@ -992,38 +947,20 @@ export class LevelManager {
       return;
     }
     
-    // Prüfen, ob alle Trigger-Wellen abgeschlossen sind
-    if (this.allEndTriggerWavesCompleted()) {
+    // Prüfen, ob bereits alle Wellen gespawnt wurden
+    if (this.allWavesSpawned) {
+      // Explizit die Anzahl verbleibender Gegner ermitteln
       const remainingEnemies = this.enemyManager.getAllEnemies().length;
       
+      console.log(`[LEVEL_MANAGER] onEnemyDestroyed: allWavesSpawned=${this.allWavesSpawned}, remainingEnemies=${remainingEnemies}`);
+      
       if (remainingEnemies <= 1) { // 1, weil dieser Gegner jetzt entfernt wird
-        console.log('[LEVEL_MANAGER] Alle Level-End-Trigger erreicht und keine Gegner mehr übrig. Level wird abgeschlossen.');
+        console.log('[LEVEL_MANAGER] Alle Wellen gespawnt und keine Gegner mehr übrig. Level wird abgeschlossen.');
         this.onLevelComplete();
       }
+    } else {
+      console.log(`[LEVEL_MANAGER] onEnemyDestroyed: Noch nicht alle Wellen gespawnt. currentWaveIndex=${this.currentWaveIndex}, waves.length=${this.currentLevel?.waves?.length || 0}`);
     }
-  }
-  
-  /**
-   * Prüft, ob alle Trigger-Wellen abgeschlossen sind
-   */
-  private allEndTriggerWavesCompleted(): boolean {
-    if (this.levelEndTriggerWaves.size === 0) {
-      // Wenn keine Ende-Trigger definiert sind, gehen wir davon aus, dass alle Wellen zerstört werden müssen
-      // In diesem Fall wird die letzte Welle als Level-Ende-Trigger verwendet
-      if (this.currentLevel && this.currentLevel.waves && this.currentLevel.waves.length > 0) {
-        return this.currentWaveIndex >= this.currentLevel.waves.length;
-      }
-      return true;
-    }
-    
-    // Andernfalls prüfen wir, ob alle definierten Trigger-Wellen abgeschlossen sind
-    for (const [waveIndex, completed] of this.levelEndTriggerWaves.entries()) {
-      if (!completed) {
-        return false;
-      }
-    }
-    
-    return true;
   }
   
   /**
@@ -1041,6 +978,58 @@ export class LevelManager {
     
     // Fallback: Verwende den Registry-Wert
     return this.scene.registry.get('score') || 0;
-  } 
-
+  }
+  
+  /**
+   * Erstellt einen Timer, der regelmäßig prüft, ob alle Gegner weg sind
+   */
+  private createEndCheckTimer(): void {
+    // Zuerst alten Timer entfernen, falls vorhanden
+    if (this.endCheckTimer) {
+      this.endCheckTimer.remove();
+      this.endCheckTimer = null;
+    }
+    
+    this.endCheckTimer = this.scene.time.addEvent({
+      delay: 1000, // Alle 1 Sekunde prüfen
+      callback: () => {
+        // Wenn das Level nicht mehr läuft oder nicht alle Wellen gespawnt wurden, Timer stoppen
+        if (!this.isInState(LevelState.RUNNING) || !this.allWavesSpawned) {
+          if (this.endCheckTimer) {
+            this.endCheckTimer.remove();
+            this.endCheckTimer = null;
+          }
+          return;
+        }
+        
+        // Prüfe verbleibende Gegner
+        const remainingEnemies = this.enemyManager.getAllEnemies().length;
+        console.log(`[LEVEL_MANAGER] EndCheckTimer: Verbleibende Gegner: ${remainingEnemies}`);
+        
+        if (remainingEnemies === 0) {
+          console.log('[LEVEL_MANAGER] EndCheckTimer: Keine Gegner mehr übrig. Level wird abgeschlossen.');
+          if (this.endCheckTimer) {
+            this.endCheckTimer.remove();
+            this.endCheckTimer = null;
+          }
+          this.onLevelComplete();
+        }
+      },
+      callbackScope: this,
+      loop: true
+    });
+  }
+  
+  /**
+   * Prüfe, ob das die letzte Welle war
+   */
+  private checkIfLastWave(): void {
+    if (this.currentWaveIndex >= (this.currentLevel?.waves?.length || 0)) {
+      this.allWavesSpawned = true;
+      console.log(`[LEVEL_MANAGER] Alle Wellen wurden gespawnt. Warte auf Zerstörung aller Gegner.`);
+      
+      // Starte den End-Check-Timer
+      this.createEndCheckTimer();
+    }
+  }
 } 
