@@ -23,7 +23,7 @@ export class TurretEnemy extends BaseEnemy {
   private turretBase: Phaser.Physics.Arcade.Sprite;
   private turretTop: Phaser.GameObjects.Sprite;
   private lastFireTime: number = 0;
-  private fireRate: number = 500; // Standard-Feuerrate
+  private fireRate: number = 100; // Standard-Feuerrate
   private activeBarrel: number = 0; // Welcher Lauf als nächstes feuert (0 oder 1)
   private barrelOffsetX: number = 15; // Horizontaler Abstand zwischen den Läufen
   private barrelOffsetY: number = 7; // Vertikaler Abstand zwischen den Läufen
@@ -38,7 +38,7 @@ export class TurretEnemy extends BaseEnemy {
       health: 100,
       speed: 30, // Sehr langsame Bewegung (nur in X-Richtung)
       scoreValue: 150,
-      fireRate: 1500, // Etwas langsamere Feuerrate
+      fireRate: 200, // Etwas langsamere Feuerrate
 
       // Bewegungseinstellungen - sehr langsame lineare Bewegung
       movement: {

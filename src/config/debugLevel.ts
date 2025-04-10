@@ -38,7 +38,7 @@ export const debugLevel: LevelConfig = {
       formation: FormationType.SINGLE,
       delay: 0,
       speedMultiplier: 1,
-      healthMultiplier: 1,
+      healthMultiplier: 1,      
     },
     /*
     {
