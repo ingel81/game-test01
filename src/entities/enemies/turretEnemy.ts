@@ -23,7 +23,7 @@ export class TurretEnemy extends BaseEnemy {
   private turretBase: Phaser.Physics.Arcade.Sprite;
   private turretTop: Phaser.GameObjects.Sprite;
   private lastFireTime: number = 0;
-  private fireRate: number = 1500; // Standard-Feuerrate
+  private fireRate: number = 500; // Standard-Feuerrate
   private activeBarrel: number = 0; // Welcher Lauf als nächstes feuert (0 oder 1)
   private barrelOffsetX: number = 15; // Horizontaler Abstand zwischen den Läufen
   private barrelOffsetY: number = 7; // Vertikaler Abstand zwischen den Läufen
@@ -265,7 +265,7 @@ export class TurretEnemy extends BaseEnemy {
     const originalUpdate = this.weaponComponent.update;
     this.weaponComponent.update = () => {
       // Tue nichts - wir verwenden unsere eigene fireTurret-Methode
-      console.log("[TURRET] Überspringe WeaponComponent-Update, verwende eigene Schusslogik");
+      //console.log("[TURRET] Überspringe WeaponComponent-Update, verwende eigene Schusslogik");
     };
     
     // Erstelle visuelle Komponente wie gewohnt

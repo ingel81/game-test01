@@ -88,7 +88,6 @@ export class Asteroid extends GameObject {
     try {
       // Prüfe, ob das Event für diesen Asteroid bestimmt ist
       if (asteroid === this.sprite) {
-        console.log('[ASTEROID] Dieser Asteroid wurde zerstört über direkten Sprite-Vergleich');
         this.destroy();
         return;
       }
@@ -99,7 +98,6 @@ export class Asteroid extends GameObject {
           asteroid.data.values && 
           'instance' in asteroid.data.values && 
           asteroid.data.values.instance === this) {
-        console.log('[ASTEROID] Dieser Asteroid wurde zerstört über Instance-Vergleich');
         this.destroy();
       }
     } catch (error) {

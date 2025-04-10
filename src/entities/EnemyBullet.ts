@@ -6,12 +6,15 @@ import { Constants } from "../utils/constants";
  * Spezifische Implementierung für feindliche Projektile
  */
 export class EnemyBullet extends Bullet {
+  protected bulletType: string = "enemy"; // Standardtyp ist "enemy"
+
   constructor(
     scene: Phaser.Scene,
     x: number,
     y: number,
     damage: number = Constants.ENEMY_BULLET_DAMAGE,
-    speed: number = Constants.ENEMY_BULLET_SPEED
+    speed: number = Constants.ENEMY_BULLET_SPEED,
+    bulletType: string = "enemy"
   ) {
     super(
       scene,
@@ -20,9 +23,12 @@ export class EnemyBullet extends Bullet {
       Constants.ASSET_ENEMY_BULLET,
       damage,
       speed,
-      "enemy",
+      "enemy", // owner ist immer "enemy"
       true
     );
+
+    // Speichere den spezifischen Bullet-Typ
+    this.bulletType = bulletType;
 
     // Direkter Debug-Log bei Erstellung
     //console.log(`[ENEMY_BULLET] Erstellt an Position (${x}, ${y})`);
@@ -36,9 +42,10 @@ export class EnemyBullet extends Bullet {
     x: number,
     y: number,
     angle: number,
-    damage: number = Constants.ENEMY_BULLET_DAMAGE
+    damage: number = Constants.ENEMY_BULLET_DAMAGE,
+    bulletType: string = "enemy"
   ): EnemyBullet {
-    const bullet = new EnemyBullet(scene, x, y, damage);
+    const bullet = new EnemyBullet(scene, x, y, damage, Constants.ENEMY_BULLET_SPEED, bulletType);
 
 
     // Setze Richtung und Geschwindigkeit
@@ -72,6 +79,17 @@ export class EnemyBullet extends Bullet {
     // Setze die Erstellungszeit
     this.sprite.setData("creationTime", this.scene.time.now);
     this.sprite.setData("bulletId", Date.now() + Math.random());
+    
+    // Speichere den spezifischen Bullet-Typ im Sprite für die Kollisionserkennung
+    this.sprite.setData("bulletType", this.bulletType);
+
+    // Größe anpassen für Turret-Bullets, um sie besser sichtbar zu machen
+    if (this.bulletType === "turret") {
+      this.sprite.setScale(1.2);
+      
+      // Optional: Andere Farbe für bessere Sichtbarkeit
+      this.sprite.setTint(0xff9999);
+    }
 
     // Registriere für Kollisionserkennung
     this.eventBus.emit("REGISTER_ENEMY_BULLET", this.sprite);

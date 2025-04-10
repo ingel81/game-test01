@@ -64,7 +64,48 @@ export class BulletFactory {
    * Erstellt ein Turret-Projektil an einer bestimmten Position mit Richtung
    */
   public createTurretBullet(x: number, y: number, angle: number, damage: number = Constants.DAMAGE.ENEMY_BULLET): EnemyBullet {
-    return EnemyBullet.createBullet(this.scene, x, y, angle, damage);
+    console.log(`[BULLET_FACTORY] Erstelle Turret-Bullet: Position=(${x}, ${y}), Winkel=${angle} rad (${Math.round(angle * 180 / Math.PI)}°)`);
+    const bullet = EnemyBullet.createBullet(this.scene, x, y, angle, damage, "turret");
+    
+    // Überprüfe, ob das Projektil korrekt erstellt wurde und sichtbar ist
+    const bulletSprite = bullet.getSprite();
+    if (bulletSprite) {
+      // Sicherstellen, dass das Projektil sichtbar ist
+      bulletSprite.setVisible(true);
+      
+      // Stellen wir sicher, dass eine Textur angewendet ist
+      if (!bulletSprite.texture || bulletSprite.texture.key === '__MISSING') {
+        console.warn(`[BULLET_FACTORY] Turret-Bullet hat keine gültige Textur, verwende Ersatztextur`);
+        bulletSprite.setTexture(Constants.ASSET_ENEMY_BULLET);
+      }
+      
+      // Debug-Log für Sichtbarkeit
+      console.log(`[BULLET_FACTORY] Turret-Bullet erstellt: Sichtbar=${bulletSprite.visible}, Textur=${bulletSprite.texture.key}, Alpha=${bulletSprite.alpha}`);
+      
+      // Setze eine höhere Sichtbarkeit falls notwendig
+      if (bulletSprite.alpha < 1) {
+        bulletSprite.setAlpha(1);
+      }
+      
+      // Überprüfe und korrigiere die Geschwindigkeit
+      if (bulletSprite.body) {
+        const vx = bulletSprite.body.velocity.x;
+        const vy = bulletSprite.body.velocity.y;
+        
+        if (Math.abs(vx) < 10 && Math.abs(vy) < 10) {
+          // Bullet hat zu geringe Geschwindigkeit, korrigiere basierend auf dem Winkel
+          const speed = Constants.ENEMY_BULLET_SPEED || 350;
+          bulletSprite.body.velocity.x = Math.cos(angle) * speed;
+          bulletSprite.body.velocity.y = Math.sin(angle) * speed;
+          
+          console.log(`[BULLET_FACTORY] Korrigierte Turret-Bullet Geschwindigkeit: (${bulletSprite.body.velocity.x}, ${bulletSprite.body.velocity.y})`);
+        }
+      }
+    } else {
+      console.error(`[BULLET_FACTORY] Konnte kein gültiges Sprite für Turret-Bullet erstellen!`);
+    }
+    
+    return bullet;
   }
   
   /**

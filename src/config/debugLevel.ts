@@ -21,16 +21,16 @@ export const debugLevel: LevelConfig = {
   outroText: "Well done! The first wave has been repelled.",
 
   waves: [
-    /*
+    
     {
       startDelay: 0,
       enemyType: EnemyType.STANDARD,
-      count: 10,
+      count: 1,
       formation: FormationType.LINE,
       delay: 0,
       speedMultiplier: 1,
-      healthMultiplier: 5,
-    },*/ 
+      healthMultiplier: 1,
+    }, 
     {
       startDelay: 0,
       enemyType: EnemyType.TURRET,
