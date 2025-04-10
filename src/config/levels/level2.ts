@@ -9,12 +9,11 @@ export const level2: LevelConfig = {
   id: 'level-2',
   name: 'Asteroid Field',
   description: 'Navigate through a dense asteroid field while fighting enemy forces.',
-  difficulty: 2,
-  duration: 120000, // 2 minutes (reduced from 2.5 minutes)
-  minAsteroids: 25,
-  maxAsteroids: 40,
-  asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID, // Standard asteroid spawn rate
-  asteroidSpeedMultiplier: 1.0, // Standard asteroid speed
+  duration: 120000, // 2 minutes
+  minAsteroids: 450,
+  maxAsteroids: 450,
+  asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID * 0.3, // Faster asteroid spawn rate
+  asteroidSpeedMultiplier: 1.1, // Faster asteroids
   // music: 'music-level2',
   background: 'bg-asteroidfield',
   introText: 'You are now entering a dense asteroid field. Enemy forces are using the cover of the asteroids to launch surprise attacks.',
@@ -24,71 +23,77 @@ export const level2: LevelConfig = {
     // Initial wave - standard enemies in asteroid field
     {
       enemyType: EnemyType.STANDARD,
-      count: 6,
+      count: 8,
       formation: FormationType.RANDOM,
-      delay: 3000, // Reduced from 5000
-      speedMultiplier: 0.9
+      delay: 2000,
+      speedMultiplier: 1.0
     },
     // Advanced enemies in line formation
     {
       enemyType: EnemyType.ADVANCED,
-      count: 4,
+      count: 6,
       formation: FormationType.LINE,
-      delay: 12000 // Reduced from 20000
+      delay: 8000,
+      healthMultiplier: 1.1
     },
     // Mixed wave
     {
       enemyType: EnemyType.STANDARD,
-      count: 6,
+      count: 8,
       formation: FormationType.V_FORMATION,
-      delay: 12000 // Reduced from 20000
+      delay: 8000,
+      speedMultiplier: 1.1
     },
     // First turret encounter
     {
       enemyType: EnemyType.TURRET,
-      count: 2,
+      count: 3,
       formation: FormationType.SINGLE,
-      delay: 15000, // Reduced from 25000
-      healthMultiplier: 0.9
+      delay: 10000,
+      healthMultiplier: 1.0
     },
     // Final wave - Mixed advanced enemies
     {
       enemyType: EnemyType.ADVANCED,
-      count: 6,
+      count: 8,
       formation: FormationType.SQUARE,
-      delay: 15000, // Reduced from 25000
-      isLevelEndTrigger: true
+      delay: 12000,
+      healthMultiplier: 1.2,
+      speedMultiplier: 1.1,
+      //isLevelEndTrigger: true
     }
   ],
   
   timedSpawns: [
     {
-      time: 30000, // Reduced from 40000
+      time: 25000,
       enemyType: EnemyType.STANDARD,
-      count: 3,
-      formation: FormationType.RANDOM
+      count: 4,
+      formation: FormationType.RANDOM,
+      speedMultiplier: 1.1
     },
     {
-      time: 60000, // Reduced from 80000
+      time: 45000,
       enemyType: EnemyType.ADVANCED,
-      count: 2,
-      formation: FormationType.SINGLE
+      count: 3,
+      formation: FormationType.SINGLE,
+      healthMultiplier: 1.1
     }
   ],
   
   timedPickups: [
     {
-      time: 25000, // Reduced from 35000
+      time: 20000,
       type: PickupType.ENERGY,
       count: 2
     },
     {
-      time: 55000, // Reduced from 75000
+      time: 40000,
       type: PickupType.POWER,
       count: 1
     },
     {
-      time: 85000, // Reduced from 115000
+      time: 70000,
       type: PickupType.ENERGY,
       count: 2
     }

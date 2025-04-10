@@ -2,66 +2,65 @@ import { EnemyType, FormationType, LevelConfig, PickupType } from '../levelConfi
 import { Constants } from '../../utils/constants';
 
 /**
- * Level 6: Asteroid Storm
- * A high-intensity level with dense asteroid fields and aggressive enemy formations
+ * Level 6: Asteroid Field Guardian
+ * A challenging level with a powerful guardian boss and elite forces
  */
 export const level6: LevelConfig = {
   id: 'level-6',
-  name: 'Asteroid Storm',
-  description: 'Navigate through a massive asteroid storm while repelling coordinated enemy assaults.',
-  difficulty: 6,
-  duration: 180000, // 3 minutes (reduced from 4 minutes)
-  minAsteroids: 40,
-  maxAsteroids: 60,
-  asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID * 0.7, // Much faster asteroid spawning
-  asteroidSpeedMultiplier: 1.3, // Faster asteroids
-  music: 'music-level6',
-  background: 'bg-deepspace',
-  introText: 'You are entering a severe asteroid storm. The enemy is using this natural hazard to launch ambush attacks. Maintain focus and navigate carefully.',
-  outroText: 'Outstanding piloting! You have survived the asteroid storm and eliminated all enemy threats.',
+  name: 'Asteroid Field Guardian',
+  description: 'Face the guardian of a massive asteroid field, protected by elite forces and advanced defense systems.',
+  duration: 180000, // 3 minutes
+  minAsteroids: 35,
+  maxAsteroids: 50,
+  asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID * 0.5, // Extremely fast asteroid spawn rate
+  asteroidSpeedMultiplier: 1.5, // Extremely fast asteroids
+  background: 'bg-asteroidguardian',
+  introText: 'A powerful guardian protects this asteroid field. It commands elite forces and advanced defense systems. This will be a challenging battle.',
+  outroText: 'The guardian has been defeated! The asteroid field is now under our control.',
   
   waves: [
     // Initial ambush from multiple directions
     {
       enemyType: EnemyType.STANDARD,
-      count: 10,
+      count: 15,
       formation: FormationType.RANDOM,
-      delay: 2000, // Reduced from 3000
-      speedMultiplier: 1.3
+      delay: 1500,
+      speedMultiplier: 1.4
     },
     // Advanced fighters in formation
     {
       enemyType: EnemyType.ADVANCED,
-      count: 8,
+      count: 10,
       formation: FormationType.V_FORMATION,
-      delay: 12000, // Reduced from 20000
-      healthMultiplier: 1.2,
-      speedMultiplier: 1.2
+      delay: 8000,
+      healthMultiplier: 1.3,
+      speedMultiplier: 1.3
     },
     // Turrets hidden among asteroids
     {
       enemyType: EnemyType.TURRET,
-      count: 8,
+      count: 12,
       formation: FormationType.RANDOM,
-      delay: 15000, // Reduced from 25000
-      healthMultiplier: 1.3
+      delay: 10000,
+      healthMultiplier: 1.4
     },
     // Elite strike team
     {
       enemyType: EnemyType.ELITE,
-      count: 6,
+      count: 8,
       formation: FormationType.SQUARE,
-      delay: 18000, // Reduced from 30000
-      healthMultiplier: 1.2,
-      speedMultiplier: 1.2
+      delay: 12000,
+      healthMultiplier: 1.3,
+      speedMultiplier: 1.3
     },
     // Asteroid field guardian
     {
       enemyType: EnemyType.BOSS,
       count: 1,
       formation: FormationType.SINGLE,
-      delay: 20000, // Reduced from 35000
-      healthMultiplier: 1.0,
+      delay: 15000,
+      healthMultiplier: 1.6,
+      speedMultiplier: 1.2,
       isLevelEndTrigger: true
     }
   ],
@@ -69,81 +68,83 @@ export const level6: LevelConfig = {
   timedSpawns: [
     // Continuous asteroid field patrols
     {
-      time: 25000, // Reduced from 30000
-      enemyType: EnemyType.STANDARD,
-      count: 8,
-      formation: FormationType.RANDOM,
-      speedMultiplier: 1.3
-    },
-    {
-      time: 50000, // Reduced from 60000
-      enemyType: EnemyType.ADVANCED,
-      count: 6,
-      formation: FormationType.LINE,
-      speedMultiplier: 1.2
-    },
-    {
-      time: 75000, // Reduced from 90000
-      enemyType: EnemyType.TURRET,
-      count: 5,
-      formation: FormationType.RANDOM
-    },
-    {
-      time: 100000, // Reduced from 120000
-      enemyType: EnemyType.ELITE,
-      count: 4,
-      formation: FormationType.V_FORMATION
-    },
-    {
-      time: 125000, // Reduced from 150000
+      time: 20000,
       enemyType: EnemyType.STANDARD,
       count: 10,
       formation: FormationType.RANDOM,
       speedMultiplier: 1.4
     },
     {
-      time: 150000, // Reduced from 180000
+      time: 40000,
       enemyType: EnemyType.ADVANCED,
       count: 8,
-      formation: FormationType.SQUARE,
+      formation: FormationType.LINE,
+      speedMultiplier: 1.3
+    },
+    {
+      time: 60000,
+      enemyType: EnemyType.TURRET,
+      count: 6,
+      formation: FormationType.RANDOM,
       healthMultiplier: 1.3
+    },
+    {
+      time: 80000,
+      enemyType: EnemyType.ELITE,
+      count: 5,
+      formation: FormationType.V_FORMATION,
+      healthMultiplier: 1.3
+    },
+    {
+      time: 100000,
+      enemyType: EnemyType.STANDARD,
+      count: 12,
+      formation: FormationType.RANDOM,
+      speedMultiplier: 1.5
+    },
+    {
+      time: 120000,
+      enemyType: EnemyType.ADVANCED,
+      count: 10,
+      formation: FormationType.SQUARE,
+      healthMultiplier: 1.4
     }
   ],
   
   timedPickups: [
     // Strategic pickups - more needed due to intense combat
     {
-      time: 25000, // Reduced from 30000
+      time: 20000,
       type: PickupType.ENERGY,
       count: 3
     },
     {
-      time: 50000, // Reduced from 60000
+      time: 40000,
       type: PickupType.POWER,
       count: 2
     },
     {
-      time: 75000, // Reduced from 90000
+      time: 60000,
       type: PickupType.ENERGY,
       count: 3
     },
     {
-      time: 100000, // Reduced from 120000
+      time: 80000,
       type: PickupType.POWER,
       count: 2
     },
     {
-      time: 125000, // Reduced from 150000
+      time: 100000,
       type: PickupType.ENERGY,
       count: 4
     },
     {
-      time: 150000, // Reduced from 180000
+      time: 120000,
       type: PickupType.POWER,
       count: 2
     },
     {
-      time: 165000, // Reduced from 210000
+      time: 140000,
       type: PickupType.ENERGY,
       count: 3
     }

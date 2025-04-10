@@ -8,7 +8,7 @@ export const debugLevel: LevelConfig = {
   id: 'level-1',
   name: 'First Encounters',
   description: 'The first enemies appear. Be careful and test your weapons.',
-  duration: 20000,
+  duration: 5000,
   minAsteroids: 20,
   maxAsteroids: 20,
   asteroidSpawnRate: 500,  
@@ -34,7 +34,17 @@ export const debugLevel: LevelConfig = {
       delay: 0,
       speedMultiplier: 1,
       healthMultiplier: 1,
-      isLevelEndTrigger: true
+      isLevelEndTrigger: false
+    },
+    {
+      startDelay: 0,
+      enemyType: EnemyType.STANDARD,
+      count: 10,
+      formation: FormationType.SQUARE,
+      delay: 0,
+      speedMultiplier: 1,
+      healthMultiplier: 1,
+      isLevelEndTrigger: false
     }
   ],
 

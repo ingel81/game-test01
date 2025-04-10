@@ -2,200 +2,168 @@ import { EnemyType, FormationType, LevelConfig, PickupType } from '../levelConfi
 import { Constants } from '../../utils/constants';
 
 /**
- * Level 8: Overwhelming Force
- * A survival challenge with massive enemy numbers
+ * Level 8: Enemy Ace Pilot
+ * A challenging level featuring an enemy ace pilot and their elite squadron
  */
 export const level8: LevelConfig = {
   id: 'level-8',
-  name: 'Overwhelming Force',
-  description: 'Survive against overwhelming enemy numbers in a desperate battle of attrition.',
-  difficulty: 8,
-  duration: 180000, // 3 minutes (reduced from 4 minutes)
-  minAsteroids: 25,
-  maxAsteroids: 40,
-  asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID * 0.9, // Slightly faster spawning
-  asteroidSpeedMultiplier: 1.2,
-  music: 'music-level8',
-  background: 'bg-darkspace',
-  introText: 'Our intelligence network has failed us. You have been ambushed by a massive enemy fleet. Your objective is survival - hold out until reinforcements arrive.',
-  outroText: 'Impossible odds overcome! Your legendary stand against overwhelming force will be remembered in the annals of space warfare.',
+  name: 'Enemy Ace Pilot',
+  description: 'Face the legendary enemy ace pilot and their elite squadron in an epic battle.',
+  duration: 180000, // 3 minutes
+  minAsteroids: 45,
+  maxAsteroids: 60,
+  asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID * 0.3, // Extremely fast asteroid spawn rate
+  asteroidSpeedMultiplier: 1.7, // Extremely fast asteroids
+  background: 'bg-acepilot',
+  introText: 'The legendary enemy ace pilot has been spotted in this sector. They command an elite squadron of the most skilled pilots. This will be a battle for the ages.',
+  outroText: 'The legendary ace pilot has been defeated! Their elite squadron is in disarray. This victory will be remembered throughout the galaxy.',
   
   waves: [
     // Initial massive ambush
     {
       enemyType: EnemyType.STANDARD,
-      count: 20,
+      count: 25,
       formation: FormationType.RANDOM,
-      delay: 2000, // Reduced from 3000
-      speedMultiplier: 1.3
+      delay: 1500,
+      speedMultiplier: 1.5
     },
     // Heavy advanced formation
     {
       enemyType: EnemyType.ADVANCED,
-      count: 12,
+      count: 15,
       formation: FormationType.V_FORMATION,
-      delay: 12000, // Reduced from 20000
-      healthMultiplier: 1.2,
-      speedMultiplier: 1.2
+      delay: 8000,
+      healthMultiplier: 1.3,
+      speedMultiplier: 1.3
     },
     // Defensive turret wall
     {
       enemyType: EnemyType.TURRET,
-      count: 10,
+      count: 12,
       formation: FormationType.LINE,
-      delay: 12000, // Reduced from 20000
-      healthMultiplier: 1.4
+      delay: 8000,
+      healthMultiplier: 1.5
     },
     // Elite hunter-killer squadron
     {
       enemyType: EnemyType.ELITE,
-      count: 8,
+      count: 10,
       formation: FormationType.SQUARE,
-      delay: 15000, // Reduced from 25000
-      healthMultiplier: 1.3,
-      speedMultiplier: 1.3
+      delay: 10000,
+      healthMultiplier: 1.4,
+      speedMultiplier: 1.4
     },
     // Flanking maneuver
     {
       enemyType: EnemyType.ADVANCED,
-      count: 15,
+      count: 18,
       formation: FormationType.RANDOM,
-      delay: 15000, // Reduced from 25000
-      speedMultiplier: 1.4
+      delay: 10000,
+      speedMultiplier: 1.5
     },
     // Enemy ace pilot
     {
       enemyType: EnemyType.BOSS,
       count: 1,
       formation: FormationType.SINGLE,
-      delay: 18000, // Reduced from 30000
-      healthMultiplier: 1.3,
-      speedMultiplier: 1.2
+      delay: 12000,
+      healthMultiplier: 1.4,
+      speedMultiplier: 1.3
     },
     // Last stand - elite force
     {
       enemyType: EnemyType.ELITE,
-      count: 12,
+      count: 15,
       formation: FormationType.V_FORMATION,
-      delay: 6000, // Reduced from 10000
-      healthMultiplier: 1.3,
-      speedMultiplier: 1.3,
+      delay: 4000,
+      healthMultiplier: 1.4,
+      speedMultiplier: 1.4,
       isLevelEndTrigger: true
     }
   ],
   
   timedSpawns: [
-    // Continual reinforcements from all sides
+    // Continuous reinforcements
     {
-      time: 25000, // Reduced from 30000
+      time: 20000,
       enemyType: EnemyType.STANDARD,
-      count: 15,
+      count: 12,
       formation: FormationType.RANDOM,
-      speedMultiplier: 1.3
+      speedMultiplier: 1.5
     },
     {
-      time: 50000, // Reduced from 60000
+      time: 40000,
       enemyType: EnemyType.ADVANCED,
       count: 10,
       formation: FormationType.LINE,
-      speedMultiplier: 1.3
-    },
-    {
-      time: 75000, // Reduced from 90000
-      enemyType: EnemyType.TURRET,
-      count: 8,
-      formation: FormationType.RANDOM,
       healthMultiplier: 1.3
     },
     {
-      time: 100000, // Reduced from 120000
+      time: 60000,
       enemyType: EnemyType.ELITE,
-      count: 6,
+      count: 8,
       formation: FormationType.V_FORMATION,
-      healthMultiplier: 1.3,
-      speedMultiplier: 1.2
+      healthMultiplier: 1.4
     },
     {
-      time: 125000, // Reduced from 150000
+      time: 80000,
+      enemyType: EnemyType.TURRET,
+      count: 10,
+      formation: FormationType.SQUARE,
+      healthMultiplier: 1.5
+    },
+    {
+      time: 100000,
       enemyType: EnemyType.STANDARD,
-      count: 18,
+      count: 20,
       formation: FormationType.RANDOM,
-      speedMultiplier: 1.4
+      speedMultiplier: 1.6
     },
     {
-      time: 150000, // Reduced from 180000
+      time: 120000,
       enemyType: EnemyType.ADVANCED,
       count: 12,
       formation: FormationType.SQUARE,
-      healthMultiplier: 1.3,
-      speedMultiplier: 1.3
-    },
-    {
-      time: 165000, // Reduced from 210000
-      enemyType: EnemyType.ELITE,
-      count: 8,
-      formation: FormationType.LINE,
-      healthMultiplier: 1.4,
-      speedMultiplier: 1.3
+      healthMultiplier: 1.4
     }
   ],
   
   timedPickups: [
-    // Frequent pickups to help with survival
+    // Strategic pickups for the intense battle
     {
-      time: 15000, // Reduced from 20000
+      time: 20000,
       type: PickupType.ENERGY,
       count: 3
     },
     {
-      time: 30000, // Reduced from 40000
+      time: 40000,
       type: PickupType.POWER,
       count: 2
     },
     {
-      time: 45000, // Reduced from 60000
+      time: 60000,
       type: PickupType.ENERGY,
-      count: 4
-    },
-    {
-      time: 60000, // Reduced from 80000
-      type: PickupType.POWER,
-      count: 2
-    },
-    {
-      time: 75000, // Reduced from 100000
-      type: PickupType.ENERGY,
-      count: 4
-    },
-    {
-      time: 90000, // Reduced from 120000
-      type: PickupType.POWER,
       count: 3
     },
     {
-      time: 105000, // Reduced from 140000
-      type: PickupType.ENERGY,
-      count: 4
-    },
-    {
-      time: 120000, // Reduced from 160000
+      time: 80000,
       type: PickupType.POWER,
       count: 2
     },
     {
-      time: 135000, // Reduced from 180000
-      type: PickupType.ENERGY,
-      count: 5
-    },
-    {
-      time: 150000, // Reduced from 200000
-      type: PickupType.POWER,
-      count: 3
-    },
-    {
-      time: 165000, // Reduced from 220000
+      time: 100000,
       type: PickupType.ENERGY,
       count: 4
+    },
+    {
+      time: 120000,
+      type: PickupType.POWER,
+      count: 2
+    },
+    {
+      time: 140000,
+      type: PickupType.ENERGY,
+      count: 3
     }
   ]
 }; 

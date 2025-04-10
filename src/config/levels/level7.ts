@@ -2,151 +2,177 @@ import { EnemyType, FormationType, LevelConfig, PickupType } from '../levelConfi
 import { Constants } from '../../utils/constants';
 
 /**
- * Level 7: Elite Squadron
- * A tactical challenge focused on elite enemy units and coordinated attacks
+ * Level 7: Elite Command Fleet
+ * A challenging level with multiple elite commanders and their forces
  */
 export const level7: LevelConfig = {
   id: 'level-7',
-  name: 'Elite Squadron',
-  description: 'Face the enemy elite fighter squadron in a series of tactical engagements.',
-  difficulty: 7,
-  duration: 180000, // 3 minutes (reduced from 3.5 minutes)
-  minAsteroids: 20,
-  maxAsteroids: 35,
-  asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID,
-  asteroidSpeedMultiplier: 1.2,
-  music: 'music-level7',
-  background: 'bg-nebula2',
-  introText: 'Intelligence reports that the enemy has deployed their elite fighter squadron to this sector. These are their best pilots with advanced weaponry. Defeat them at all costs.',
-  outroText: 'Outstanding performance! The elite squadron has been decimated. The enemy will think twice before challenging us again.',
+  name: 'Elite Command Fleet',
+  description: 'Face multiple elite commanders and their combined forces in a decisive battle.',
+  duration: 180000, // 3 minutes
+  minAsteroids: 40,
+  maxAsteroids: 55,
+  asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID * 0.4, // Extremely fast asteroid spawn rate
+  asteroidSpeedMultiplier: 1.6, // Extremely fast asteroids
+  background: 'bg-elitefleet',
+  introText: 'Multiple elite commanders have gathered their forces. This will be a battle of skill and strategy against overwhelming odds.',
+  outroText: 'The elite command fleet has been defeated! Their combined forces are no match for your skill.',
   
   waves: [
-    // Initial scout wave
-    {
-      enemyType: EnemyType.ADVANCED,
-      count: 6,
-      formation: FormationType.V_FORMATION,
-      delay: 2000, // Reduced from 3000
-      speedMultiplier: 1.3
-    },
-    // First elite strike team
-    {
-      enemyType: EnemyType.ELITE,
-      count: 4,
-      formation: FormationType.SQUARE,
-      delay: 12000, // Reduced from 20000
-      healthMultiplier: 1.2,
-      speedMultiplier: 1.3
-    },
-    // Support turrets
-    {
-      enemyType: EnemyType.TURRET,
-      count: 8,
-      formation: FormationType.LINE,
-      delay: 12000, // Reduced from 20000
-      healthMultiplier: 1.4
-    },
-    // Heavy elite assault team
-    {
-      enemyType: EnemyType.ELITE,
-      count: 8,
-      formation: FormationType.V_FORMATION,
-      delay: 15000, // Reduced from 25000
-      healthMultiplier: 1.3,
-      speedMultiplier: 1.2
-    },
-    // Standard diversionary force
+    // Initial defense screen
     {
       enemyType: EnemyType.STANDARD,
-      count: 15,
-      formation: FormationType.RANDOM,
-      delay: 15000, // Reduced from 25000
+      count: 20,
+      formation: FormationType.V_FORMATION,
+      delay: 1500,
       speedMultiplier: 1.4
     },
-    // Elite squadron commander
+    // Advanced fighter squadron
+    {
+      enemyType: EnemyType.ADVANCED,
+      count: 12,
+      formation: FormationType.SQUARE,
+      delay: 8000,
+      healthMultiplier: 1.3,
+      speedMultiplier: 1.3
+    },
+    // Elite guard force
+    {
+      enemyType: EnemyType.ELITE,
+      count: 8,
+      formation: FormationType.LINE,
+      delay: 10000,
+      healthMultiplier: 1.3,
+      speedMultiplier: 1.3
+    },
+    // First Commander (Tactical)
     {
       enemyType: EnemyType.BOSS,
       count: 1,
       formation: FormationType.SINGLE,
-      delay: 18000, // Reduced from 30000
-      healthMultiplier: 1.2,
-      speedMultiplier: 1.1
+      delay: 12000,
+      healthMultiplier: 1.4,
+      speedMultiplier: 1.2
     },
-    // Final elite guard
+    // Commander's Guard
     {
       enemyType: EnemyType.ELITE,
-      count: 10,
+      count: 8,
       formation: FormationType.SQUARE,
-      delay: 6000, // Reduced from 10000
+      delay: 2000,
       healthMultiplier: 1.3,
-      speedMultiplier: 1.2,
+      speedMultiplier: 1.3
+    },
+    // Second Commander (Defense)
+    {
+      enemyType: EnemyType.BOSS,
+      count: 1,
+      formation: FormationType.SINGLE,
+      delay: 12000,
+      healthMultiplier: 1.5,
+      speedMultiplier: 1.1
+    },
+    // Commander's Support
+    {
+      enemyType: EnemyType.TURRET,
+      count: 10,
+      formation: FormationType.RANDOM,
+      delay: 2000,
+      healthMultiplier: 1.4
+    },
+    // Final Commander (Fleet Admiral)
+    {
+      enemyType: EnemyType.BOSS,
+      count: 1,
+      formation: FormationType.SINGLE,
+      delay: 15000,
+      healthMultiplier: 1.6,
+      speedMultiplier: 1.3,
       isLevelEndTrigger: true
     }
   ],
   
   timedSpawns: [
-    // Continuous tactical reinforcements
+    // Continuous reinforcements
     {
-      time: 30000, // Reduced from 40000
+      time: 20000,
+      enemyType: EnemyType.STANDARD,
+      count: 10,
+      formation: FormationType.RANDOM,
+      speedMultiplier: 1.4
+    },
+    {
+      time: 40000,
       enemyType: EnemyType.ADVANCED,
       count: 8,
       formation: FormationType.LINE,
-      speedMultiplier: 1.3
-    },
-    {
-      time: 60000, // Reduced from 80000
-      enemyType: EnemyType.ELITE,
-      count: 3,
-      formation: FormationType.V_FORMATION,
-      healthMultiplier: 1.2
-    },
-    {
-      time: 90000, // Reduced from 120000
-      enemyType: EnemyType.TURRET,
-      count: 6,
-      formation: FormationType.RANDOM,
       healthMultiplier: 1.3
     },
     {
-      time: 120000, // Reduced from 160000
+      time: 60000,
       enemyType: EnemyType.ELITE,
-      count: 5,
+      count: 6,
+      formation: FormationType.V_FORMATION,
+      healthMultiplier: 1.3
+    },
+    {
+      time: 80000,
+      enemyType: EnemyType.TURRET,
+      count: 8,
       formation: FormationType.SQUARE,
-      healthMultiplier: 1.3,
-      speedMultiplier: 1.3
+      healthMultiplier: 1.4
+    },
+    {
+      time: 100000,
+      enemyType: EnemyType.STANDARD,
+      count: 15,
+      formation: FormationType.RANDOM,
+      speedMultiplier: 1.5
+    },
+    {
+      time: 120000,
+      enemyType: EnemyType.ADVANCED,
+      count: 10,
+      formation: FormationType.SQUARE,
+      healthMultiplier: 1.4
     }
   ],
   
   timedPickups: [
-    // Critical resource management for extended combat
+    // Strategic pickups for the intense battle
     {
-      time: 25000, // Reduced from 30000
+      time: 20000,
       type: PickupType.ENERGY,
       count: 3
     },
     {
-      time: 50000, // Reduced from 60000
+      time: 40000,
       type: PickupType.POWER,
       count: 2
     },
     {
-      time: 75000, // Reduced from 90000
+      time: 60000,
       type: PickupType.ENERGY,
-      count: 4
+      count: 3
     },
     {
-      time: 100000, // Reduced from 120000
+      time: 80000,
       type: PickupType.POWER,
       count: 2
     },
     {
-      time: 125000, // Reduced from 150000
+      time: 100000,
       type: PickupType.ENERGY,
       count: 4
     },
     {
-      time: 150000, // Reduced from 180000
+      time: 120000,
       type: PickupType.POWER,
+      count: 2
+    },
+    {
+      time: 140000,
+      type: PickupType.ENERGY,
       count: 3
     }
   ]

@@ -13,12 +13,11 @@ export const level1: LevelConfig = {
   id: 'level-1',
   name: 'First Contact',
   description: 'Your first encounter with enemy scouts. Stay focused and learn the controls.',
-  difficulty: 1,
-  duration: 90000, // 1.5 minutes (reduced from 2 minutes)
-  minAsteroids: 10,
-  maxAsteroids: 20,
-  asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID * 1.5, // Slower asteroid spawn rate for beginners
-  asteroidSpeedMultiplier: 0.8, // Slower asteroids for beginners
+  duration: 30000,
+  minAsteroids: 15,
+  maxAsteroids: 25,
+  asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID * 1.2, // Slightly faster asteroid spawn rate
+  asteroidSpeedMultiplier: 0.9, // Slightly faster asteroids
   background: 'bg-nebula1',
   introText: 'Enemy scouts detected in this sector. Eliminate them while avoiding asteroids. This is your first real mission, pilot.',
   outroText: 'Well done! You have successfully repelled the first wave of scouts.',
@@ -27,50 +26,50 @@ export const level1: LevelConfig = {
     // Tutorial wave - single enemies with pauses
     {
       enemyType: EnemyType.STANDARD,
-      count: 3,
+      count: 4,
       formation: FormationType.SINGLE,
-      delay: 1500, // Reduced from 2000
-      healthMultiplier: 0.8, // Weaker enemies for the first level
-      speedMultiplier: 0.7 // Slower enemies for beginners
+      delay: 1200,
+      healthMultiplier: 0.9,
+      speedMultiplier: 0.8
     },
     // Small line formation
     {
       enemyType: EnemyType.STANDARD,
-      count: 5,
+      count: 6,
       formation: FormationType.LINE,
-      delay: 8000 // Reduced from 15000
+      delay: 6000
     },
     // Introduce advanced enemy type
     {
       enemyType: EnemyType.ADVANCED,
-      count: 2,
+      count: 3,
       formation: FormationType.SINGLE,
-      delay: 8000, // Reduced from 15000
-      healthMultiplier: 0.9
+      delay: 6000,
+      healthMultiplier: 1.0
     },
     // Final wave - mixed formation
     {
       enemyType: EnemyType.STANDARD,
-      count: 8,
+      count: 10,
       formation: FormationType.V_FORMATION,
-      delay: 10000, // Reduced from 20000
-      isLevelEndTrigger: true
+      delay: 8000,
+      //isLevelEndTrigger: true
     }
   ],
   
   timedPickups: [
     {
-      time: 20000, // Reduced from 30000
+      time: 15000,
       type: PickupType.ENERGY,
       count: 1
     },
     {
-      time: 45000, // Reduced from 60000
+      time: 35000,
       type: PickupType.POWER,
       count: 1
     },
     {
-      time: 70000, // Reduced from 90000
+      time: 55000,
       type: PickupType.ENERGY,
       count: 2
     }

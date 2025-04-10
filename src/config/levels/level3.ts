@@ -3,112 +3,119 @@ import { Constants } from '../../utils/constants';
 
 /**
  * Level 3: Enemy Outpost
- * A challenging level with more advanced enemies and coordinated attacks
+ * A level featuring enemy outpost defense systems and elite units
  */
 export const level3: LevelConfig = {
   id: 'level-3',
   name: 'Enemy Outpost',
-  description: 'Attack an enemy outpost guarded by coordinated forces and defense turrets.',
-  difficulty: 3,
-  duration: 150000, // 2.5 minutes (reduced from 3 minutes)
-  minAsteroids: 15,
-  maxAsteroids: 30,
-  asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID * 1.2, // Moderate asteroid presence
-  asteroidSpeedMultiplier: 1.1, // Slightly faster asteroids
+  description: 'Infiltrate an enemy outpost protected by advanced defense systems and elite guard units.',
+  duration: 150000, // 2.5 minutes
+  minAsteroids: 20,
+  maxAsteroids: 35,
+  asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID * 0.8, // Even faster asteroid spawn rate
+  asteroidSpeedMultiplier: 1.2, // Faster asteroids
   music: 'music-level3',
   background: 'bg-outpost',
-  introText: 'We have detected an enemy outpost in this sector. It is heavily defended with turrets and patrol ships. Eliminate all threats.',
-  outroText: 'The outpost has been neutralized! The enemy will be forced to fall back and regroup.',
+  introText: 'We have detected an enemy outpost in this sector. It is heavily defended with advanced turrets and elite guard units. Proceed with caution.',
+  outroText: 'Outpost neutralized! The enemy forces have been driven out of this sector.',
   
   waves: [
     // Patrol wave - standard enemies in V formation
     {
       enemyType: EnemyType.STANDARD,
-      count: 7,
+      count: 9,
       formation: FormationType.V_FORMATION,
-      delay: 2000 // Reduced from 3000
+      delay: 1500,
+      speedMultiplier: 1.1
     },
     // Outpost defense - turrets in line formation
     {
       enemyType: EnemyType.TURRET,
-      count: 3,
+      count: 4,
       formation: FormationType.LINE,
-      delay: 12000, // Reduced from 20000
-      healthMultiplier: 1.1
+      delay: 8000,
+      healthMultiplier: 1.2
     },
     // Elite guard squad
     {
       enemyType: EnemyType.ADVANCED,
-      count: 5,
+      count: 6,
       formation: FormationType.SQUARE,
-      delay: 15000, // Reduced from 25000
-      speedMultiplier: 1.1
+      delay: 10000,
+      speedMultiplier: 1.2,
+      healthMultiplier: 1.1
     },
     // Reinforcements - mixed types
     {
       enemyType: EnemyType.STANDARD,
-      count: 10,
+      count: 12,
       formation: FormationType.RANDOM,
-      delay: 15000 // Reduced from 25000
+      delay: 10000,
+      speedMultiplier: 1.1
     },
     // Elite enemy introduction
     {
       enemyType: EnemyType.ELITE,
-      count: 2,
+      count: 3,
       formation: FormationType.SINGLE,
-      delay: 18000, // Reduced from 30000
-      healthMultiplier: 0.9, // Slightly weaker as introduction
-      speedMultiplier: 0.9
+      delay: 12000,
+      healthMultiplier: 1.0,
+      speedMultiplier: 1.0
     },
     // Final wave - Outpost commander with guards
     {
       enemyType: EnemyType.ELITE,
-      count: 4,
+      count: 5,
       formation: FormationType.V_FORMATION,
-      delay: 18000, // Reduced from 30000
+      delay: 12000,
+      healthMultiplier: 1.2,
+      speedMultiplier: 1.1,
       isLevelEndTrigger: true
     }
   ],
   
   timedSpawns: [
     {
-      time: 30000, // Reduced from 45000
+      time: 25000,
       enemyType: EnemyType.TURRET,
-      count: 2,
-      formation: FormationType.SINGLE
+      count: 3,
+      formation: FormationType.SINGLE,
+      healthMultiplier: 1.1
     },
     {
-      time: 60000, // Reduced from 90000
+      time: 45000,
       enemyType: EnemyType.ADVANCED,
-      count: 4,
-      formation: FormationType.LINE
+      count: 5,
+      formation: FormationType.LINE,
+      speedMultiplier: 1.2
     },
     {
-      time: 90000, // Reduced from 135000
+      time: 75000,
       enemyType: EnemyType.STANDARD,
-      count: 6,
-      formation: FormationType.RANDOM
+      count: 8,
+      formation: FormationType.RANDOM,
+      speedMultiplier: 1.1
     }
   ],
   
   timedPickups: [
     {
-      time: 30000, // Reduced from 40000
+      time: 20000,
       type: PickupType.ENERGY,
       count: 2
     },
     {
-      time: 60000, // Reduced from 80000
+      time: 45000,
       type: PickupType.POWER,
-      count: 1
-    },
-    {
-      time: 90000, // Reduced from 120000
-      type: PickupType.ENERGY,
       count: 2
     },
     {
-      time: 120000, // Reduced from 160000
+      time: 70000,
+      type: PickupType.ENERGY,
+      count: 3
+    },
+    {
+      time: 100000,
       type: PickupType.POWER,
       count: 1
     }

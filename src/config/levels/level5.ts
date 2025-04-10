@@ -2,57 +2,74 @@ import { EnemyType, FormationType, LevelConfig, PickupType } from '../levelConfi
 import { Constants } from '../../utils/constants';
 
 /**
- * Level 5: Fleet Commander
- * The first boss encounter, featuring a fleet commander with support units
+ * Level 5: Command Center
+ * A challenging level with a boss encounter and elite forces
  */
 export const level5: LevelConfig = {
   id: 'level-5',
-  name: 'Fleet Commander',
-  description: 'Face your first major enemy commander and defeat their elite fighter squadron.',
-  difficulty: 5,
-  duration: 150000, // 2.5 minutes (reduced from 3 minutes)
-  minAsteroids: 15,
-  maxAsteroids: 25,
-  asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID,
-  asteroidSpeedMultiplier: 1.0,
-  music: 'music-boss1',
-  background: 'bg-redspace',
-  introText: 'We have tracked down the commander of the enemy fleet. Eliminating this high-value target will significantly weaken their operations in this sector. Prepare for heavy resistance.',
-  outroText: 'Commander eliminated! This is a significant victory for our forces. The enemy will be in disarray without their leadership.',
+  name: 'Command Center',
+  description: 'Infiltrate an enemy command center protected by elite forces and a powerful commander.',
+  duration: 180000, // 3 minutes
+  minAsteroids: 30,
+  maxAsteroids: 45,
+  asteroidSpawnRate: Constants.SPAWN_RATE_ASTEROID * 0.6, // Very fast asteroid spawn rate
+  asteroidSpeedMultiplier: 1.4, // Very fast asteroids
+  background: 'bg-command',
+  introText: 'We have located an enemy command center. It is heavily defended by elite forces and commanded by a powerful leader. This is a critical target.',
+  outroText: 'The command center has been neutralized! The enemy leadership has been dealt a significant blow.',
   
   waves: [
-    // Guardian patrol
+    // Initial perimeter defense
+    {
+      enemyType: EnemyType.STANDARD,
+      count: 12,
+      formation: FormationType.V_FORMATION,
+      delay: 1500,
+      speedMultiplier: 1.2
+    },
+    // Advanced guard units
     {
       enemyType: EnemyType.ADVANCED,
       count: 8,
-      formation: FormationType.V_FORMATION,
-      delay: 3000, // Reduced from 5000
+      formation: FormationType.SQUARE,
+      delay: 8000,
+      healthMultiplier: 1.2,
       speedMultiplier: 1.2
     },
-    // Elite squadron - commander's personal guard
+    // Elite patrol squad
+    {
+      enemyType: EnemyType.ELITE,
+      count: 4,
+      formation: FormationType.LINE,
+      delay: 10000,
+      healthMultiplier: 1.2,
+      speedMultiplier: 1.2
+    },
+    // Command center turrets
+    {
+      enemyType: EnemyType.TURRET,
+      count: 10,
+      formation: FormationType.RANDOM,
+      delay: 10000,
+      healthMultiplier: 1.3
+    },
+    // Commander's personal guard
     {
       enemyType: EnemyType.ELITE,
       count: 6,
-      formation: FormationType.SQUARE,
-      delay: 12000, // Reduced from 20000
-      healthMultiplier: 1.2,
-      speedMultiplier: 1.1
+      formation: FormationType.V_FORMATION,
+      delay: 12000,
+      healthMultiplier: 1.3,
+      speedMultiplier: 1.3
     },
-    // Defense turrets
-    {
-      enemyType: EnemyType.TURRET,
-      count: 6,
-      formation: FormationType.LINE,
-      delay: 15000, // Reduced from 25000
-      healthMultiplier: 1.2
-    },
-    // Final wave - The Commander (Boss)
+    // Final boss - Command Center Commander
     {
       enemyType: EnemyType.BOSS,
       count: 1,
       formation: FormationType.SINGLE,
-      delay: 18000, // Reduced from 30000
-      healthMultiplier: 0.9, // First boss, slightly easier
+      delay: 12000,
+      healthMultiplier: 1.5,
+      speedMultiplier: 1.2,
       isLevelEndTrigger: true
     }
   ],
@@ -60,52 +77,57 @@ export const level5: LevelConfig = {
   timedSpawns: [
     // Continuous reinforcements
     {
-      time: 20000, // Reduced from 30000
+      time: 15000,
       enemyType: EnemyType.STANDARD,
-      count: 6,
-      formation: FormationType.RANDOM
+      count: 8,
+      formation: FormationType.RANDOM,
+      speedMultiplier: 1.2
     },
     {
-      time: 45000, // Reduced from 60000
+      time: 35000,
       enemyType: EnemyType.ADVANCED,
-      count: 4,
-      formation: FormationType.LINE
+      count: 6,
+      formation: FormationType.LINE,
+      healthMultiplier: 1.2
     },
     {
-      time: 70000, // Reduced from 90000
+      time: 55000,
       enemyType: EnemyType.ELITE,
-      count: 2,
-      formation: FormationType.SINGLE
+      count: 3,
+      formation: FormationType.SINGLE,
+      healthMultiplier: 1.2,
+      speedMultiplier: 1.2
     },
     // Emergency defense when boss appears
     {
-      time: 95000, // Reduced from 120000
+      time: 75000,
       enemyType: EnemyType.TURRET,
-      count: 4,
-      formation: FormationType.SQUARE
+      count: 6,
+      formation: FormationType.SQUARE,
+      healthMultiplier: 1.3
     }
   ],
   
   timedPickups: [
     // Strategic pickups to help with boss fight
     {
-      time: 18000, // Reduced from 25000
+      time: 15000,
       type: PickupType.ENERGY,
       count: 2
     },
     {
-      time: 50000, // Reduced from 70000
+      time: 35000,
       type: PickupType.POWER,
       count: 2
     },
     {
-      time: 85000, // Reduced from 115000
+      time: 65000,
       type: PickupType.ENERGY,
       count: 3
     },
     // Final power boost before boss
     {
-      time: 115000, // Reduced from 145000
+      time: 85000,
       type: PickupType.POWER,
       count: 2
     }

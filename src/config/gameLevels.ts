@@ -20,7 +20,8 @@ import { level10 } from './levels/level10';
  * Array aller Level für das Spiel, in aufsteigender Schwierigkeit sortiert
  */
 export const GameLevels: LevelConfig[] = [
-  debugLevel,
+   
+   debugLevel,
   /*
   level1,
   level2,
@@ -32,7 +33,8 @@ export const GameLevels: LevelConfig[] = [
   level8,
   level9,
   level10 
-  */
+   */
+  
 ];
 
 /**
