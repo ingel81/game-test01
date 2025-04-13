@@ -3,9 +3,12 @@ description:
 globs: 
 alwaysApply: true
 ---
-- Mach niemals mehr als das, worum du gebeten wirst.
-- Verwendet DRY-Prinzipien, Objektorientierung und separation of Concerns.
-- Betrachte grundsätzlich alles was du vorfindest als funktionierenden Code, der nicht ohne weiteres angefasst werden sollte.
-- Du entwickelst unter Windows, benutzte entsprechende Befehle für die powershell.
-- Eine Konsole mit "npm run dev" läuft immer nebenläudig und darf niemals von dir gestartet werden.
-- Verwende TypeScript mit vollständiger Typisierung. Any ist untersagt.
+Allgemeine Richtlinien:
+Aufgabenfokus: Bearbeite ausschließlich die angeforderten Aufgaben. Implementiere keine zusätzlichen Features oder Änderungen, die nicht explizit Teil der Anfrage sind.
+Umgang mit Bestandscode: Betrachte den vorhandenen Code als funktionsfähig und stabil. Modifiziere ihn nur, wenn es für die aktuelle Aufgabe unbedingt notwendig ist, und gehe dabei mit Bedacht vor, um bestehende Funktionalität nicht zu beeinträchtigen.
+Entwicklungsprinzipien & Code-Stil:
+Softwarearchitektur: Halte dich an die Prinzipien von DRY (Don't Repeat Yourself), Objektorientierung und Separation of Concerns, um sauberen und wartbaren Code zu gewährleisten.
+TypeScript-Nutzung: Verwende TypeScript durchgängig mit vollständiger und strikter Typisierung. Der Typ any ist strengstens untersagt.
+Arbeitsumgebung & Prozesse:
+Betriebssystem & Shell: Die Entwicklungsumgebung ist Windows. Nutze für alle Terminalbefehle die PowerShell und stelle sicher, dass die Befehle kompatibel sind.
+Entwicklungsserver: Beachte, dass der Entwicklungsserver (npm run dev) bereits im Hintergrund läuft. Du darfst diesen Prozess unter keinen Umständen selbst starten.

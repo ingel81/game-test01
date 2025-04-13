@@ -10,558 +10,587 @@ Die Anwendung ist wie folgt strukturiert:
 
 ```
 /
-├── assets/            # Spielressourcen (Grafiken, Audio)
-├── dist/              # Kompilierte Dateien
+├── assets/            # Spielressourcen (Grafiken, Audio, Daten)
+├── dist/              # Kompilierte Dateien für die Produktion
+├── node_modules/      # Projekt Abhängigkeiten
 ├── src/               # Quellcode
-│   ├── core/          # Kern-Komponenten
-│   ├── entities/      # Spielobjekte
-│   │   ├── enemies/   # Gegner-Klassen
-│   │   ├── player/    # Spieler-Klassen
+│   ├── config/        # Spielkonfigurationen (z.B. Level, Gegner)
+│   ├── core/          # Kernfunktionalitäten und Basiselemente (z.B. Konfiguration)
+│   ├── entities/      # Spielobjekte (Spieler, Gegner, Projektile, etc.)
+│   │   ├── enemies/   # Gegner-Klassen und -Komponenten
+│   │   ├── player/    # Spieler-Klasse und -Komponenten
 │   │   ├── pickups/   # Sammelgegenstände
-│   │   ├── environment/ # Umgebungsobjekte (Asteroiden, etc.)
-│   ├── managers/      # Manager-Klassen
-│   ├── scenes/        # Spielszenen
-│   ├── shaders/       # GLSL-Shader
-│   ├── ui/            # Benutzeroberfläche
-│   ├── utils/         # Hilfsfunktionen
-│   ├── pipelines/     # Render-Pipelines
-│   ├── factories/     # Fabriken für Spielobjekte
-│   ├── config/        # Konfigurationsdateien
-│   ├── collisionManager.ts # Kollisionssystem
-├── index.html         # Haupt-HTML-Datei
-├── tsconfig.json      # TypeScript-Konfiguration
-├── vite.config.ts     # Vite-Konfiguration
+│   │   ├── environment/ # Umgebungsobjekte (z.B. Asteroiden)
+│   │   ├── Bullet.ts       # Basisklasse für Projektile
+│   │   ├── EnemyBullet.ts  # Gegner-Projektilklasse
+│   │   ├── PlayerBullet.ts # Spieler-Projektilklasse
+│   │   ├── entity.ts       # Abstrakte Basisklasse für alle Entitäten
+│   │   └── gameObject.ts   # Basisklasse für Entitäten mit Lebenspunkten etc.
+│   ├── factories/     # Fabriken zum Erstellen von Spielobjekten (z.B. Projektile)
+│   │   └── BulletFactory.ts # Fabrik für Projektile
+│   ├── managers/      # Manager-Klassen (Kollision, Level, Gegner, Spawning, Sound, Musik)
+│   │   ├── collisionManager.ts # Verwaltung der Kollisionserkennung
+│   │   ├── enemyManager.ts     # Verwaltung von Gegnern
+│   │   ├── levelManager.ts     # Verwaltung des Level-Fortschritts und der Events
+│   │   ├── musicManager.ts     # Verwaltung der Hintergrundmusik
+│   │   ├── soundManager.ts     # Verwaltung der Soundeffekte
+│   │   └── spawnManager.ts     # Verwaltung des Spawnen von Gegnern und Objekten
+│   ├── pipelines/     # Benutzerdefinierte Render-Pipelines
+│   ├── scenes/        # Spielszenen (Hauptmenü, Spiel, Game Over, etc.)
+│   │   ├── baseScene.ts      # Basisklasse für alle Szenen
+│   │   ├── finishedScene.ts  # Szene nach erfolgreichem Abschluss
+│   │   ├── gameScene.ts      # Haupt-Spielszenene
+│   │   ├── gameOverScene.ts  # Game-Over-Szene
+│   │   ├── mainMenuScene.ts  # Hauptmenü-Szene
+│   │   └── pauseScene.ts     # Pause-Menü-Szene
+│   ├── shaders/       # GLSL-Shader für visuelle Effekte
+│   ├── ui/            # Komponenten der Benutzeroberfläche (HUD, Buttons, etc.)
+│   │   ├── fpsDisplay.ts       # Anzeige der Bilder pro Sekunde
+│   │   ├── gameUI.ts         # Haupt-UI-Container im Spiel
+│   │   ├── healthBar.ts      # Lebenspunkteanzeige
+│   │   ├── planetsBackground.ts # Parallax-Hintergrund mit Planeten
+│   │   ├── scoreDisplay.ts     # Punkteanzeige
+│   │   └── touchControls.ts    # Steuerungselemente für Touch-Geräte
+│   ├── utils/         # Hilfsfunktionen und Dienstprogramme
+│   └── index.ts       # Haupteinstiegspunkt der Anwendung
+├── .cursor/           # Cursor-spezifische Konfigurationen
+├── .git/              # Git-Repository-Verzeichnis
+├── .gitignore         # Von Git ignorierte Dateien und Ordner
+├── index.html         # Haupt-HTML-Datei der Anwendung
+├── package-lock.json  # Exakte Versionen der Abhängigkeiten
+├── package.json       # Projektdefinition und Abhängigkeiten
+├── README.md          # Diese Dokumentation
+├── temp.txt           # Temporäre Datei (vermutlich nicht relevant)
+├── tsconfig.json      # TypeScript-Compiler-Konfiguration
+└── vite.config.ts     # Vite Build-Tool-Konfiguration
 ```
 
 ## 3. Architektur
 
 ### 3.1 Kernkomponenten
 
-#### GameConfig (src/core/config.ts)
-Zentrale Konfigurationsklasse für Phaser-Einstellungen, Spielparameter und Bildschirmanpassungen.
+#### GameConfig (`src/core/config.ts`)
+Zentrale Konfigurationsklasse für Phaser-Einstellungen, Spielparameter und Bildschirmanpassungen. Sie initialisiert die Phaser-Spielinstanz mit den notwendigen Szenen, Physik-Einstellungen und Skalierungsmodi.
 
 **Wichtigste Funktionen:**
-- `getConfig()`: Liefert die Phaser-Konfiguration mit Szenen, Physik und Bildschirmeinstellungen
-- `addGameStyles()`: Fügt CSS-Stile für das Spielcontainer hinzu
-- `addResizeListener()`: Fügt Event-Listener für Fenstergrößenänderungen hinzu
+- `getConfig()`: Liefert die Phaser-Konfiguration, die Szenen, Physik-Engine (Arcade), Renderer-Typ (Auto), Skalierungsoptionen (Fit, Auto-Center) und den Eltern-DOM-Container (`#game`) definiert.
+- `addGameStyles()`: Fügt CSS-Regeln hinzu, um das Spiel zentriert und bildschirmfüllend darzustellen.
+- `addResizeListener()`: Richtet einen Event-Listener ein, der das Spiel bei Größenänderungen des Browserfensters neu skaliert.
 
 ```typescript
-// Beispiel zur Verwendung
+// Beispiel: Initialisierung des Spiels in src/index.ts
+import { GameConfig } from './core/config';
+
 const config = GameConfig.getConfig();
-const game = new Phaser.Game(config);
+GameConfig.addGameStyles(); // Styles anwenden
+GameConfig.addResizeListener(); // Listener für Größenänderung hinzufügen
+
+const game = new Phaser.Game(config); // Spielinstanz erstellen
 ```
 
-Die Konfiguration enthält Einstellungen für:
-- Renderer-Typ (AUTO wählt WebGL oder Canvas)
-- Fenstergröße und Anpassungen
-- Physik-Engine-Parameter
-- Szenen-Management
-- Skalierungsoptionen für verschiedene Bildschirmgrößen
-- DOM-Container-Einstellungen
+Die Konfiguration umfasst:
+- Renderer-Typ: `Phaser.AUTO` (wählt automatisch WebGL oder Canvas).
+- Fenstergröße und Skalierung: Definiert die Basisgröße und passt sie dynamisch an (`Phaser.Scale.FIT`).
+- Physik-Engine: `arcade` mit globaler Schwerkraft (standardmäßig 0).
+- Szenen-Management: Listet alle Spielszenen auf, die Phaser bekannt sein sollen.
+- DOM-Integration: Legt fest, in welchem HTML-Element das Spiel gerendert wird (`parent: 'game'`).
+- Hintergrundfarbe: Standardmäßig schwarz (`backgroundColor: '#000'`).
 
 ### 3.2 Entity-System
 
-Das Projekt verwendet ein hierarchisches Entity-System:
+Das Projekt verwendet ein hierarchisches Entity-System zur Organisation von Spielobjekten.
 
-#### Entity (src/entities/entity.ts)
-Abstrakte Basisklasse für alle Spielobjekte mit grundlegenden Funktionen für Position und Bewegung.
+#### Entity (`src/entities/entity.ts`)
+Abstrakte Basisklasse für alle dynamischen Objekte im Spiel. Sie bietet grundlegende Eigenschaften und Methoden für Positionierung, Bewegung und Lebenszyklusmanagement.
 
 **Eigenschaften:**
-- `sprite`: Phaser-Sprite für Rendering und Physik
-- `scene`: Referenz auf die aktuelle Szene
+- `sprite`: Das `Phaser.Physics.Arcade.Sprite`-Objekt, das die visuelle Darstellung und die physikalische Interaktion der Entität handhabt.
+- `scene`: Eine Referenz auf die `Phaser.Scene`, zu der die Entität gehört.
 
 **Öffentliche Methoden:**
-- `getSprite()`: Gibt das Phaser-Sprite zurück
-- `update(time, delta)`: Abstrakte Methode für Frame-Updates
-- `destroy()`: Gibt Ressourcen frei
-- `setPosition(x, y)`: Positioniert die Entität
-- `setVelocity(x, y)`: Setzt die Geschwindigkeit
+- `getSprite()`: Gibt das zugehörige Phaser-Sprite zurück.
+- `update(time: number, delta: number)`: Abstrakte Methode, die in jeder Frame zur Aktualisierung der Entitätslogik aufgerufen wird. Muss von abgeleiteten Klassen implementiert werden.
+- `destroy()`: Methode zum Aufräumen und Entfernen der Entität aus dem Spiel. Gibt Ressourcen frei und entfernt das Sprite.
+- `setPosition(x: number, y: number)`: Setzt die Position der Entität im Spielweltkoordinatensystem.
+- `setVelocity(x: number, y: number)`: Setzt die Geschwindigkeit der Entität für die Bewegung.
 
 ```typescript
 export abstract class Entity {
   protected sprite: Phaser.Physics.Arcade.Sprite;
   protected scene: Phaser.Scene;
-  
-  // Methoden zur Steuerung von Position und Geschwindigkeit
+
+  constructor(scene: Phaser.Scene, x: number, y: number, texture: string) {
+    this.scene = scene;
+    // Initialisiert das Sprite mit Physik-Body
+    this.sprite = scene.physics.add.sprite(x, y, texture);
+    this.sprite.setData('parentEntity', this); // Referenz zur Entity speichern
+  }
+
+  // ... weitere Methoden ...
+
   public abstract update(time: number, delta: number): void;
 }
 ```
 
-#### GameObject (src/entities/gameObject.ts)
-Erweitert Entity um Gesundheits- und Kollisionssystem.
+#### GameObject (`src/entities/gameObject.ts`)
+Erweitert die `Entity`-Klasse um Konzepte wie Lebenspunkte (Health), Schaden und Zerstörung. Diese Klasse dient als Basis für alle interaktiven Objekte, die beschädigt oder zerstört werden können (z.B. Spieler, Gegner).
 
 **Eigenschaften:**
-- `health`: Aktueller Gesundheitswert
-- `maxHealth`: Maximaler Gesundheitswert
-- `isDestroyed`: Flag, ob das Objekt zerstört wurde
+- `health`: Aktueller Gesundheitswert des Objekts.
+- `maxHealth`: Maximaler Gesundheitswert des Objekts.
+- `isDestroyed`: Ein Flag, das anzeigt, ob das Objekt zerstört wurde.
 
 **Öffentliche Methoden:**
-- `takeDamage(amount)`: Verarbeitet eingehenden Schaden
-- `getHealth()`: Gibt aktuelle Gesundheit zurück
-- `getMaxHealth()`: Gibt maximale Gesundheit zurück
-- `getHealthPercentage()`: Gibt Gesundheit als Prozentsatz zurück
-- `heal(amount)`: Erhöht die Gesundheit
-- `destroy()`: Überschreibt die Entity-Methode und ruft onDestroy auf
+- `takeDamage(amount: number)`: Reduziert die Lebenspunkte des Objekts um den angegebenen Betrag. Löst die `onDestroy`-Logik aus, wenn die Lebenspunkte auf 0 oder darunter fallen. Gibt zurück, ob das Objekt nach dem Schaden zerstört ist.
+- `getHealth()`: Gibt die aktuellen Lebenspunkte zurück.
+- `getMaxHealth()`: Gibt die maximalen Lebenspunkte zurück.
+- `getHealthPercentage()`: Berechnet die aktuellen Lebenspunkte als Prozentsatz der maximalen Lebenspunkte.
+- `heal(amount: number)`: Erhöht die Lebenspunkte, begrenzt durch `maxHealth`.
+- `destroy()`: Überschreibt die `destroy`-Methode von `Entity`, um sicherzustellen, dass `onDestroy` aufgerufen wird, bevor das Objekt endgültig entfernt wird.
 
 **Geschützte Methoden:**
-- `onCollision(other)`: Abstrakte Methode für Kollisionsverarbeitung
-- `onDestroy()`: Abstrakte Methode, die bei Zerstörung aufgerufen wird
+- `onCollision(other: GameObject)`: Abstrakte Methode, die von abgeleiteten Klassen implementiert werden muss, um auf Kollisionen mit anderen `GameObject`-Instanzen zu reagieren. Wird typischerweise vom `CollisionManager` aufgerufen.
+- `onDestroy()`: Abstrakte Methode, die aufgerufen wird, wenn das Objekt zerstört wird (z.B. Lebenspunkte <= 0). Hier kann spezifische Logik für Zerstörungseffekte, Punktvergabe etc. implementiert werden.
 
 ```typescript
 export abstract class GameObject extends Entity {
   protected health: number;
   protected maxHealth: number;
-  
-  public takeDamage(amount: number): boolean;
+  protected isDestroyed: boolean = false;
+
+  constructor(scene: Phaser.Scene, x: number, y: number, texture: string, maxHealth: number) {
+    super(scene, x, y, texture);
+    this.maxHealth = maxHealth;
+    this.health = maxHealth;
+  }
+
+  public takeDamage(amount: number): boolean {
+    // ... Logik zum Reduzieren der Lebenspunkte ...
+    if (this.health <= 0 && !this.isDestroyed) {
+      this.isDestroyed = true;
+      this.onDestroy(); // Zerstörungslogik aufrufen
+      super.destroy(); // Basis-destroy aufrufen
+      return true; // Objekt ist zerstört
+    }
+    return false; // Objekt lebt noch
+  }
+
+  // ... weitere Methoden ...
+
   protected abstract onCollision(other: GameObject): void;
   protected abstract onDestroy(): void;
 }
 ```
 
-### 3.3 Player-System
+### 3.3 Spieler-System
 
-#### Player (src/entities/player/player.ts)
-Implementiert die Spielerklasse mit erweiterter Steuerung und Waffensystemen.
-
-**Haupteigenschaften:**
-- `speed`: Bewegungsgeschwindigkeit des Spielers
-- `weapon`: Referenz auf das Waffensystem
-- `acceleration`/`deceleration`: Parameter für flüssigere Bewegungssteuerung
-- `touchControls`: Objektstruktur für Touch-Steuerung auf mobilen Geräten
-- `isTouchDevice`: Flag zur Erkennung von Touch-Geräten
-
-**Wichtige Methoden:**
-- `handleMovement(delta)`: Verbesserte Bewegungslogik mit Beschleunigung und Abbremsung
-- `handleShooting(time)`: Verarbeitet Schussaktionen und Feuerraten
-- `setupTouchControls()`: Konfiguriert Touch-Steuerung für mobile Geräte
-- `takeDamage(amount)`: Erweiterte Schadensfunktion mit Unverwundbarkeitseffekten
-- `heal(amount)`: Heilungsfunktion mit Begrenzung auf maximale Gesundheit
-- `onPowerUpCollected()`: Verarbeitet eingesammelte Power-Ups
-- `onEnergyPickupCollected(amount)`: Verarbeitet eingesammelte Energieeinheiten
-- `handleCheatKeys(time)`: Verarbeitet geheime Tastenkombinationen für Entwicklungszwecke
-
-**Verbesserungen gegenüber früheren Versionen:**
-- Optimierte Bewegungsphysik für direktere Kontrolle
-- Unterstützung für Smartphone-Steuerung
-- Dynamische Sprite-Anpassung basierend auf Bewegungsrichtung
-- Cheatsystem für Entwicklungs- und Testzwecke
-- Verbesserte Kollisionsbehandlung
-- Erweitertes Gesundheits- und Heilungssystem
-
-#### PlayerWeapon (src/entities/player/playerWeapon.ts)
-Verwaltung der Spielerwaffen mit mehreren Leistungsstufen und Schussmustern.
+#### Player (`src/entities/player/player.ts`)
+Implementiert die Spielercharakter-Klasse, die von `GameObject` erbt. Sie steuert die Bewegung, das Schießen, die Interaktion mit Power-Ups und die Schadensaufnahme.
 
 **Haupteigenschaften:**
-- `powerLevel`: Aktuelle Leistungsstufe der Waffe (1-6)
-- `bulletPool`: Optimierter Objekt-Pool für Projektile
-- `shotDelay`: Zeit zwischen Schüssen abhängig von Leistungsstufe
+- `speed`: Maximale Bewegungsgeschwindigkeit des Spielers.
+- `acceleration`: Beschleunigungsrate für die Bewegung.
+- `deceleration`: Rate, mit der der Spieler abbremst, wenn keine Eingabe erfolgt.
+- `weapon`: Eine Instanz von `PlayerWeapon`, die für das Abfeuern von Projektilen verantwortlich ist.
+- `touchControls`: Optionales Objekt zur Verwaltung der Touch-Steuerung auf mobilen Geräten.
+- `isInvincible`: Flag für kurzzeitige Unverwundbarkeit nach Schaden.
+- `invincibilityDuration`: Dauer der Unverwundbarkeit in Millisekunden.
+- `invincibilityTimer`: Timer für die Unverwundbarkeit.
+- `shootTimer`: Timer zur Kontrolle der Feuerrate.
+- `lastMoveDir`: Speichert die letzte Bewegungsrichtung für Sprite-Animationen.
 
 **Wichtige Methoden:**
-- `shoot(x, y)`: Erzeugt Projektile basierend auf aktueller Leistungsstufe
-- `update(delta)`: Aktualisiert alle aktiven Projektile
-- `increasePower()`: Erhöht die Leistungsstufe der Waffe
-- `getBullets()`: Gibt die Projektilgruppe zurück
+- `handleMovement(cursors: Phaser.Types.Input.Keyboard.CursorKeys, delta: number)`: Verarbeitet Tastatureingaben (Pfeiltasten oder WASD) zur Steuerung der Spielerbewegung mit Beschleunigung und Abbremsung. Begrenzt die Bewegung auf den Bildschirmbereich.
+- `handleTouchMovement(joystick: Phaser.GameObjects.Sprite | null, delta: number)`: Verarbeitet Eingaben von einem virtuellen Joystick für die Touch-Steuerung.
+- `handleShooting(time: number, input: Phaser.Input.InputPlugin)`: Prüft, ob die Schusstaste (Leertaste oder Touch) gedrückt ist und feuert die Waffe unter Berücksichtigung der Feuerrate (`shootDelay`).
+- `setupInputHandling()`: Initialisiert die Verarbeitung von Tastatur- und Touch-Eingaben.
+- `takeDamage(amount: number)`: Überschreibt die Methode von `GameObject`. Macht den Spieler nach Erhalt von Schaden kurzzeitig unverwundbar und löst einen visuellen Blinkeffekt aus.
+- `heal(amount: number)`: Stellt Lebenspunkte wieder her.
+- `collectPowerUp()`: Erhöht die Waffenstufe des Spielers durch Aufrufen von `weapon.increasePower()`.
+- `update(time: number, delta: number)`: Haupt-Update-Schleife für den Spieler. Ruft Bewegungs-, Schieß- und Unverwundbarkeitslogik auf.
+- `onDestroy()`: Wird aufgerufen, wenn der Spieler zerstört wird. Löst normalerweise den Übergang zur "Game Over"-Szene aus.
 
-**Schussmuster nach Leistungsstufe:**
-- Stufe 1: Einzelner gerader Schuss
-- Stufe 2: Schnellerer Einzelschuss
-- Stufe 3: Doppelschuss (gerade und leicht versetzt)
-- Stufe 4: Dreifachschuss im Fächer
-- Stufe 5: Vier Schüsse in breiterem Fächer
-- Stufe 6: Fünf Schüsse mit maximaler Streuung und Schaden
+**Besonderheiten:**
+- **Flüssige Bewegung:** Verwendet Beschleunigung und Abbremsung anstelle von sofortiger Geschwindigkeitsänderung.
+- **Touch-Steuerung:** Integriert optionale Touch-Steuerung über `TouchControls`.
+- **Unverwundbarkeit:** Bietet kurzes Zeitfenster nach Schaden, um sofortige Mehrfachtreffer zu vermeiden.
+- **Dynamische Sprites:** Ändert das Spieler-Sprite basierend auf der vertikalen Bewegung (Auf/Ab).
+
+#### PlayerWeapon (`src/entities/player/playerWeapon.ts`)
+Verwaltet das Waffensystem des Spielers, einschließlich verschiedener Leistungsstufen und Schussmuster. Nutzt einen Objektpool (`BulletFactory`) für effizientes Projektilmanagement.
+
+**Haupteigenschaften:**
+- `powerLevel`: Aktuelle Leistungsstufe der Waffe (beginnt bei 1, maximal 6). Beeinflusst Schussmuster und Feuerrate.
+- `maxPowerLevel`: Maximale erreichbare Leistungsstufe.
+- `bulletFactory`: Eine Instanz der `BulletFactory` zum Erzeugen von `PlayerBullet`-Objekten.
+- `shotDelay`: Zeitintervall (in Millisekunden) zwischen den Schüssen. Verringert sich mit höherem `powerLevel`.
+- `shotPatterns`: Eine Map, die für jede Leistungsstufe das entsprechende Schussmuster (Anzahl, Winkel der Projektile) definiert.
+
+**Wichtige Methoden:**
+- `shoot(x: number, y: number)`: Erzeugt Projektile entsprechend der aktuellen `powerLevel` und dem zugehörigen `shotPattern`. Nutzt die `bulletFactory`, um Projektile aus dem Pool zu holen oder neu zu erstellen.
+- `update(time: number, delta: number)`: (Aktuell nicht implementiert, könnte für Waffen-spezifische Updates genutzt werden).
+- `increasePower()`: Erhöht die `powerLevel`, wenn das Maximum noch nicht erreicht ist. Passt `shotDelay` entsprechend an.
+- `getShotDelay()`: Gibt die aktuelle Feuerrate zurück.
+- `getCurrentPowerLevel()`: Gibt die aktuelle Waffenstufe zurück.
+
+**Schussmuster nach Leistungsstufe (Beispiele):**
+- Stufe 1: Ein einzelner gerader Schuss.
+- Stufe 2: Schnellerer Einzelschuss.
+- Stufe 3: Doppelschuss (zwei parallele Projektile).
+- Stufe 4: Dreifachschuss (ein gerader, zwei leicht abgewinkelte).
+- Stufe 5 & 6: Breitere Fächer mit mehr Projektilen und höherer Feuerrate.
 
 ### 3.4 Projektilsystem
 
-Das Spiel implementiert ein flexibles Projektilsystem:
+Das Spiel nutzt ein wiederverwendbares System für verschiedene Arten von Projektilen.
 
-#### Bullet (src/entities/Bullet.ts)
-Basisklasse für alle Projektile im Spiel.
+#### Bullet (`src/entities/Bullet.ts`)
+Abstrakte Basisklasse für alle Projektile (Spieler und Gegner). Definiert grundlegende Eigenschaften und Verhalten.
 
 **Haupteigenschaften:**
-- `damage`: Schadenswert des Projektils
-- `owner`: Besitzer des Projektils ('player' oder 'enemy')
-- `speed`: Grundgeschwindigkeit des Projektils
-- `shouldFlipX`: Flag für horizontale Spiegelung der Textur
+- `damage`: Der Schadenswert, den das Projektil bei einem Treffer verursacht.
+- `speed`: Die Geschwindigkeit, mit der sich das Projektil bewegt.
+- `owner`: Ein String ('player' oder 'enemy'), der angibt, wer das Projektil abgefeuert hat. Wichtig für die Kollisionserkennung (damit Spieler nicht ihre eigenen Kugeln treffen).
+- `lifespan`: Maximale Lebensdauer des Projektils in Millisekunden, bevor es automatisch entfernt wird.
 
 **Wichtige Methoden:**
-- `setVelocityWithRotation(x, y)`: Setzt Geschwindigkeit und aktualisiert die Rotation entsprechend
-- `setDirectionAndSpeed(angleRadians)`: Setzt Richtung und Geschwindigkeit basierend auf einem Winkel
-- `updateRotation()`: Aktualisiert die Rotation des Projektils basierend auf seiner Flugrichtung
-- `update(time, delta)`: Aktualisiert den Zustand des Projektils, überprüft Grenzen und passt die Rotation an
+- `fire(x: number, y: number, angle: number, speed: number)`: Aktiviert und positioniert ein Projektil aus dem Pool. Setzt seine Geschwindigkeit basierend auf dem Winkel.
+- `update(time: number, delta: number)`: Aktualisiert die Position des Projektils. Überprüft, ob es die Bildschirmgrenzen verlassen hat oder seine `lifespan` abgelaufen ist, und deaktiviert es gegebenenfalls.
+- `deactivate()`: Deaktiviert das Projektil und gibt es an den Objektpool zurück (falls Pooling verwendet wird).
+- `setOwner(owner: 'player' | 'enemy')`: Legt den Besitzer des Projektils fest.
 
-```typescript
-// Die updateRotation-Methode sorgt dafür, dass die Ausrichtung der Flugrichtung entspricht
-protected updateRotation(): void {
-  if (this.sprite && this.sprite.body) {
-    const vx = this.sprite.body.velocity.x;
-    const vy = this.sprite.body.velocity.y;
-    
-    // Nur rotieren, wenn es eine signifikante Geschwindigkeit gibt
-    if (Math.abs(vx) > 1 || Math.abs(vy) > 1) {
-      // Berechne den Winkel aus den Geschwindigkeitskomponenten
-      const angle = Math.atan2(vy, vx);
-      
-      // Setze die Rotation des Sprites auf diesen Winkel
-      this.sprite.setRotation(angle);
-    }
-  }
-}
-```
-
-#### PlayerBullet (src/entities/PlayerBullet.ts)
-Spezialisierte Projektilklasse für Spieler-Schüsse.
+#### PlayerBullet (`src/entities/PlayerBullet.ts`)
+Spezifische Implementierung für Projektile, die vom Spieler abgefeuert werden. Erbt von `Bullet`.
 
 **Besonderheiten:**
-- Standardrichtung nach rechts (0°)
-- Zusätzliche `powerLevel`-Eigenschaft für Upgrade-System
-- Originaltextur ohne Farbänderung
+- Wird typischerweise mit `owner = 'player'` initialisiert.
+- Verwendet eine spezifische Textur ('player-bullet').
+- Kann zusätzliche Logik für Spieler-spezifische Effekte oder Upgrades enthalten (obwohl Upgrades meist in `PlayerWeapon` gehandhabt werden).
 
-#### EnemyBullet (src/entities/EnemyBullet.ts)
-Spezialisierte Projektilklasse für Gegner-Schüsse.
+#### EnemyBullet (`src/entities/EnemyBullet.ts`)
+Spezifische Implementierung für Projektile, die von Gegnern abgefeuert werden. Erbt von `Bullet`.
 
 **Besonderheiten:**
-- Standardrichtung nach links (180°)
-- Registrierung für spezielle Kollisionserkennung
-- Optimierung für Fallback, falls Geschwindigkeit zu niedrig ist
-- Rotation wird immer der Flugrichtung des Projektils angepasst
+- Wird typischerweise mit `owner = 'enemy'` initialisiert.
+- Verwendet eine spezifische Textur ('enemy-bullet').
+- Kann komplexere Bewegungs- oder Zielmuster implementieren (z.B. zielsuchend, sinusförmig).
 
-#### BulletFactory (src/factories/BulletFactory.ts)
-Factory-Klasse für das Erzeugen verschiedener Projektiltypen mit optimierten Einstellungen.
+#### BulletFactory (`src/factories/BulletFactory.ts`)
+Eine Factory-Klasse, die für die effiziente Erstellung und Verwaltung von Projektil-Objekten verantwortlich ist. Sie verwendet **Objekt-Pooling**, um die Performance zu verbessern, indem sie deaktivierte Projektile wiederverwendet, anstatt ständig neue zu erstellen und zu zerstören.
 
 **Hauptmethoden:**
-- `createPlayerBullet(x, y, angle, powerLevel)`: Erstellt ein Spieler-Projektil
-- `createEnemyBullet(x, y, angle)`: Erstellt ein Gegner-Projektil
-- `createTurretBullet(x, y, angle)`: Erstellt ein Projektil für Geschütztürme
-- `create360Bullets(x, y, count)`: Erstellt mehrere Projektile in einer 360-Grad-Formation
+- `constructor(scene: Phaser.Scene)`: Initialisiert Pools für verschiedene Projektiltypen (`PlayerBullet`, `EnemyBullet`).
+- `getBullet<T extends Bullet>(type: { new(...args: any[]): T }, owner: 'player' | 'enemy')`: Holt ein inaktives Projektil des angeforderten Typs aus dem entsprechenden Pool oder erstellt ein neues, falls der Pool leer ist. Setzt den Besitzer.
+- `createPlayerBullet(x: number, y: number, angle: number, speed: number)`: Holt ein `PlayerBullet`-Objekt, aktiviert und konfiguriert es mit den gegebenen Parametern.
+- `createEnemyBullet(x: number, y: number, angle: number, speed: number)`: Holt ein `EnemyBullet`-Objekt, aktiviert und konfiguriert es.
+- `releaseBullet(bullet: Bullet)`: Deaktiviert ein Projektil und gibt es an seinen Pool zurück, damit es wiederverwendet werden kann. Diese Methode wird normalerweise von der `update`- oder `deactivate`-Methode des `Bullet` selbst aufgerufen.
+
+```typescript
+// Beispiel: Verwendung der BulletFactory in PlayerWeapon
+this.bulletFactory.createPlayerBullet(startX, startY, angle, bulletSpeed);
+
+// Beispiel: Internes Pooling in BulletFactory
+private playerBulletPool: Phaser.GameObjects.Group;
+// ...
+const bullet = this.playerBulletPool.get(undefined, undefined, 'player-bullet') as PlayerBullet;
+if (bullet) {
+  // Konfiguriere wiederverwendetes Projektil
+  bullet.setActive(true).setVisible(true);
+  bullet.setOwner(owner);
+  // ...
+  return bullet;
+} else {
+  // Erstelle neues Projektil, falls Pool leer ist
+  const newBullet = new type(this.scene, 0, 0, 'player-bullet', owner);
+  // ...
+  this.playerBulletPool.add(newBullet);
+  return newBullet;
+}
+```
 
 ### 3.5 Gegner-System
 
-Das Projekt verwendet ein modulares, komponentenbasiertes Gegner-System:
+Das Gegnersystem ist modular aufgebaut und nutzt Komponenten für Verhalten und Waffen.
 
-#### BaseEnemy (src/entities/enemies/baseEnemy.ts)
-Hauptbasisklasse für alle Gegner mit Komponenten für Bewegung, Waffen und visuelle Effekte.
+#### BaseEnemy (`src/entities/enemies/baseEnemy.ts`)
+Abstrakte Basisklasse für alle Gegner im Spiel. Erbt von `GameObject`. Definiert gemeinsame Eigenschaften und Methoden für Gegner.
 
 **Eigenschaften:**
-- `speed`: Bewegungsgeschwindigkeit
-- `scoreValue`: Punktwert bei Zerstörung
-- `movementComponent`: Bewegungskomponente
-- `weaponComponent`: Waffenkomponente
-- `visualComponent`: Visuelle Effektkomponente
+- `scoreValue`: Punkte, die der Spieler erhält, wenn dieser Gegner zerstört wird.
+- `movementComponent`: Eine Instanz einer Bewegungskomponente (z.B. `LinearMovement`, `SineMovement`), die das Bewegungsmuster des Gegners definiert.
+- `weaponComponent`: Eine Instanz einer Waffenkomponente (z.B. `BasicEnemyWeapon`), die das Schussverhalten des Gegners steuert.
+- `visualComponent`: Optional, für spezielle visuelle Effekte (z.B. Animationen bei Schaden).
 
-**Öffentliche Methoden:**
-- `update(time, delta)`: Aktualisiert alle Komponenten
-- `takeDamage(amount)`: Verarbeitet Schaden
-- `applyDifficulty(data)`: Passt Gegner an Schwierigkeitsgrad an
+**Wichtige Methoden:**
+- `constructor(...)`: Initialisiert den Gegner, setzt Lebenspunkte, Punktwert und weist die erforderlichen Komponenten (Bewegung, Waffe) zu.
+- `update(time: number, delta: number)`: Ruft die `update`-Methoden der zugewiesenen Komponenten auf (Bewegung, Waffe, Visuals). Überprüft auch, ob der Gegner den Bildschirm verlassen hat und zerstört ihn ggf.
+- `onCollision(other: GameObject)`: Implementiert die Kollisionslogik. Prüft, ob die Kollision mit einem `PlayerBullet` stattgefunden hat und nimmt entsprechend Schaden.
+- `onDestroy()`: Wird aufgerufen, wenn der Gegner zerstört wird. Vergibt Punkte an den Spieler (`ScoreManager.addScore`), löst möglicherweise eine Explosion aus und gibt Ressourcen frei.
+- `setMovement(component: MovementComponent)`: Weist eine neue Bewegungskomponente zu.
+- `setWeapon(component: WeaponComponent)`: Weist eine neue Waffenkomponente zu.
 
-**Geschützte Methoden:**
-- `getRandomMovementPattern()`: Gibt ein zufälliges Bewegungsmuster zurück
-- `getRandomShootingPattern()`: Gibt ein zufälliges Schussmuster zurück
-- `initComponents(config)`: Initialisiert alle Komponenten
-- `onCollision(other)`: Verarbeitet Kollisionen
-- `onDestroy()`: Wird bei Zerstörung aufgerufen
+#### Gegner-Typen (Beispiele in `src/entities/enemies/`)
+Spezifische Gegnerklassen erben von `BaseEnemy` und konfigurieren dieses mit spezifischen Texturen, Lebenspunkten, Punktwerten sowie konkreten Bewegungs- und Waffenkomponenten.
 
-#### Konkrete Gegnerklassen
-- **StandardEnemy**: Einfacher Standardgegner mit grundlegenden Bewegungs- und Angriffsmustern
-- **AdvancedEnemy**: Fortgeschrittener Gegner mit komplexeren Verhaltensweisen und erhöhter Gesundheit
-- **EliteEnemy**: Elitegegner mit Spezialangriffen und fortgeschrittenen Bewegungsmustern
-- **TurretEnemy**: Stationärer Gegner, der den Spieler verfolgt und gezielt beschießt
-- **BossEnemy**: Komplexer Bossgegner mit mehreren Angriffsphasen, erhöhter Gesundheit und speziellen Attacken
+- **`ScoutEnemy`**: Einfacher Gegner, bewegt sich linear, schießt selten.
+- **`FighterEnemy`**: Bewegt sich in einem Sinusmuster, schießt häufiger.
+- **`CruiserEnemy`**: Größerer, langsamerer Gegner mit mehr Lebenspunkten, schießt Salven.
+- **`Asteroid`**: Kein traditioneller Gegner, sondern ein Umgebungshindernis. Erbt möglicherweise direkt von `GameObject`, hat keine Waffe, zerbricht bei Zerstörung in kleinere Teile.
 
-### 3.6 Gegner-Komponenten
+#### Komponenten (`src/entities/enemies/components/`)
 
-Die Gegner verwenden ein modulares Komponentensystem für verschiedene Aspekte ihres Verhaltens:
+Das Komponentensystem ermöglicht flexibles Gegnerdesign:
 
-#### WeaponComponent (src/entities/enemies/components/weaponComponent.ts)
-Wiederverwendbare Waffenkomponente für Gegner, die verschiedene Schussmuster implementiert.
+- **Movement Components (`movement/`)**:
+    - `LinearMovement`: Einfache geradlinige Bewegung mit konstanter Geschwindigkeit.
+    - `SineMovement`: Bewegung entlang einer Sinuskurve für ausweichendes Verhalten.
+    - `PathMovement`: Folgt einem vordefinierten Pfad (Sequenz von Punkten).
+    - `TargetedMovement`: Bewegt sich auf den Spieler zu (ggf. mit Begrenzungen).
+- **Weapon Components (`weapon/`)**:
+    - `NoWeapon`: Feuert keine Projektile.
+    - `SingleShotWeapon`: Feuert einzelne Projektile in Intervallen.
+    - `SpreadShotWeapon`: Feuert mehrere Projektile in einem Fächer.
+    - `BurstFireWeapon`: Feuert kurze Salven von Projektilen.
+- **Visual Components (`visual/`)**:
+    - `BlinkOnHit`: Lässt den Gegner kurz aufblitzen, wenn er getroffen wird.
+    - `EngineTrail`: Fügt einen Partikeleffekt als Antriebsspur hinzu.
 
-**Schussmuster:**
-- `single`: Einzelne Schüsse direkt auf den Spieler
-- `double`: Zwei Schüsse mit leichtem Versatz
-- `triple`: Drei Schüsse in einem Fächer
-- `spread`: Fächerförmige Schüsse mit konfigurierbarem Winkel
-- `burst`: Schnelle Abfolge von Einzelschüssen
+### 3.6 Manager-Klassen (`src/managers/`)
 
-**Besonderheiten:**
-- Unterstützt prädiktives Zielen auf den Spieler
-- Konfigurierbare Feuerrate und Muster
-- Automatische Berechnung der Schusswinkel
+Manager koordinieren übergreifende Spielsysteme. Sie werden oft in der Haupt-Spielszene (`GameScene`) instanziiert und aktualisiert.
 
-#### MovementComponent
-Verwaltet die Bewegung der Gegner mit verschiedenen vordefinierten Mustern.
+#### CollisionManager (`src/managers/collisionManager.ts`)
+Verwaltet die Kollisionserkennung und -behandlung zwischen verschiedenen Spielobjektgruppen.
 
-**Bewegungsmuster:**
-- `linear`: Lineare Bewegung in eine Richtung
-- `zigzag`: Zickzack-Bewegung mit konfigurierbarer Amplitude
-- `sine`: Wellenförmige Bewegung
-- `circle`: Kreisförmige Bewegung um einen Punkt
-- `followPlayer`: Verfolgung des Spielers mit konfigurierbarer Geschwindigkeit
-- `stationary`: Stationäre Position ohne Bewegung
-
-#### VisualComponent
-Verwaltet visuelle Effekte und Animationen für Gegner.
-
-**Funktionen:**
-- Farbeffekte (Tint) für verschiedene Zustände
-- Blinkeffekte bei Schaden
-- Spezielle Animationen für Angriffe und Zerstörung
-- Skalierungseffekte
-
-### 3.7 Manager-Systeme
-
-#### EnemyManager (src/managers/enemyManager.ts)
-Verwaltet die Erzeugung, Aktualisierung und Verwaltung aller Gegner im Spiel.
-
-**Hauptfunktionen:**
-- Gegner-Pooling für optimierte Leistung
-- Dynamische Gegner-Erzeugung basierend auf Spielfortschritt
-- Verwaltung verschiedener Gegnertypen und -muster
+**Aufgaben:**
+- Definiert Kollisionsregeln zwischen Gruppen (z.B. Spieler vs. Gegner-Projektile, Spieler-Projektile vs. Gegner).
+- Nutzt die Arcade-Physik von Phaser (`this.scene.physics.add.collider` und `this.scene.physics.add.overlap`), um Kollisionen zu erkennen.
+- Ruft die `onCollision`-Methode der beteiligten `GameObject`-Instanzen auf, wenn eine Kollision auftritt.
+- Verwaltet Gruppen von Spielobjekten (z.B. `playerGroup`, `enemyGroup`, `playerBulletGroup`, `enemyBulletGroup`).
 
 ```typescript
-// Kern-Funktionalität des EnemyManager
-export class NewEnemyManager {
-    private enemies: BaseEnemy[] = [];
-    private enemyPool: Map<string, BaseEnemy[]> = new Map();
-    private scene: GameScene;
-    private player: Player;
-    private difficultyManager: DifficultyManager;
+// Beispiel: Kollision zwischen Spieler-Projektilen und Gegnern
+this.scene.physics.add.overlap(
+  this.playerBulletGroup,
+  this.enemyGroup,
+  (bulletSprite, enemySprite) => {
+    const bullet = bulletSprite.getData('parentEntity') as Bullet;
+    const enemy = enemySprite.getData('parentEntity') as BaseEnemy;
 
-    // Hauptfunktionen:
-    public spawnEnemy(type: string, x: number, y: number): BaseEnemy;
-    public update(time: number, delta: number): void;
-    private recycleEnemy(enemy: BaseEnemy): void;
-    private getEnemyFromPool(type: string): BaseEnemy | null;
-    private createNewEnemy(type: string, x: number, y: number): BaseEnemy;
-}
+    if (bullet && enemy && !bullet.getData('collided')) {
+      bullet.setData('collided', true); // Verhindert Mehrfachkollisionen derselben Kugel
+      enemy.onCollision(bullet); // Ruft die Kollisionsbehandlung des Gegners auf
+      bullet.deactivate(); // Deaktiviert das Projektil nach dem Treffer
+    }
+  }
+);
 ```
 
-#### LevelManager (src/managers/levelManager.ts)
-Verwaltet die Level, deren Progression und Konfiguration.
+#### EnemyManager (`src/managers/enemyManager.ts`)
+Verantwortlich für die Verwaltung aller aktiven Gegner im Spiel.
 
-**Hauptfunktionen:**
-- Level-basierte Spielprogression mit dynamischen Schwierigkeitsgraden
-- Management von Wellen und zeitgesteuerten Ereignissen
-- Level-Intros und -Outros mit Textanzeigen
-- Übergang zwischen Levels mit Fade-Effekten
-- Level-Ende-Logik: Ein Level wird erst beendet, wenn alle Gegner zerstört wurden oder den Bildschirm verlassen haben
+**Aufgaben:**
+- Hält eine Liste oder Gruppe (`enemyGroup`) aller aktiven Gegner.
+- Fügt neue Gegner hinzu (oft in Zusammenarbeit mit `SpawnManager` oder `LevelManager`).
+- Entfernt zerstörte oder außerhalb des Bildschirms befindliche Gegner.
+- Ruft die `update`-Methode für jeden aktiven Gegner in der Spiel-Schleife auf.
+- Stellt Methoden bereit, um Informationen über Gegner abzurufen (z.B. Anzahl, Positionen).
 
-```typescript
-export class LevelManager {
-  private currentLevel: LevelConfig | null = null;
-  private currentLevelIndex: number = 0;
-  private levelTimer: Phaser.Time.TimerEvent | null = null;
-  private pendingWaves: Wave[] = [];
-  
-  // Hauptfunktionen
-  public startLevel(levelIndex: number): void;
-  public startNextLevel(): void;
-  private spawnWave(wave: Wave): void;
-  private setupTimedSpawns(timedSpawns: TimedSpawn[]): void;
-  private setupTimedPickups(timedPickups: TimedPickup[]): void;
-}
-```
+#### LevelManager (`src/managers/levelManager.ts`)
+Steuert den Ablauf des Spiellevels, einschließlich des Timings von Events wie Gegnerwellen, Bosskämpfen und dem Levelende.
 
-#### CollisionManager (src/managers/collisionManager.ts)
-Verwaltet alle Kollisionen zwischen Spielobjekten.
+**Aufgaben:**
+- Lädt Leveldaten (z.B. aus einer JSON-Datei), die definieren, wann welche Gegner oder Events auftreten sollen.
+- Verfolgt den Fortschritt im Level (z.B. basierend auf Zeit oder besiegten Gegnern).
+- Löst Events aus, indem es den `SpawnManager` anweist, bestimmte Gegner oder Wellen zu spawnen.
+- Kann den Schwierigkeitsgrad im Laufe des Levels anpassen.
+- Löst das Ende des Levels aus und startet möglicherweise den Übergang zur nächsten Szene (`FinishedScene`).
 
-**Hauptfunktionen:**
-- Registrierung von Kollisionsgruppen
-- Behandlung verschiedener Kollisionstypen
-- Optimierte Kollisionserkennung
-- Verbesserte Kollisionsverarbeitung zwischen Spieler, Gegnern und Projektilen
+#### MusicManager (`src/managers/musicManager.ts`)
+Verwaltet die Hintergrundmusik des Spiels.
 
-```typescript
-export class CollisionManager {
-    private scene: GameScene;
-    private player: Player;
-    private playerBullets: Phaser.Physics.Arcade.Group;
-    private enemies: Phaser.Physics.Arcade.Group;
-    private enemyBullets: Phaser.Physics.Arcade.Group;
-    private pickups: Phaser.Physics.Arcade.Group;
-    private asteroids: Phaser.Physics.Arcade.Group;
-    
-    // Optimierte Kollisionsüberprüfungen
-    public setupCollisions(): void;
-    public update(): void;
-    
-    // Kollisionshandler
-    private handlePlayerEnemyCollision(player: any, enemy: any): void;
-    private handlePlayerPickupCollision(player: any, pickup: any): void;
-    private handleBulletEnemyCollision(bullet: any, enemy: any): void;
-}
-```
+**Aufgaben:**
+- Lädt und spielt Hintergrundmusik-Tracks ab.
+- Sorgt für nahtlose Übergänge zwischen Tracks oder Loops.
+- Steuert die Lautstärke der Musik.
+- Kann die Musik je nach Spielzustand ändern (z.B. Bosskampf-Musik).
 
-#### SpawnManager (src/managers/spawnManager.ts)
-Koordiniert das Erscheinen von Gegnern, Powerups und Umgebungsobjekten.
+#### SoundManager (`src/managers/soundManager.ts`)
+Verwaltet alle Soundeffekte im Spiel.
 
-**Hauptfunktionen:**
-- Wellenbasierte Gegnererzeugung
-- Zeitgesteuerte Spawns
-- Zufällige Verteilung von Pickups und Objekten
-- Dynamische Anpassung von Spawn-Raten basierend auf Schwierigkeit
+**Aufgaben:**
+- Lädt Soundeffekt-Dateien (z.B. Schüsse, Explosionen, Power-Ups).
+- Spielt Soundeffekte auf Anfrage ab (z.B. `soundManager.play('explosion')`).
+- Verwendet möglicherweise Sound-Pooling oder steuert die Anzahl gleichzeitig spielender Sounds, um Performance-Probleme oder Überlagerungen zu vermeiden.
+- Steuert die globale Lautstärke der Soundeffekte.
 
-### 3.8 Event-System
+#### SpawnManager (`src/managers/spawnManager.ts`)
+Zuständig für das tatsächliche Erzeugen (Spawnen) von Gegnern, Power-Ups und anderen Objekten in der Spielwelt. Arbeitet oft eng mit dem `LevelManager` und `EnemyManager` zusammen.
 
-#### EventBus (src/utils/eventBus.ts)
-Implementiert ein Publisher-Subscriber-Muster für die Kommunikation zwischen verschiedenen Spielkomponenten.
+**Aufgaben:**
+- Enthält Logik zum Erstellen spezifischer Gegnertypen an bestimmten Positionen (oft außerhalb des sichtbaren Bereichs).
+- Nutzt möglicherweise Factories (wie `EnemyFactory`, falls vorhanden), um Objekte zu erstellen.
+- Fügt neu erzeugte Objekte den relevanten Gruppen im `EnemyManager` und `CollisionManager` hinzu.
+- Kann zufällige Spawn-Positionen oder Muster implementieren.
+- Verwaltet das Spawnen von Power-Ups nach Zerstörung von Gegnern oder nach Zeitintervallen.
 
-**Öffentliche Methoden:**
-- `getInstance()`: Gibt die Singleton-Instanz zurück
-- `resetInstance()`: Setzt die EventBus-Instanz zurück
-- `on(event, callback)`: Registriert einen Event-Listener
-- `off(event, callback)`: Entfernt einen Event-Listener
-- `emit(event, data)`: Löst ein Event aus
-- `removeAllListeners(event)`: Entfernt alle Listener für ein Event
-- `removeAllEvents()`: Entfernt alle Event-Listener
+### 3.7 Szenen (`src/scenes/`)
 
-**Im EventType-Enum definierte Events:**
-- `ENEMY_DESTROYED`: Gegner wurde zerstört (liefert Objektreferenz)
-- `PLAYER_DESTROYED`: Spieler wurde zerstört
-- `GAME_OVER`: Spiel ist beendet
-- `GAME_RESUMED`: Spiel wurde wieder aufgenommen
-- `PAUSE_GAME`: Spiel wurde pausiert
-- `RESUME_GAME`: Spiel wurde fortgesetzt
-- `PICKUP_COLLECTED`: Pickup wurde gesammelt
-- `DIFFICULTY_CHANGED`: Schwierigkeitsgrad hat sich geändert
-- `DEBUG_TOGGLED`: Debug-Modus wurde umgeschaltet
-- `BOSS_SPAWNED`: Boss wurde erzeugt
-- `LEVEL_STARTED`: Level wurde gestartet
-- `LEVEL_ENDING`: Level geht zu Ende
-- `LEVEL_ENEMIES_CLEARED`: Alle Gegner in einem Level sind besiegt
-- `LEVEL_COMPLETED`: Level wurde abgeschlossen
-- `NEXT_LEVEL_STARTING`: Nächstes Level wird gestartet
-- `GAME_WON`: Spiel wurde gewonnen
-- `ASTEROID_DESTROYED`: Asteroid wurde zerstört
-- `POWER_PICKUP_COLLECTED`: Power-Pickup wurde gesammelt
-- `BOSS_DESTROYED`: Boss wurde zerstört
-- `ENEMY_KILLED`: Gegner wurde getötet
-- `PLAYER_DAMAGED`: Spieler hat Schaden erhalten
-- `PLAYER_HEALED`: Spieler wurde geheilt
-- `SCORE_CHANGED`: Punktestand hat sich geändert
-- `REGISTER_ENEMY_BULLET`: Registriert ein feindliches Projektil zur Kollisionsprüfung
-- `CREATE_SMALL_ASTEROID`: Erzeugt einen kleinen Asteroiden, wenn ein größerer zerstört wird
-- `CREATE_ENERGY_PICKUP`: Erzeugt ein Energie-Pickup an einer bestimmten Position
-- `CREATE_POWER_PICKUP`: Erzeugt ein Power-Pickup an einer bestimmten Position
-- `DESTROY_ASTEROID`: Signal zum Zerstören eines Asteroiden
+Phaser-Spiele sind in Szenen unterteilt. Jede Szene repräsentiert einen bestimmten Zustand oder Bildschirm des Spiels (z.B. Hauptmenü, Spiel selbst, Game Over).
 
-### 3.9 Level- und Missionsystem
+#### BaseScene (`src/scenes/baseScene.ts`)
+Eine benutzerdefinierte Basisklasse, von der alle anderen Szenen erben können. Sie kann gemeinsame Funktionalitäten enthalten, wie z.B.:
+- Zugriff auf globale Manager (Sound, Musik).
+- Gemeinsame UI-Elemente (z.B. Hintergrund).
+- Standardmethoden für `preload`, `create`, `update`.
 
-#### LevelConfig (src/config/levelConfig.ts)
-Definiert die Struktur und Konfiguration der Spiellevel.
+#### MainMenuScene (`src/scenes/mainMenuScene.ts`)
+Zeigt das Hauptmenü an.
+- Lädt Menü-Assets (Hintergrund, Logo, Buttons).
+- Zeigt Spieltitel und Buttons (z.B. "Start Game", "Options").
+- Verarbeitet Benutzereingaben (Klicks auf Buttons).
+- Startet die `GameScene`, wenn der "Start Game"-Button gedrückt wird.
 
-**Hauptkomponenten:**
-- `LevelConfig`: Interface für Level-Konfigurationen
-- `Wave`: Interface für Gegner-Wellen
-- `TimedSpawn`: Interface für zeitgesteuerte Spawns
-- `TimedPickup`: Interface für zeitgesteuerte Pickups
-- `EnemyType`: Enum für Gegnertypen
-- `FormationType`: Enum für Formationen
-- `PickupType`: Enum für Pickup-Typen
-- `Levels`: Array mit allen Level-Konfigurationen
+#### GameScene (`src/scenes/gameScene.ts`)
+Die Hauptszene, in der das eigentliche Gameplay stattfindet.
+- `preload()`: Lädt alle für das Spiel notwendigen Assets (Spieler, Gegner, Projektile, Hintergründe, Sounds, Musik).
+- `create()`: Initialisiert das Spiel:
+    - Erstellt den Spieler.
+    - Instanziiert alle Manager (`CollisionManager`, `EnemyManager`, `LevelManager`, `SpawnManager`, `SoundManager`, `MusicManager`).
+    - Richtet die Benutzeroberfläche (`GameUI`) ein.
+    - Startet die Hintergrundmusik (`MusicManager`).
+    - Richtet Kollisionsregeln im `CollisionManager` ein.
+    - Startet den `LevelManager`.
+- `update(time: number, delta: number)`: Die Haupt-Spiel-Schleife:
+    - Aktualisiert den Spieler (Bewegung, Schießen).
+    - Aktualisiert alle Manager (`EnemyManager.update()`, `LevelManager.update()`).
+    - Aktualisiert die UI (`GameUI.update()`).
+    - Verarbeitet Pausierung (`PauseScene`).
 
-**Neues Attribut in LevelConfig:**
-- `asteroidSpeedMultiplier`: Steuert die Geschwindigkeit von Asteroiden im Level
+#### GameOverScene (`src/scenes/gameOverScene.ts`)
+Wird angezeigt, wenn der Spieler verliert (Lebenspunkte <= 0).
+- Zeigt "Game Over"-Text an.
+- Zeigt den erreichten Punktestand an.
+- Bietet Optionen zum Neustarten (`GameScene`) oder Zurückkehren zum Hauptmenü (`MainMenuScene`).
 
-```typescript
-export interface LevelConfig {
-  id: string;                     // Eindeutige Level-ID
-  name: string;                   // Name des Levels
-  description: string;            // Beschreibung des Levels
-  difficulty: number;             // Schwierigkeitsgrad des Levels (1-10)
-  duration: number;               // Dauer des Levels in Millisekunden
-  minAsteroids?: number;          // Minimale Anzahl an Asteroiden
-  maxAsteroids?: number;          // Maximale Anzahl an Asteroiden
-  asteroidSpawnRate?: number;     // Spawn-Rate für Asteroiden in ms
-  asteroidSpeedMultiplier?: number; // Geschwindigkeitsmultiplikator für Asteroiden
-  music?: string;                 // Musik für dieses Level
-  background?: string;            // Hintergrund für dieses Level
-  introText?: string;             // Einleitungstext für das Level
-  outroText?: string;             // Text nach Abschluss des Levels
-  
-  waves: Wave[];                  // Gegnerwellen
-  timedSpawns?: TimedSpawn[];     // Zeitbasierte Gegner-Spawns
-  timedPickups?: TimedPickup[];   // Zeitbasierte Pickup-Spawns
-}
-```
+#### FinishedScene (`src/scenes/finishedScene.ts`)
+Wird angezeigt, wenn der Spieler das Level erfolgreich abgeschlossen hat.
+- Zeigt "Level Complete" oder "Congratulations"-Text an.
+- Zeigt den finalen Punktestand an.
+- Bietet Optionen zum Fortfahren (falls es mehrere Level gibt) oder Zurückkehren zum Hauptmenü.
 
-### 3.10 Shader und visuelle Effekte
+#### PauseScene (`src/scenes/pauseScene.ts`)
+Eine überlagernde Szene, die angezeigt wird, wenn das Spiel pausiert wird.
+- Zeigt "Paused"-Text und Optionen wie "Resume", "Restart", "Main Menu" an.
+- Stoppt die Aktualisierung der `GameScene`, während sie aktiv ist.
+- Nimmt das Spiel wieder auf (`this.scene.resume('GameScene')`) oder wechselt zu anderen Szenen.
 
-#### GlowPipeline (src/pipelines/glowPipeline.ts)
-Implementiert einen WebGL-Shader für Glow-Effekte.
+### 3.8 Benutzeroberfläche (UI) (`src/ui/`)
 
-Die Shader-Dateien befinden sich im `/src/shaders/`-Verzeichnis als separate `.glsl`-Dateien.
+Komponenten zur Anzeige von Informationen und zur Interaktion mit dem Spieler.
 
-## 4. Spielsteuerung und Interaktion
+#### GameUI (`src/ui/gameUI.ts`)
+Ein Container oder eine Klasse, die alle HUD-Elemente (Heads-Up Display) während des Spiels verwaltet.
+- Erstellt und positioniert Elemente wie `HealthBar`, `ScoreDisplay`, `FPSDisplay`.
+- Aktualisiert diese Elemente regelmäßig mit Daten aus dem Spiel (z.B. `player.getHealthPercentage()`, `scoreManager.getScore()`).
+- Kann auch Pausen-Buttons oder andere interaktive UI-Elemente enthalten.
 
-### 4.1 Spielersteuerung
-- **Tastatur**: WASD oder Pfeiltasten für Bewegung, Leertaste zum Schießen
-- **Touch**: Drag & Drop für Bewegung, Tippen zum Schießen
-- **Geheime Tastenkombinationen**: Implementiert für Testzwecke während der Entwicklung
+#### HealthBar (`src/ui/healthBar.ts`)
+Zeigt die Lebenspunkte des Spielers an, oft als Balken, der sich leert.
+- Nimmt einen Wert (typischerweise zwischen 0 und 1) entgegen und stellt ihn grafisch dar.
+- Kann Farbänderungen verwenden (z.B. grün bei voll, rot bei niedrig).
 
-### 4.2 Touch-Steuerung für mobile Geräte
-Die Spielerklasse enthält eine optimierte Touch-Steuerung für mobile Geräte:
-- Touch-Erkennung mit automatischer Anpassung
-- Dynamische Geschwindigkeitssteuerung basierend auf Touch-Position
-- Separate Bereiche für Bewegung und Schießen
+#### ScoreDisplay (`src/ui/scoreDisplay.ts`)
+Zeigt den aktuellen Punktestand des Spielers an.
+- Aktualisiert einen Textwert basierend auf den Daten vom `ScoreManager` (oder direkt aus der `GameScene`).
 
-## 5. Level-System
+#### FPSDisplay (`src/ui/fpsDisplay.ts`)
+Zeigt die aktuelle Bildrate (Frames Per Second) an. Nützlich für die Leistungsüberwachung während der Entwicklung.
+- Greift auf `this.game.loop.actualFps` zu und zeigt den Wert an.
 
-### 5.1 Level-Konfiguration
-Das Spiel verwendet ein flexibles Level-System mit konfigurierbaren Parametern.
+#### TouchControls (`src/ui/touchControls.ts`)
+Implementiert Steuerelemente für Touch-Geräte, typischerweise einen virtuellen Joystick für die Bewegung und einen Button zum Schießen.
+- Erstellt sichtbare Steuerelemente auf dem Bildschirm.
+- Verarbeitet Touch-Events (Start, Bewegung, Ende) auf diesen Elementen.
+- Stellt den aktuellen Status der Steuerung (z.B. Bewegungsrichtung, Schusstaste gedrückt) für die `Player`-Klasse bereit.
 
-### 5.2 Level-Progression
-Der LevelManager steuert den Fortschritt durch die Level:
-- Dynamische Schwierigkeitsanpassung
-- Nahtloser Übergang zwischen Levels
-- Ereignisbasierte Level-Abschlüsse
+#### PlanetsBackground (`src/ui/planetsBackground.ts`)
+Implementiert einen scrollenden Parallax-Hintergrund mit mehreren Ebenen (z.B. Sterne, ferne Planeten, nahe Planeten), die sich mit unterschiedlichen Geschwindigkeiten bewegen, um einen Tiefeneffekt zu erzeugen.
+- Verwendet `Phaser.GameObjects.TileSprite`, um nahtlos scrollende Texturen zu erstellen.
+- Aktualisiert die `tilePositionX` der TileSprites in jeder Frame, um den Scrolleffekt zu erzielen.
 
-## 6. Performance-Optimierung
+### 3.9 Hilfsfunktionen (`src/utils/`)
 
-- **Objekt-Pools**: Für häufig erzeugte und zerstörte Objekte wie Projektile werden Objekt-Pools verwendet
-- **Textur-Atlas**: Kombinieren von Sprites in Textur-Atlanten reduziert Draw-Calls
-- **Effiziente Physik**: Beschränkung der Physikberechnungen auf aktive Objekte
-- **Lazy Loading**: Laden von Assets nur in den Szenen, in denen sie benötigt werden
-- **Automatische Bereinigung**: Projektile und andere Objekte werden außerhalb des sichtbaren Bereichs automatisch deaktiviert
-- **Optimierte Kollisionserkennung**: Verbesserte Algorithmen für effizientere Kollisionserkennung
+Ein Verzeichnis für allgemeine Hilfsfunktionen oder Klassen, die an verschiedenen Stellen im Code verwendet werden können. Beispiele:
+- **Mathematische Funktionen:** Berechnungen für Winkel, Distanzen, Vektoren.
+- **Zufallsgeneratoren:** Erzeugung von Zufallszahlen innerhalb bestimmter Bereiche.
+- **String-Formatierung:** Funktionen zur Formatierung von Text (z.B. für die Punkteanzeige).
+- **Konstanten:** Definition globaler Konstanten (z.B. `MAX_PLAYER_SPEED`).
 
-## 7. Technologien und Abhängigkeiten
+## 4. Technologien
 
-- **Phaser 3**: JavaScript/TypeScript Spieleentwicklungsframework
-- **TypeScript**: Typsicheres JavaScript für robustere Codebasis
-- **Vite**: Modernes und schnelles Build-Tool und Entwicklungsserver
-- **Node.js**: Entwicklungsumgebung für Build-Prozesse
+- **Engine:** Phaser 3 (Version 3.70.0 oder neuer) - Ein beliebtes HTML5-Spieleframework.
+- **Sprache:** TypeScript (Version 5.3.3 oder neuer) - Fügt statische Typisierung zu JavaScript hinzu.
+- **Build-Tool:** Vite (Version 5.0.0 oder neuer) - Ein schnelles Frontend-Build-Tool, das Hot Module Replacement (HMR) für eine schnelle Entwicklung bietet.
+- **Physik:** Phaser Arcade Physics - Die integrierte 2D-Physik-Engine von Phaser.
 
-## 8. Build und Deployment
+## 5. Setup und Start
 
-### 8.1 Entwicklungsserver starten
+### Voraussetzungen
+
+- Node.js und npm (oder yarn) müssen installiert sein.
+
+### Installation
+
+1. Klone das Repository:
+   ```bash
+   git clone <repository-url>
+   cd <projekt-verzeichnis>
+   ```
+2. Installiere die Abhängigkeiten:
+   ```bash
+   npm install
+   ```
+
+### Entwicklungsserver starten
+
+Starte den Vite-Entwicklungsserver mit Hot Reloading:
 ```bash
 npm run dev
 ```
+Das Spiel sollte sich automatisch in deinem Standardbrowser öffnen (standardmäßig auf `http://localhost:3000`).
 
-### 8.2 Produktionsbuild erstellen
+### Produktion Build erstellen
+
+Erstellt optimierte Dateien im `dist/`-Verzeichnis für das Deployment:
 ```bash
 npm run build
 ```
 
-### 8.3 Build-Vorschau anzeigen
+### Build-Vorschau
+
+Startet einen lokalen Server, um den Produktions-Build zu testen:
 ```bash
 npm run preview
 ```
 
-## 9. Bekannte Probleme und Lösungen
+## 6. Wichtige Konzepte
 
-### 9.1 Projektilrotation
-Bei Projektilen von Gegnern kann es vorkommen, dass die Rotation nicht korrekt mit der Flugrichtung übereinstimmt. Dies wurde behoben, indem die `updateRotation()`-Methode in der `Bullet`-Klasse verbessert wurde, um die Rotation kontinuierlich zu aktualisieren.
+- **Objektorientierung:** Verwendung von Klassen und Vererbung zur Strukturierung des Codes (`Entity`, `GameObject`, `Player`, `BaseEnemy`).
+- **Komponenten:** Zerlegung von komplexem Verhalten (Bewegung, Waffen) in wiederverwendbare Komponenten, insbesondere im Gegner-System.
+- **Szenenmanagement:** Aufteilung des Spiels in logische Zustände (`MainMenuScene`, `GameScene`, `GameOverScene`).
+- **Physik:** Nutzung der Arcade-Physik für Bewegung und Kollisionserkennung.
+- **Objekt-Pooling:** Wiederverwendung von Objekten (insbesondere `Bullet`) zur Verbesserung der Performance durch Reduzierung von Garbage Collection (`BulletFactory`).
+- **Manager-Klassen:** Zentralisierung der Logik für übergreifende Systeme (Kollision, Level, Sound).
+- **TypeScript:** Nutzung von Typen zur Verbesserung der Codequalität und Wartbarkeit.
+- **Vite:** Schneller Entwicklungszyklus durch HMR und optimierte Builds.
 
-### 9.2 Leistungseinbrüche bei vielen Objekten
-Bei einer hohen Anzahl von Objekten auf dem Bildschirm kann es zu Leistungseinbrüchen kommen. Um dies zu minimieren, werden Objekt-Pools für Projektile verwendet, und inaktive Objekte werden außerhalb des sichtbaren Bereichs automatisch entfernt.
+## 7. Zukünftige Erweiterungen (Ideen)
 
-### 9.3 Mobile Steuerung
-Die Touch-Steuerung auf mobilen Geräten wurde optimiert, um präzisere Kontrolle zu ermöglichen und ein besseres Spielerlebnis zu bieten.
-
-## 10. Erweiterungen und zukünftige Funktionen
-
-- Zusätzliche Gegnertypen mit komplexeren Verhaltensweisen
-- Erweiterte Waffensysteme und Powerups
-- Verbessertes Partikelsystem für Explosionen und Triebwerkseffekte
-- Mehr Level und Missionen
-- Speichern des Spielfortschritts
+- Mehr Gegnertypen und Bosskämpfe.
+- Zusätzliche Waffen und Power-Ups.
+- Unterschiedliche Level mit variierenden Umgebungen und Herausforderungen.
+- Online-Highscore-Tabelle.
+- Verbesserte visuelle Effekte und Partikelsysteme.
+- Controller-Unterstützung.
+- Detailliertere Konfigurationsdateien für Level und Gegner.
