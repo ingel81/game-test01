@@ -70,14 +70,14 @@ export class Constants {
   public static readonly ENERGY_HEAL_AMOUNT: number = 20;
   public static readonly PICKUP_LIFETIME: number = 10000; // 10 Sekunden (allgemeine Lebensdauer für Pickups)
   public static readonly ENERGY_PICKUP_LIFETIME: number = 10000; // 10 Sekunden
-  public static readonly ENERGY_PICKUP_SPAWN_CHANCE: number = 0.1; // 30% Chance bei regulärem Spawn
-  public static readonly ENEMY_DROP_CHANCE: number = 0.01; // 10% Chance bei Zerstörung eines normalen Feindes 
-  public static readonly BOSS_DROP_CHANCE: number = 0.5; // 50% Chance bei Zerstörung eines Bosses
-  
-  // Power-Pickup-Werte
   public static readonly POWER_PICKUP_LIFETIME: number = 10000; // 10 Sekunden
-  public static readonly BOSS_POWER_DROP_CHANCE: number = 0.25; // 25% Chance bei Zerstörung eines Bosses
-  public static readonly ENEMY_POWER_DROP_CHANCE: number = 0.15; // 15% Chance bei Zerstörung eines normalen Gegners
+
+  public static readonly ENEMY_ENERGY_DROP_CHANCE: number = 0.01; // 10% Chance bei Zerstörung eines normalen Feindes   
+  public static readonly ENEMY_POWER_DROP_CHANCE: number = 0.01; // 15% Chance bei Zerstörung eines normalen Gegners    
+
+  public static readonly BOSS_DROP_CHANCE: number = 0.5; // 50% Chance bei Zerstörung eines Bosses
+  public static readonly BOSS_POWER_DROP_CHANCE: number = 0.01; // 25% Chance bei Zerstörung eines Bosses
+  
   
   // Szenenkeys
   public static readonly SCENE_MAIN_MENU: string = 'MainMenuScene';

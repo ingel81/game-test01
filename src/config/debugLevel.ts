@@ -30,17 +30,16 @@ export const debugLevel: LevelConfig = {
       delay: 1000,
       speedMultiplier: 1,
       healthMultiplier: 1,
-    }, 
+    },
     {
       startDelay: 10000,
       enemyType: EnemyType.STANDARD,
-      count: 10,
+      count: 5,
       formation: FormationType.SQUARE,
       delay: 5000,
       speedMultiplier: 2,
       healthMultiplier: 2,
-    }, 
-    /*
+    },
     {
       startDelay: 0,
       enemyType: EnemyType.TURRET,
@@ -50,6 +49,17 @@ export const debugLevel: LevelConfig = {
       speedMultiplier: 1,
       healthMultiplier: 1,      
     },
+    {
+      startDelay: 0,
+      enemyType: EnemyType.STANDARD,
+      count: 5,
+      formation: FormationType.SQUARE,
+      delay: 5000,
+      speedMultiplier: 2,
+      healthMultiplier: 2,
+    },
+
+    /*   
     
     {
       startDelay: 0,
@@ -92,12 +102,12 @@ export const debugLevel: LevelConfig = {
 
   timedPickups: [
     {
-      time: 1000,
+      time: 10000,
       type: PickupType.ENERGY,
       count: 1,
     },
     {
-      time: 1000,
+      time: 15000,
       type: PickupType.POWER,
       count: 1,
     },

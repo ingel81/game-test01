@@ -523,7 +523,6 @@ export class LevelManager {
     const enemyType = wave.enemyType ? String(wave.enemyType) : '';
     const count = wave.count || 5;
     const delay = wave.delay || 500;
-    const startDelay = wave.startDelay || 0;
     const healthMultiplier = wave.healthMultiplier;
     const speedMultiplier = wave.speedMultiplier;
     

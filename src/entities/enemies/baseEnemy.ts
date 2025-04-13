@@ -330,13 +330,10 @@ export class BaseEnemy extends GameObject {
     // Übergebe sowohl den Gegner selbst als auch sein Sprite für die Level-End-Trigger-Überprüfung
     this.eventBus.emit(EventType.ENEMY_DESTROYED, { enemy: this, sprite: this.sprite });
 
-    // Prüfe, ob ein Energie-Pickup erstellt werden soll
-    if (Math.random() < Constants.ENEMY_DROP_CHANCE) {
+    // Prüfe, ob Pickup erstellt werden soll
+    if (Math.random() < Constants.ENEMY_ENERGY_DROP_CHANCE) {
       this.createEnergyPickup();
-    }
-    
-    // Prüfe, ob ein Power-Pickup erstellt werden soll
-    if (Math.random() < Constants.ENEMY_POWER_DROP_CHANCE) {
+    }else if (Math.random() < Constants.ENEMY_POWER_DROP_CHANCE) {
       this.createPowerPickup();
     }
   }

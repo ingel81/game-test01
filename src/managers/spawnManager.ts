@@ -152,18 +152,6 @@ export class SpawnManager {
   }
 
   /**
-   * Spawnt ein Pickup
-   */
-  private spawnPickup = (): void => {
-    if (this.isPaused) return;
-    
-    // Spawne seltener und begrenzt für bessere Performance
-    if (Math.random() > Constants.ENERGY_PICKUP_SPAWN_CHANCE ) return;
-    
-    this.spawnEnergyPickup(this.scene.scale.width + 50, Phaser.Math.Between(100, this.scene.scale.height - 100));
-  }
-
-  /**
    * Spawnt ein EnergyPickup an den angegebenen Koordinaten
    */
   public spawnEnergyPickup(x: number, y: number): EnergyPickup {
