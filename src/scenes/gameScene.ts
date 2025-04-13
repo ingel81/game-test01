@@ -294,6 +294,9 @@ export class GameScene extends BaseScene {
    * Spiel gewonnen Handler
    */
   private gameWon = (): void => {
+    // Setze das Flag in der Registry, dass das Spiel beendet wird
+    this.registry.set('isGameEnding', true);
+    
     // Alle Sounds stoppen
     this.sound.stopAll();
     

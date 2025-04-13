@@ -232,6 +232,10 @@ export class LevelManager {
     if (this.currentLevelIndex >= GameLevels.length - 1) {
       console.log('[LEVEL_MANAGER] Letztes Level abgeschlossen, Spiel beendet!');
       
+      // Setze das Flag in der Registry, dass das Spiel beendet wird
+      // Dies verhindert das Abspielen von Explosionen beim Entfernen von Objekten
+      this.scene.registry.set('isGameEnding', true);
+      
       this.scene.time.delayedCall(
         1000,
         () => {
@@ -928,6 +932,13 @@ export class LevelManager {
    */
   public destroy(): void {
     console.log('[LEVEL_MANAGER] Manager wird zerstört');
+    
+    // Prüfe, ob das Spiel bereits beendet wird
+    if (this.scene.registry.get('isGameEnding')) {
+      // Flag erneut setzen für Konsistenz
+      this.scene.registry.set('isGameEnding', true);
+    }
+    
     this.stopLevel();
     
     // Event-Listener entfernen

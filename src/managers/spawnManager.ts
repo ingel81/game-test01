@@ -277,6 +277,16 @@ export class SpawnManager {
    * Zerstört alle Objekte
    */
   public destroyAllObjects(): void {
+    console.log('SpawnManager wird zerstört');
+    
+    // Prüfe, ob wir uns im "Spiel beendet" Zustand befinden
+    const isGameEnding = this.scene.registry.get('isGameEnding') || false;
+    
+    // Setze das Flag in der Registry für alle Objekte
+    if (isGameEnding) {
+      this.scene.registry.set('isGameEnding', true);
+    }
+    
     // Zerstöre alle Asteroiden
     for (const asteroid of this.asteroids) {
       asteroid.destroy();
@@ -346,6 +356,14 @@ export class SpawnManager {
    */
   public destroy(): void {
     console.log('SpawnManager wird zerstört');
+    
+    // Prüfe, ob wir uns im "Spiel beendet" Zustand befinden
+    // Wenn GameScene bereits das Flag gesetzt hat, sollten wir es auch hier setzen
+    if (this.scene.registry.get('isGameEnding')) {
+      console.log('SpawnManager: Spiel wird beendet, setze isGameEnding-Flag');
+      // Flag erneut setzen, um sicherzustellen, dass alle noch zu zerstörenden Objekte davon wissen
+      this.scene.registry.set('isGameEnding', true);
+    }
     
     // Timer entfernen
     if (this.asteroidSpawnTimer) {

@@ -1,4 +1,5 @@
 import { Entity } from './entity';
+import { EventBus, EventType } from '../utils/eventBus';
 
 /**
  * GameObject-Klasse
@@ -8,10 +9,12 @@ export abstract class GameObject extends Entity {
   protected health: number;
   protected maxHealth: number;
   public isDestroyed: boolean = false;
+  protected eventBus: EventBus;
 
   constructor(scene: Phaser.Scene, x: number, y: number, texture: string, health: number) {
     super(scene, x, y, texture);
     this.health = this.maxHealth = health;
+    this.eventBus = EventBus.getInstance();
   }
 
   /**
@@ -101,11 +104,22 @@ export abstract class GameObject extends Entity {
    */
   public destroy(): void {
     console.log('GameObject: destroy aufgerufen');
-    if (!this.isDestroyed) {
+    
+    // Überprüfe, ob wir uns bereits im "Spiel beendet" Zustand befinden
+    const isGameEnding = this.scene.registry.get('isGameEnding') || false;
+    
+    // Prüfe, ob es sich um ein Pickup handelt oder ob das Objekt aktiv zerstört werden soll
+    const isPickup = this.constructor.name.includes('Pickup');
+    
+    // Rufe onDestroy nur auf, wenn:
+    // - Das Objekt noch nicht zerstört wurde und
+    // - Das Spiel nicht beendet wird ODER es handelt sich um ein Pickup (Pickups brauchen immer onDestroy)
+    if (!this.isDestroyed && (!isGameEnding || isPickup)) {
+      // Rufe onDestroy auf
       this.onDestroy();
-      // isDestroyed wird in remove() gesetzt
     }
-    // Anstatt super.destroy() aufzurufen, verwenden wir remove()
+    
+    // isDestroyed wird in remove() gesetzt
     this.remove();
   }
 } 
