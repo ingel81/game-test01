@@ -25,12 +25,22 @@ export const debugLevel: LevelConfig = {
     {
       startDelay: 0,
       enemyType: EnemyType.STANDARD,
-      count: 1,
+      count: 10,
       formation: FormationType.LINE,
-      delay: 0,
+      delay: 1000,
       speedMultiplier: 1,
       healthMultiplier: 1,
     }, 
+    {
+      startDelay: 10000,
+      enemyType: EnemyType.STANDARD,
+      count: 10,
+      formation: FormationType.SQUARE,
+      delay: 5000,
+      speedMultiplier: 2,
+      healthMultiplier: 2,
+    }, 
+    /*
     {
       startDelay: 0,
       enemyType: EnemyType.TURRET,
@@ -40,7 +50,7 @@ export const debugLevel: LevelConfig = {
       speedMultiplier: 1,
       healthMultiplier: 1,      
     },
-    /*
+    
     {
       startDelay: 0,
       enemyType: EnemyType.STANDARD,

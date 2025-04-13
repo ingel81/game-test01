@@ -11,7 +11,6 @@ import { PowerPickup } from '../entities/pickups/powerPickup';
 export class SpawnManager {
   private scene: Phaser.Scene;
   private asteroidSpawnTimer: Phaser.Time.TimerEvent;
-  private pickupSpawnTimer: Phaser.Time.TimerEvent;
   private asteroids: Asteroid[] = [];
   private pickups: EnergyPickup[] = [];
   private powerPickups: PowerPickup[] = [];
@@ -45,14 +44,6 @@ export class SpawnManager {
     this.asteroidSpawnTimer = this.scene.time.addEvent({
       delay: this.asteroidSpawnRate,
       callback: this.spawnAsteroid,
-      callbackScope: this,
-      loop: true
-    });
-
-    // Timer für Pickups (längere Verzögerung als Asteroiden)
-    this.pickupSpawnTimer = this.scene.time.addEvent({
-      delay: this.asteroidSpawnRate * 3, // Dreimal seltener als Asteroiden
-      callback: this.spawnPickup,
       callbackScope: this,
       loop: true
     });
@@ -248,7 +239,6 @@ export class SpawnManager {
   private pauseSpawning = (): void => {
     this.isPaused = true;
     this.asteroidSpawnTimer.paused = true;
-    this.pickupSpawnTimer.paused = true;
   }
 
   /**
@@ -257,7 +247,6 @@ export class SpawnManager {
   private resumeSpawning = (): void => {
     this.isPaused = false;
     this.asteroidSpawnTimer.paused = false;
-    this.pickupSpawnTimer.paused = false;
   }
 
   /**
@@ -266,7 +255,6 @@ export class SpawnManager {
   private stopSpawning = (): void => {
     this.isPaused = true;
     this.asteroidSpawnTimer.remove();
-    this.pickupSpawnTimer.remove();
   }
 
   /**
@@ -362,10 +350,6 @@ export class SpawnManager {
     // Timer entfernen
     if (this.asteroidSpawnTimer) {
       this.asteroidSpawnTimer.remove();
-    }
-    
-    if (this.pickupSpawnTimer) {
-      this.pickupSpawnTimer.remove();
     }
     
     this.destroyAllObjects();

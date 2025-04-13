@@ -71,7 +71,7 @@ export class Constants {
   public static readonly PICKUP_LIFETIME: number = 10000; // 10 Sekunden (allgemeine Lebensdauer für Pickups)
   public static readonly ENERGY_PICKUP_LIFETIME: number = 10000; // 10 Sekunden
   public static readonly ENERGY_PICKUP_SPAWN_CHANCE: number = 0.1; // 30% Chance bei regulärem Spawn
-  public static readonly ENEMY_DROP_CHANCE: number = 0.1; // 10% Chance bei Zerstörung eines normalen Feindes 
+  public static readonly ENEMY_DROP_CHANCE: number = 0.01; // 10% Chance bei Zerstörung eines normalen Feindes 
   public static readonly BOSS_DROP_CHANCE: number = 0.5; // 50% Chance bei Zerstörung eines Bosses
   
   // Power-Pickup-Werte
